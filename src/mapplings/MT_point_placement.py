@@ -163,11 +163,11 @@ class MTRequirementPlacement:
         new_param_list = []
         for parameter in param_list:
             new_cells = parameter.map.preimage_of_cell(cell)
-            #print(parameter)
+            # print(parameter)
             for new_cell in new_cells:
-                new_ghost = PointPlacement(parameter.ghost).directionless_point_placement(
-                new_cell
-                )
+                new_ghost = PointPlacement(
+                    parameter.ghost
+                ).directionless_point_placement(new_cell)
                 if new_ghost.is_empty():
                     continue
                 new_param = self.new_parameter_from_point_placed_tiling(

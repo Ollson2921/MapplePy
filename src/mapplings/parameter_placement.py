@@ -1,14 +1,16 @@
 from mapplings import MappedTiling, Parameter
-from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from gridded_cayley_permutations import GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Iterable
 from gridded_cayley_permutations.point_placements import PointPlacement
 from gridded_cayley_permutations.row_col_map import RowColMap
 from .MT_point_placement import MTRequirementPlacement
 
 
 class ParameterPlacement:
-    """For a given mappling and containing parameter, places the parameter in the base tiling of the mappling."""
+    """For a given mappling and containing parameter, places the parameter
+    in a cell of the tiling of the mappling. Places the point of the parameter
+    at the given index (0 based) in the given direction."""
 
     def __init__(
         self, mappling: MappedTiling, param: Parameter, cell: Tuple[int, int]
@@ -19,8 +21,9 @@ class ParameterPlacement:
         self.cell = cell
 
     def param_placement(self, direction: int, index_of_pattern: int) -> MappedTiling:
-        """Place a parameter in the tiling."""
-        """index_of_pattern is the index of the pattern that is placed in the tiling and is 0 based."""
+        """Place a parameter in the tiling.
+        index_of_pattern is the index of the pattern that is placed in the tiling and is 0 based.
+        """
         temp_containing_parameters = self.mappling.containing_parameters.copy()
         if [self.param] in temp_containing_parameters:
             temp_containing_parameters.remove([self.param])
@@ -32,7 +35,6 @@ class ParameterPlacement:
                 self.mappling.enumeration_parameters,
             )
         ).directionless_point_placement(self.cell)
-        # print(new_mappling)
         new_avoiding_parameters = (
             new_mappling.avoiding_parameters
             + self.find_new_avoiding_parameters(direction, index_of_pattern)
@@ -66,13 +68,14 @@ class ParameterPlacement:
         return new_avoiding_parameters
 
     def new_cell_block_in_tiling(self):
+        """The new block of cells in the tiling after the point placement."""
         return [
             (i, j)
             for i in range(self.cell[0], self.cell[0] + 3)
             for j in range(self.cell[1], self.cell[1] + 3)
         ]
 
-    def cells_to_insert_point_in(self, direction, index_of_pattern):
+    def cells_to_insert_point_in(self, direction: int, index_of_pattern: int):
         """Returns a list of cells in the parameter which a point can be
         placed into for the resulting tiling to be an avoiding parameter (cells
         which are not further in the given direction so that the pattern in the
@@ -107,7 +110,9 @@ class ParameterPlacement:
         return self.param.map.preimage_of_cell(self.cell)
 
     def update_containing_parameters(
-        self, index_of_pattern: int, containing_parameters
+        self,
+        index_of_pattern: int,
+        containing_parameters: Iterable[Iterable[Parameter]],
     ):
         """Remove [self.param] from containing parameters and add new
         containing parameter list (one that is the identity)."""
@@ -117,7 +122,7 @@ class ParameterPlacement:
         return containing_parameters
 
     def new_containing_param_map(self, index_of_pattern: int):
-        """Return a new RowColMap for the containing parameter."""
+        """Return a new RowColMap for the containing parameter that was placed."""
         middle_cell = self.cell_of_inserted_point_in_param(index_of_pattern)
         row_map = self.param.map.row_map.copy()
         col_map = self.param.map.col_map.copy()
@@ -129,6 +134,10 @@ class ParameterPlacement:
     def adjust_dict_in_param(
         self, middle_cell: Tuple[int, int], row_or_col: int, new_map: Dict[int, int]
     ):
+        """Update a row or col map given the cell in the new parameter where the point is placed
+        and the old row or col map.
+        If row_or_col = 0 then it returns the new col map, if 1 then it returns the new row map.
+        """
         vals_in_param = set(cell[row_or_col] for cell in self.cells_in_parameter())
         middle_val = middle_cell[row_or_col]
         for val in range(self.param.ghost.dimensions[row_or_col]):
@@ -144,6 +153,8 @@ class ParameterPlacement:
         return new_map
 
     def cell_of_inserted_point_in_param(self, index_of_pattern: int):
+        """The cell in the new parameter after point placement where the point
+        is placed."""
         for cell in self.cells_in_parameter():
             if (
                 cell[0] == index_of_pattern * 2 + 1

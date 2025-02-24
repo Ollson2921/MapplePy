@@ -225,7 +225,7 @@ print(M6)
 
 for factor in MTFactor(M6).find_factors():
     print("-------------------------------------")
-    print(factor)
+    print(factor.reduced_str())
 
 # for factor in MTFactor(list(MTFactor(M5).find_factors())[2]).find_factors():
 #     print("-------------------------------------")

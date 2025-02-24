@@ -26,9 +26,7 @@ class Parameter:
         )
         new_map = self.reduce_row_col_map(cols_to_remove, rows_to_remove)
         new_ghost = self.ghost.delete_rows_and_columns(cols_to_remove, rows_to_remove)
-        return Parameter(new_ghost,new_map)
-
-
+        return Parameter(new_ghost, new_map)
 
     def empty_rows_and_columns_to_delete(self, ghost: Tiling, row_col_map: RowColMap):
         """Delete empty rows and columns in parameters if not
@@ -50,7 +48,7 @@ class Parameter:
                 rows_to_remove.append(row)
         return cols_to_remove, rows_to_remove
 
-    def is_contradictory(self, tiling: Tiling) -> bool: #good
+    def is_contradictory(self, tiling: Tiling) -> bool:  # good
         """Returns True if the parameter is contradictory.
         Is contradictory if any of the requirements in the ghost map to a gcp
         containing an obstruction in the tiling
@@ -125,8 +123,13 @@ class Parameter:
     def __repr__(self):
         return str((repr(self.ghost), str(self.map)))
 
+    def reduced_str(self):
+        """Returns a string representation of the parameter without the
+        crossing obs and reqs."""
+        return str(self.map) + "\n" + self.ghost.reduced_str()
+
     def __str__(self) -> str:
-        return str(self.ghost) + "\n" + str(self.map)
+        return str(self.map) + "\n" + str(self.ghost)
 
 
 class MappedTiling(CombinatorialClass):
@@ -138,56 +141,10 @@ class MappedTiling(CombinatorialClass):
         containing_parameters: Iterable[Iterable[Parameter]],
         enumeration_parameters: Iterable[Iterable[Parameter]],
     ):
-        # self.tiling = tiling
-        # self.containing_parameters = self.tidy_containing_parameters(
-        #     containing_parameters
-        # )
-        # if self.containing_parameters == False:
-        #     self.tiling = Tiling([], [], self.tiling.dimensions)
-        #     self.containing_parameters = []
-        #     self.avoiding_parameters = []
-        #     self.enumeration_parameters = []
-        # else:
-        #     self.avoiding_parameters = self.remove_empty_ghosts_from_list(
-        #         avoiding_parameters
-        #     )
-        #     self.enumeration_parameters = enumeration_parameters
         self.avoiding_parameters = avoiding_parameters
         self.containing_parameters = containing_parameters
         self.enumeration_parameters = enumeration_parameters
         self.tiling = tiling
-
-    def remove_empty_ghosts_from_list(
-        self, avoiding_parameters: List[Parameter]
-    ) -> List[Parameter]:
-        """Remove any parameters with empty tilings."""
-        return [param for param in avoiding_parameters if not param.ghost.is_empty()]
-
-    def tidy_containing_parameters(
-        self, containing_parameters: List[List[Parameter]]
-    ) -> List[List[Parameter]]:
-        """For parameters with empty tilings, if it is the only
-         one in a list then the mappling is empty, otherwise remove the empty
-         parameter.
-        If only one parameter in a list and it maps to base tiling by the identity map
-        then map obs and reqs down and remove the parameter list.
-        Note: As we always assume a parameter maps to the whole tiling, we defined a row
-         col map as being trivial iff the dimenstions of the tiling and ghost are the same.
-        """
-        new_containing_parameters = []
-        for param_list in containing_parameters:
-            if len(param_list) == 1:
-                if param_list[0].ghost.is_empty():
-                    return False
-                if param_list[0].ghost.dimensions == self.tiling.dimensions:
-                    self.tiling = param_list[0].back_map_obs_and_reqs(self.tiling).ghost
-                else:
-                    new_containing_parameters.append(param_list)
-            else:
-                new_containing_parameters.append(
-                    self.remove_empty_ghosts_from_list(param_list)
-                )
-        return new_containing_parameters
 
     ## Combintatorial class stuff ##
 
@@ -233,19 +190,95 @@ class MappedTiling(CombinatorialClass):
             for params in self.containing_parameters
         )
 
-    def reap_contradictory_ghosts_from_list(self,parameter_list):  # Good?
+    ## Tidying functions ##
+
+    def cleanup(self):
+        """Tidies all parameter lists (apart from enumeration parameters)
+        and returns a new tiling with the tidied parameters."""
+        tiling = self.tiling
+        containing_parameters = self.tidy_containing_parameters(
+            self.containing_parameters
+        )
+        if containing_parameters == False:
+            tiling = Tiling([], [], self.tiling.dimensions)
+            containing_parameters = []
+            avoiding_parameters = []
+            enumeration_parameters = []
+        else:
+            avoiding_parameters = self.back_maps_obs_and_reqs_for_param_list(
+                tiling, self.avoiding_parameters
+            )
+            avoiding_parameters = self.remove_empty_ghosts_from_list(
+                avoiding_parameters
+            )
+            enumeration_parameters = self.enumeration_parameters
+
+        return MappedTiling(
+            tiling, avoiding_parameters, containing_parameters, enumeration_parameters
+        )
+
+    def remove_empty_ghosts_from_list(
+        self, avoiding_parameters: List[Parameter]
+    ) -> List[Parameter]:
+        """Remove any parameters with empty tilings."""
+        return [param for param in avoiding_parameters if not param.ghost.is_empty()]
+
+    def back_maps_obs_and_reqs_for_param_list(
+        self, tiling: Tiling, param_list: List[Parameter]
+    ):
+        """Map all obs and reqs in the tiling to the parameters in the parameter list"""
+        return [param.back_map_obs_and_reqs(tiling) for param in param_list]
+
+    def tidy_containing_parameters(
+        self, containing_parameters: List[List[Parameter]]
+    ) -> List[List[Parameter]]:
+        """For parameters with empty tilings, if it is the only
+         one in a list then the mappling is empty, otherwise remove the empty
+         parameter.
+        If only one parameter in a list and it maps to base tiling by the identity map
+        then map obs and reqs down and remove the parameter list.
+        Note: As we always assume a parameter maps to the whole tiling, we defined a row
+         col map as being trivial iff the dimenstions of the tiling and ghost are the same.
+        """
+        new_containing_parameters = []
+        for param_list in containing_parameters:
+            param_list = self.back_maps_obs_and_reqs_for_param_list(
+                self.tiling, param_list
+            )
+            if len(param_list) == 1:
+                if param_list[0].ghost.is_empty():
+                    return False
+                if param_list[0].ghost.dimensions == self.tiling.dimensions:
+                    self.tiling = param_list[0].back_map_obs_and_reqs(self.tiling).ghost
+                else:
+                    new_containing_parameters.append(param_list)
+            else:
+                new_containing_parameters.append(
+                    self.remove_empty_ghosts_from_list(param_list)
+                )
+        return new_containing_parameters
+
+    def reap_contradictory_ghosts_from_list(self, parameter_list):  # Good?
         """Removes parameters which are contradictory from parameter list"""
         return [A for A in parameter_list if not A.is_contradictory(self.tiling)]
-    
-    def reap_all_contradictions(self): #good
-        '''Removes any contradictory ghosts from each ACE list.
-        Also removes empty C or E lists'''
-        new_avoiders = self.reap_contradictory_ghosts_from_list(self.avoiding_parameters)
-        new_containers = [self.reap_contradictory_ghosts_from_list(c_list) for c_list in self.containing_parameters]
+
+    def reap_all_contradictions(self):  # good
+        """Removes any contradictory ghosts from each ACE list.
+        Also removes empty C or E lists"""
+        new_avoiders = self.reap_contradictory_ghosts_from_list(
+            self.avoiding_parameters
+        )
+        new_containers = [
+            self.reap_contradictory_ghosts_from_list(c_list)
+            for c_list in self.containing_parameters
+        ]
         new_containers = [c_list for c_list in new_containers if c_list]
-        new_enumerators =  [self.reap_contradictory_ghosts_from_list(e_list) for e_list in self.enumeration_parameters]
+        new_enumerators = [
+            self.reap_contradictory_ghosts_from_list(e_list)
+            for e_list in self.enumeration_parameters
+        ]
         new_enumerators = [e_list for e_list in new_enumerators if e_list]
-        return MappedTiling(self.tiling, new_avoiders,new_containers,new_enumerators)
+        return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
 
     def kill_ghost(self, ghost_number: int):  # BAD
         """removes a ghost from the mapped tiling"""
@@ -445,6 +478,30 @@ class MappedTiling(CombinatorialClass):
                 [repr(p) for p in self.avoiding_parameters],
                 [[repr(p) for p in ps] for ps in self.containing_parameters],
                 [[repr(p) for p in ps] for ps in self.enumeration_parameters],
+            )
+        )
+
+    def reduced_str(self):
+        """Returns a string representation of the parameter without the
+        crossing obs and reqs."""
+        return (
+            "Base tiling: \n"
+            + self.tiling.reduced_str()
+            + "\nAvoiding parameters:\n"
+            + "\n".join([p.reduced_str() for p in self.avoiding_parameters])
+            + "\nContaining parameters:\n"
+            + "\nNew containing parameters list \n".join(
+                [
+                    "\n".join([p.reduced_str() for p in ps])
+                    for ps in self.containing_parameters
+                ]
+            )
+            + "\nEnumeration parameters:\n"
+            + "\nNew enumeration parameters list\n".join(
+                [
+                    "\n".join([p.reduced_str() for p in ps])
+                    for ps in self.enumeration_parameters
+                ]
             )
         )
 

@@ -317,32 +317,49 @@ class Tiling(CombinatorialClass):
                     return False
                 ob_list.remove(shift)
         return True
-    
+
     ## Construction methods
     @staticmethod
-    def from_vincular(cperm :CayleyPermutation, adjacencies :Iterable[int]):
-        '''Both cperm and adjacencies must be 0 based. Creates a tiling from a vincular pattern. Adjacencies is a list of positions where i in adjacencencies means positions i and i+1 must be adjacent'''
-        dimensions = (len(cperm), max(cperm)+1)
+    def from_vincular(cperm: CayleyPermutation, adjacencies: Iterable[int]):
+        """Both cperm and adjacencies must be 0 based. Creates a tiling from a vincular pattern. Adjacencies is a list of positions where i in adjacencencies means positions i and i+1 must be adjacent"""
+        dimensions = (len(cperm), max(cperm) + 1)
         all_obs, all_reqs = [], []
-        perm_cells = [(2*k+1,2*cperm[k]+1) for k in range(dimensions[0])]
-        cols, rows = [2*i+1 for i in range(dimensions[0])] + [2*i+2 for i in adjacencies], [2*i+1 for i in range(dimensions[1])]
-        col_cells = [cell for cell in product(cols,range(2*dimensions[1]+1)) if cell not in perm_cells] #this is all the cells that will have point obstructions
+        perm_cells = [(2 * k + 1, 2 * cperm[k] + 1) for k in range(dimensions[0])]
+        cols, rows = [2 * i + 1 for i in range(dimensions[0])] + [
+            2 * i + 2 for i in adjacencies
+        ], [2 * i + 1 for i in range(dimensions[1])]
+        col_cells = [
+            cell
+            for cell in product(cols, range(2 * dimensions[1] + 1))
+            if cell not in perm_cells
+        ]  # this is all the cells that will have point obstructions
         for cell in col_cells:
-                all_obs.append(GriddedCayleyPerm(CayleyPermutation([0]), [cell]))
-        for i in rows:  #this puts the 01,10 obstructions across each row
-            for j in range(2*dimensions[0]+1):
-                cell1 = (j,i)
+            all_obs.append(GriddedCayleyPerm(CayleyPermutation([0]), [cell]))
+        for i in rows:  # this puts the 01,10 obstructions across each row
+            for j in range(2 * dimensions[0] + 1):
+                cell1 = (j, i)
                 if cell1 not in col_cells:
-                    for k in range(j,2*dimensions[0]+1):
-                        cell2 = (k,i)
+                    for k in range(j, 2 * dimensions[0] + 1):
+                        cell2 = (k, i)
                         if cell2 not in col_cells:
-                            all_obs.append(GriddedCayleyPerm(CayleyPermutation([0,1]), [cell1,cell2]))
-                            all_obs.append(GriddedCayleyPerm(CayleyPermutation([1,0]), [cell1,cell2]))
-        for cell in perm_cells: #this puts the point requirement and the 00 obstruction according to the permutation
+                            all_obs.append(
+                                GriddedCayleyPerm(
+                                    CayleyPermutation([0, 1]), [cell1, cell2]
+                                )
+                            )
+                            all_obs.append(
+                                GriddedCayleyPerm(
+                                    CayleyPermutation([1, 0]), [cell1, cell2]
+                                )
+                            )
+        for (
+            cell
+        ) in (
+            perm_cells
+        ):  # this puts the point requirement and the 00 obstruction according to the permutation
             all_reqs.append([GriddedCayleyPerm(CayleyPermutation([0]), [cell])])
-            all_obs.append(GriddedCayleyPerm(CayleyPermutation([0,0]), [cell,cell]))
-        return Tiling(all_obs,all_reqs,(2*dimensions[0]+1, 2*dimensions[1]+1))
-
+            all_obs.append(GriddedCayleyPerm(CayleyPermutation([0, 0]), [cell, cell]))
+        return Tiling(all_obs, all_reqs, (2 * dimensions[0] + 1, 2 * dimensions[1] + 1))
 
     ### CSS methods
 
@@ -414,6 +431,14 @@ class Tiling(CombinatorialClass):
         return f"Tiling({self.obstructions}, {self.requirements}, {self.dimensions})"
 
     def __str__(self) -> str:
+        grid, key_string, crossing_string, requirements_string = self.find_string()
+        return grid + key_string + crossing_string + requirements_string
+
+    def reduced_str(self) -> str:
+        grid, key_string, crossing_string, requirements_string = self.find_string()
+        return grid + key_string
+
+    def find_string(self) -> str:
         if self.dimensions == (0, 0):
             return "+---+\n| \u03B5 |\n+---+\n"
         crossing_string = "Crossing obstructions: \n"
@@ -471,7 +496,7 @@ class Tiling(CombinatorialClass):
             basis_string = f"Av({','.join(str(p) for p in basis)})"
             key_string += f"{key}: {basis_string} \n"
 
-        return grid + key_string + crossing_string + requirements_string
+        return grid, key_string, crossing_string, requirements_string
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Tiling):
