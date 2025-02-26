@@ -192,7 +192,7 @@ class MappedTiling(CombinatorialClass):
 
     ## Tidying functions ##
 
-    def cleanup(self):
+    def cleanup(self):  # Good
         """Tidies all parameter lists (apart from enumeration parameters)
         and returns a new tiling with the tidied parameters."""
         tiling = self.tiling
@@ -219,19 +219,19 @@ class MappedTiling(CombinatorialClass):
 
     def remove_empty_ghosts_from_list(
         self, avoiding_parameters: List[Parameter]
-    ) -> List[Parameter]:
+    ) -> List[Parameter]:  # Good
         """Remove any parameters with empty tilings."""
         return [param for param in avoiding_parameters if not param.ghost.is_empty()]
 
     def back_maps_obs_and_reqs_for_param_list(
         self, tiling: Tiling, param_list: List[Parameter]
-    ):
+    ):  # Good
         """Map all obs and reqs in the tiling to the parameters in the parameter list"""
         return [param.back_map_obs_and_reqs(tiling) for param in param_list]
 
     def tidy_containing_parameters(
         self, containing_parameters: List[List[Parameter]]
-    ) -> List[List[Parameter]]:
+    ) -> List[List[Parameter]]:  # Good
         """For parameters with empty tilings, if it is the only
          one in a list then the mappling is empty, otherwise remove the empty
          parameter.

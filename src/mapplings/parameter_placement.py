@@ -138,18 +138,22 @@ class ParameterPlacement:
         and the old row or col map.
         If row_or_col = 0 then it returns the new col map, if 1 then it returns the new row map.
         """
+        if row_or_col == 1:
+            adjust = int(self.cell[1] in self.mappling.tiling.point_rows())
+        else:
+            adjust = 0
         vals_in_param = set(cell[row_or_col] for cell in self.cells_in_parameter())
         middle_val = middle_cell[row_or_col]
         for val in range(self.param.ghost.dimensions[row_or_col]):
             if val not in vals_in_param:
                 if val > middle_val:
-                    new_map[val] += 2
+                    new_map[val] += 2 - adjust
             elif val < middle_val:
                 new_map[val] = self.cell[row_or_col]
             elif val > middle_val:
-                new_map[val] = self.cell[row_or_col] + 2
+                new_map[val] = self.cell[row_or_col] + 2 - adjust
             else:
-                new_map[val] = self.cell[row_or_col] + 1
+                new_map[val] = self.cell[row_or_col] + 1 - adjust
         return new_map
 
     def cell_of_inserted_point_in_param(self, index_of_pattern: int):
