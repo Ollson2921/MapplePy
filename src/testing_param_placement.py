@@ -28,6 +28,7 @@ cell = (0, 0)
 output = ParameterPlacement(mappling, param, cell).param_placement(3, 0)
 output = MappedTiling(output.tiling, [], output.containing_parameters, [])
 print(output.reduced_str())
+m2 = output
 
 cell_in_param = ParameterPlacement(
     mappling, param, cell
@@ -37,8 +38,20 @@ cell = (
     to_place.map.col_map[cell_in_param[0]],
     to_place.map.row_map[cell_in_param[1]],
 )
-print(cell)
 new_output = ParameterPlacement(output, to_place, cell).param_placement(3, 1)
+output = MappedTiling(output.tiling, [], output.containing_parameters, [])
+print(new_output.reduced_str())
+
+param = output.containing_parameters[0][0]
+cell_in_param = ParameterPlacement(output, param, cell).cell_of_inserted_point_in_param(
+    2
+)
+to_place = output.containing_parameters[0][0]
+cell = (
+    to_place.map.col_map[cell_in_param[0]],
+    to_place.map.row_map[cell_in_param[1]],
+)
+new_output = ParameterPlacement(output, to_place, cell).param_placement(3, 2)
 output = MappedTiling(output.tiling, [], output.containing_parameters, [])
 print(new_output.reduced_str())
 
