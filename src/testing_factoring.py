@@ -193,14 +193,17 @@ T0 = Tiling(
 M0 = MappedTiling(
     T0,
     [],
-    [
-        [P0],
-    ],
+    [],
     [],
 )
 
 # M1 = MappedTiling(T1,[P1,P2],[],[])
 
+
+M3 = list(fully_place_parameter(M0,P0,4))[1].cleanup().cleanup()
+for factor in MTFactor(M3).find_factors():
+    print("-------------------------------------")
+    print(factor.reduced_str())
 M2 = ParameterPlacement(M0, P0, (0, 0)).param_placement(4, 0)
 
 M3 = ParameterPlacement(M2, M2.containing_parameters[0][0], (2, 2)).param_placement(

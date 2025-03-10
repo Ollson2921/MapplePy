@@ -217,6 +217,11 @@ class MappedTiling(CombinatorialClass):
             tiling, avoiding_parameters, containing_parameters, enumeration_parameters
         )
 
+
+            
+
+
+
     def remove_empty_ghosts_from_list(
         self, avoiding_parameters: List[Parameter]
     ) -> List[Parameter]:  # Good

@@ -126,7 +126,6 @@ class ParameterPlacement:
         middle_cell = self.cell_of_inserted_point_in_param(index_of_pattern)
         row_map = self.param.map.row_map.copy()
         col_map = self.param.map.col_map.copy()
-
         new_row_map = self.adjust_dict_in_param(middle_cell, 1, row_map)
         new_col_map = self.adjust_dict_in_param(middle_cell, 0, col_map)
         return RowColMap(new_col_map, new_row_map)
@@ -138,23 +137,22 @@ class ParameterPlacement:
         and the old row or col map.
         If row_or_col = 0 then it returns the new col map, if 1 then it returns the new row map.
         """
-        if row_or_col == 1:
-            adjust = int(self.cell[1] in self.mappling.tiling.point_rows())
+        if row_or_col == 1 and self.cell[1] in self.mappling.tiling.point_rows():
+                return new_map
         else:
-            adjust = 0
-        vals_in_param = set(cell[row_or_col] for cell in self.cells_in_parameter())
-        middle_val = middle_cell[row_or_col]
-        for val in range(self.param.ghost.dimensions[row_or_col]):
-            if val not in vals_in_param:
-                if val > middle_val:
-                    new_map[val] += 2 - adjust
-            elif val < middle_val:
-                new_map[val] = self.cell[row_or_col]
-            elif val > middle_val:
-                new_map[val] = self.cell[row_or_col] + 2 - adjust
-            else:
-                new_map[val] = self.cell[row_or_col] + 1 - adjust
-        return new_map
+            vals_in_param = set(cell[row_or_col] for cell in self.cells_in_parameter())
+            middle_val = middle_cell[row_or_col]
+            for val in range(self.param.ghost.dimensions[row_or_col]):
+                if val not in vals_in_param:
+                    if val > middle_val:
+                        new_map[val] += 2
+                elif val < middle_val:
+                    new_map[val] = self.cell[row_or_col]
+                elif val > middle_val:
+                    new_map[val] = self.cell[row_or_col] + 2
+                else:
+                    new_map[val] = self.cell[row_or_col] + 1
+            return new_map
 
     def cell_of_inserted_point_in_param(self, index_of_pattern: int):
         """The cell in the new parameter after point placement where the point
