@@ -21,20 +21,31 @@ P0 = Parameter(
 
 M0 = MappedTiling(base_tiling, [], [], [])
 
+
+TT = Parameter(Tiling([GriddedCayleyPerm(CayleyPermutation((0,1)),[(0,0),(0,0)]),GriddedCayleyPerm(CayleyPermutation((0,1)),[(0,0),(1,0)]),GriddedCayleyPerm(CayleyPermutation((0,1)),[(1,0),(1,0)])],[],(3,1)), RowColMap({0:0,1:0,2:0},{0:0}))
+
+print(TT)
+MT = MappedTiling(base_tiling,[TT],[],[])
+
+MT.avoiding_parameters[0] = MT.avoiding_parameters[0].reduce_by_fusion()
+
+print(MT)
+
+
 # print("=" * 150)
-def fully_place_parameter(mappling : MappedTiling, param : Parameter, direction):
-    '''Places all points of a parameter (assumes parameter is not already in the containing parameter list, so we can pop eligable containing parameters when we find them). We can use this as a base for the strategy'''
-    points_to_place = sorted(param.ghost.point_cells())
-    new_mappling = MappedTiling(mappling.tiling, mappling.avoiding_parameters, [[param]]+mappling.containing_parameters, mappling.enumeration_parameters)
-    for i in range(len(points_to_place)):
-        new_param = new_mappling.containing_parameters[0][0]
-        temp_map = new_param.map
-        cell = (temp_map.col_map[points_to_place[i][0]], temp_map.row_map[points_to_place[i][1]])
-        new_mappling = ParameterPlacement(new_mappling, new_param, cell).param_placement(direction, i)
-        yield new_mappling
+# def fully_place_parameter(mappling : MappedTiling, param : Parameter, direction):
+#     '''Places all points of a parameter (assumes parameter is not already in the containing parameter list, so we can pop eligable containing parameters when we find them). We can use this as a base for the strategy'''
+#     points_to_place = sorted(param.ghost.point_cells())
+#     new_mappling = MappedTiling(mappling.tiling, mappling.avoiding_parameters, [[param]]+mappling.containing_parameters, mappling.enumeration_parameters)
+#     for i in range(len(points_to_place)):
+#         new_param = new_mappling.containing_parameters[0][0]
+#         temp_map = new_param.map
+#         cell = (temp_map.col_map[points_to_place[i][0]], temp_map.row_map[points_to_place[i][1]])
+#         new_mappling = ParameterPlacement(new_mappling, new_param, cell).param_placement(direction, i)
+#         yield new_mappling
 
 
-print(list(fully_place_parameter(M0,P0,3))[2].reduced_str())
+# print(list(fully_place_parameter(M0,P0,3))[2].reduced_str())
 # cell = (0, 0)
 # output = ParameterPlacement(mappling, param, cell).param_placement(3, 0)
 # output = MappedTiling(output.tiling, [], output.containing_parameters, [])
