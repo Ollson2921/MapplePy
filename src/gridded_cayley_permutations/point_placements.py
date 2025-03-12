@@ -79,10 +79,7 @@ class PointPlacement:
     def point_obstructions_and_requirements(
         self, cell: Tuple[int, int]
     ) -> Tuple[OBSTRUCTIONS, REQUIREMENTS]:
-        if cell[1] in self.tiling.point_rows():
-            cell = (cell[0] + 1, cell[1])
-        else:
-            cell = self.placed_cell(cell)
+        cell = self.placed_cell(cell)
         x, y = self.new_dimensions(cell)
         col_obs = [
             GriddedCayleyPerm(CayleyPermutation([0]), [(cell[0], i)])
@@ -190,19 +187,13 @@ class PointPlacement:
         return Tiling(obstructions, requirements, self.new_dimensions(cell))
 
     def new_dimensions(self, cell=(-1, -1)):
-        in_point_rows = int(cell[1] in self.tiling.point_rows()) * 2
         return (
             self.tiling.dimensions[0] + 2,
-            self.tiling.dimensions[1] + 2 - in_point_rows,
+            self.tiling.dimensions[1] + 2,
         )
 
     def directionless_point_placement(self, cell: Tuple[int, int]) -> Tiling:
-        if cell[1] in self.tiling.point_rows():
-            new_col_map = self.multiplex_map(cell).col_map
-            row_map = {row: row for row in range(self.tiling.dimensions[1])}
-            multiplex_map = RowColMap(new_col_map, row_map)
-        else:
-            multiplex_map = self.multiplex_map(cell)
+        multiplex_map = self.multiplex_map(cell)
         multiplex_obs, multiplex_reqs = multiplex_map.preimage_of_tiling(self.tiling)
         point_obs, point_reqs = self.point_obstructions_and_requirements(cell)
         obstructions = multiplex_obs + point_obs

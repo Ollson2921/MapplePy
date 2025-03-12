@@ -44,7 +44,14 @@ class ParameterPlacement:
             index_of_pattern, new_mappling.containing_parameters
         )
         new_enumeration_parameters = new_mappling.enumeration_parameters
-
+        print(
+            MappedTiling(
+                new_mappling.tiling,
+                new_avoiding_parameters,
+                new_containing_parameters,
+                new_enumeration_parameters,
+            ).reduced_str()
+        )
         return MappedTiling(
             new_mappling.tiling,
             new_avoiding_parameters,
@@ -86,9 +93,7 @@ class ParameterPlacement:
             if GriddedCayleyPerm(CayleyPermutation([0]), [cell])
             not in self.param.ghost.obstructions
         ]
-        cell_of_point_being_placed = self.cell_of_inserted_point_in_param(
-            index_of_pattern
-        )
+        cell_of_point_being_placed = self.cell_in_param(index_of_pattern)
         cells_to_insert_in = [
             cell
             for cell in all_cells
@@ -116,51 +121,56 @@ class ParameterPlacement:
     ):
         """Remove [self.param] from containing parameters and add new
         containing parameter list (one that is the identity)."""
-        new_map = self.new_containing_param_map(index_of_pattern)
-        containing_param = [Parameter(self.param.ghost, new_map)]
-        containing_parameters.append(containing_param)
+        param_to_update = self.param.copy()
+        point_placed_ghost = PointPlacement(
+            param_to_update.ghost
+        ).directionless_point_placement(self.cell_in_param(index_of_pattern))
+        new_map = self.new_containing_param_map(index_of_pattern, point_placed_ghost)
+        new_containing_param = Parameter(point_placed_ghost, new_map)
+        containing_parameters.append([new_containing_param])
         return containing_parameters
 
-    def new_containing_param_map(self, index_of_pattern: int):
+    def cell_in_param(self, index_of_pattern: int):
+        """The cell in the parameter where the point is placed."""
+        return list(sorted(self.param.ghost.point_cells()))[index_of_pattern]
+
+    def new_containing_param_map(self, index_of_pattern: int, ghost: Parameter):
         """Return a new RowColMap for the containing parameter that was placed."""
-        middle_cell = self.cell_of_inserted_point_in_param(index_of_pattern)
+        middle_cell = self.cell_in_param(index_of_pattern)
         row_map = self.param.map.row_map.copy()
         col_map = self.param.map.col_map.copy()
-        new_row_map = self.adjust_dict_in_param(middle_cell, 1, row_map)
-        new_col_map = self.adjust_dict_in_param(middle_cell, 0, col_map)
+        new_row_map = self.adjust_dict_in_param(
+            middle_cell, 1, row_map, ghost.dimensions[1]
+        )
+        new_col_map = self.adjust_dict_in_param(
+            middle_cell, 0, col_map, ghost.dimensions[0]
+        )
         return RowColMap(new_col_map, new_row_map)
 
     def adjust_dict_in_param(
-        self, middle_cell: Tuple[int, int], row_or_col: int, new_map: Dict[int, int]
+        self,
+        middle_cell: Tuple[int, int],
+        row_or_col: int,
+        new_map: Dict[int, int],
+        dimension: int,
     ):
         """Update a row or col map given the cell in the new parameter where the point is placed
         and the old row or col map.
         If row_or_col = 0 then it returns the new col map, if 1 then it returns the new row map.
         """
-        if row_or_col == 1 and self.cell[1] in self.mappling.tiling.point_rows():
-                return new_map
-        else:
-            vals_in_param = set(cell[row_or_col] for cell in self.cells_in_parameter())
-            middle_val = middle_cell[row_or_col]
-            for val in range(self.param.ghost.dimensions[row_or_col]):
-                if val not in vals_in_param:
-                    if val > middle_val:
+        vals_in_param = set(cell[row_or_col] for cell in self.cells_in_parameter())
+        middle_val = middle_cell[row_or_col] + 1
+        for val in range(dimension):
+            if val not in vals_in_param:
+                if val > middle_val:
+                    if val not in new_map:
+                        new_map[val] = self.cell[row_or_col] + 2
+                    else:
                         new_map[val] += 2
-                elif val < middle_val:
-                    new_map[val] = self.cell[row_or_col]
-                elif val > middle_val:
-                    new_map[val] = self.cell[row_or_col] + 2
-                else:
-                    new_map[val] = self.cell[row_or_col] + 1
-            return new_map
-
-    def cell_of_inserted_point_in_param(self, index_of_pattern: int):
-        """The cell in the new parameter after point placement where the point
-        is placed."""
-        for cell in self.cells_in_parameter():
-            if (
-                cell[0] == index_of_pattern * 2 + 1
-                and GriddedCayleyPerm(CayleyPermutation([0]), [cell])
-                not in self.param.ghost.obstructions
-            ):
-                return cell
+            elif val < middle_val:
+                new_map[val] = self.cell[row_or_col]
+            elif val > middle_val:
+                new_map[val] = self.cell[row_or_col] + 2
+            else:
+                new_map[val] = self.cell[row_or_col] + 1
+        return new_map

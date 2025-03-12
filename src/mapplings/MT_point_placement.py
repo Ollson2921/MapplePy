@@ -163,7 +163,6 @@ class MTRequirementPlacement:
         new_param_list = []
         for parameter in param_list:
             new_cells = parameter.map.preimage_of_cell(cell)
-            # print(parameter)
             for new_cell in new_cells:
                 new_ghost = PointPlacement(
                     parameter.ghost

@@ -119,23 +119,32 @@ class Parameter:
     def sub_parameter(self, factor):
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
-    
+
     def reduce_by_fusion(self):
-        new_ghost, new_col_map, new_row_map = self.ghost, self.map.col_map.copy(), self.map.row_map.copy()
-        i,j = 0,0
-        while i < new_ghost.dimensions[0]-1:
-            if new_col_map[i] == new_col_map[i+1]:
-                if self.ghost.is_fuseable(0,i):
-                    new_ghost = new_ghost.fuse(0,i)
+        new_ghost, new_col_map, new_row_map = (
+            self.ghost,
+            self.map.col_map.copy(),
+            self.map.row_map.copy(),
+        )
+        i, j = 0, 0
+        while i < new_ghost.dimensions[0] - 1:
+            if new_col_map[i] == new_col_map[i + 1]:
+                if self.ghost.is_fuseable(0, i):
+                    new_ghost = new_ghost.fuse(0, i)
                     del new_col_map[i]
-            i+=1
-        while j < new_ghost.dimensions[1]-1:
-            if new_row_map[j] == new_row_map[j+1]:
-                if self.ghost.is_fuseable(1,j):
-                    new_ghost = new_ghost.fuse(1,j)
+            i += 1
+        while j < new_ghost.dimensions[1] - 1:
+            if new_row_map[j] == new_row_map[j + 1]:
+                if self.ghost.is_fuseable(1, j):
+                    new_ghost = new_ghost.fuse(1, j)
                     del new_col_map[j]
-            j+=1
-        return Parameter(new_ghost,RowColMap(new_col_map,new_row_map).standardise_map())
+            j += 1
+        return Parameter(
+            new_ghost, RowColMap(new_col_map, new_row_map).standardise_map()
+        )
+
+    def copy(self):
+        return Parameter(self.ghost, self.map)
 
     def __repr__(self):
         return str((repr(self.ghost), str(self.map)))
@@ -234,15 +243,20 @@ class MappedTiling(CombinatorialClass):
             tiling, avoiding_parameters, containing_parameters, enumeration_parameters
         )
 
-
-
     def fuse_parameters(self):
-        avoiding_parameters, containing_parameters = [],[]
+        avoiding_parameters, containing_parameters = [], []
         for avoider in self.avoiding_parameters:
             avoiding_parameters.append(avoider.reduce_by_fusion())
         for c_list in self.containing_parameters:
-            containing_parameters.append([container.reduce_by_fusion() for container in c_list])
-        return MappedTiling(self.tiling, avoiding_parameters,containing_parameters,self.enumeration_parameters)
+            containing_parameters.append(
+                [container.reduce_by_fusion() for container in c_list]
+            )
+        return MappedTiling(
+            self.tiling,
+            avoiding_parameters,
+            containing_parameters,
+            self.enumeration_parameters,
+        )
 
     def remove_empty_ghosts_from_list(
         self, avoiding_parameters: List[Parameter]
