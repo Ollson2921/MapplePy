@@ -2,6 +2,7 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
 from mapplings import Parameter, MappedTiling, MTFactor, ParameterPlacement
 from gridded_cayley_permutations.row_col_map import RowColMap
+from tilescope_folder.strategies.factor import Factors
 
 base_obs = [
     GriddedCayleyPerm(CayleyPermutation([0, 2, 1]), ((0, 0), (0, 0), (0, 0))),
@@ -197,41 +198,38 @@ M0 = MappedTiling(
     [],
 )
 
-# M1 = MappedTiling(T1,[P1,P2],[],[])
-
-
-M3 = list(fully_place_parameter(M0,P0,4))[1].cleanup().cleanup()
-for factor in MTFactor(M3).find_factors():
-    print("-------------------------------------")
+M1 = MappedTiling(T0,[],[[P0]],[])
+def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
+    """Places all points of a parameter (assumes parameter is not already in the containing parameter list, so we can pop eligable containing parameters when we find them). We can use this as a base for the strategy"""
+    new_mappling = MappedTiling(
+        mappling.tiling,
+        mappling.avoiding_parameters,
+        [[param]] + mappling.containing_parameters,
+        mappling.enumeration_parameters,
+    )
+    for i in range(len(param.ghost.point_cells())):
+        new_param = new_mappling.containing_parameters[0][0]
+        temp_map = new_param.map
+        points_to_place = sorted(new_param.ghost.point_cells())
+        cell = (
+            temp_map.col_map[points_to_place[i][0]],
+            temp_map.row_map[points_to_place[i][1]],
+        )
+        new_mappling = ParameterPlacement(
+            new_mappling, new_param, cell
+        ).param_placement(direction, i).reduce_empty_rows_and_cols_in_parameters().full_cleanup()
+        yield new_mappling
+print("====================Initial Mappling====================")
+print(M1.reduced_str())
+print("====================Start Parameter Placement====================")
+param_placement = list(fully_place_parameter(M0,P0,4))
+print('++++ First Point Placed ++++')
+print(param_placement[0].reduced_str())
+print('++++ Second Point Placed ++++')
+print(param_placement[1].reduced_str())
+print("====================Start Factoring====================")
+i=0
+for factor in MTFactor(param_placement[-1]).find_factors():
+    print('----- Factor:', i)
+    i+=1
     print(factor.reduced_str())
-M2 = ParameterPlacement(M0, P0, (0, 0)).param_placement(4, 0)
-
-M3 = ParameterPlacement(M2, M2.containing_parameters[0][0], (2, 2)).param_placement(
-    4, 1
-)
-
-NCP = M3.tidy_containing_parameters(M3.containing_parameters)
-
-M4 = MappedTiling(M3.tiling, M3.avoiding_parameters, NCP, M3.enumeration_parameters)
-
-M5 = M4.reap_all_contradictions()
-
-avoiding_params = [
-    param.back_map_obs_and_reqs(M5.tiling) for param in M5.avoiding_parameters
-]
-
-M6 = MappedTiling(
-    M5.tiling, avoiding_params, M5.containing_parameters, M5.enumeration_parameters
-)
-
-print(M6)
-
-for factor in MTFactor(M6).find_factors():
-    print("-------------------------------------")
-    print(factor.reduced_str())
-
-# for factor in MTFactor(list(MTFactor(M5).find_factors())[2]).find_factors():
-#     print("-------------------------------------")
-#     print(factor)
-
-# print(M0)

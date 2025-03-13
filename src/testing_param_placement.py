@@ -48,28 +48,28 @@ print("=" * 150)
 
 def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
     """Places all points of a parameter (assumes parameter is not already in the containing parameter list, so we can pop eligable containing parameters when we find them). We can use this as a base for the strategy"""
-    points_to_place = sorted(param.ghost.point_cells())
     new_mappling = MappedTiling(
         mappling.tiling,
         mappling.avoiding_parameters,
         [[param]] + mappling.containing_parameters,
         mappling.enumeration_parameters,
     )
-    for i in range(len(points_to_place)):
+    for i in range(len(param.ghost.point_cells())):
         new_param = new_mappling.containing_parameters[0][0]
         temp_map = new_param.map
+        points_to_place = sorted(new_param.ghost.point_cells())
         cell = (
             temp_map.col_map[points_to_place[i][0]],
             temp_map.row_map[points_to_place[i][1]],
         )
         new_mappling = ParameterPlacement(
             new_mappling, new_param, cell
-        ).param_placement(direction, i)
+        ).param_placement(direction, i).reduce_empty_rows_and_cols_in_parameters().full_cleanup()
         yield new_mappling
 
-
-new_mappling = list(fully_place_parameter(M0, P0, 3))[0].reduced_str()
-print(new_mappling)
+for mappling in fully_place_parameter(M0, P0, 4):
+    print( mappling.reduced_str())
+    print('=======================')
 # print(P0)
 # cell = (0, 0)
 # output = ParameterPlacement(mappling, param, cell).param_placement(3, 0)

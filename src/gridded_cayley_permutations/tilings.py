@@ -96,6 +96,10 @@ class Tiling(CombinatorialClass):
             if len(ob) == 1:
                 active_cells.discard(ob.positions[0])
         return active_cells
+    
+    def cell_is_active(self, cell):
+        '''returns true if cell is not empty'''
+        return GriddedCayleyPerm(CayleyPermutation([0]), [cell,]) in self.obstructions
 
     def positive_cells(self):
         """Returns a set of cells that are positive in the tiling.
@@ -123,6 +127,17 @@ class Tiling(CombinatorialClass):
             ):
                 point_cells.add(cell)
         return point_cells
+    
+    def cell_is_point_cell(self, cell):
+        '''returns true if cell is a point cell'''
+        if not GriddedCayleyPerm(CayleyPermutation([0, 1]), [cell, cell]) in self.obstructions:
+            return False
+        if not GriddedCayleyPerm(CayleyPermutation([1, 0]), [cell, cell]) in self.obstructions:
+            return False
+        if not GriddedCayleyPerm(CayleyPermutation([0, 0]), [cell, cell]) in self.obstructions:
+            return False
+        if [GriddedCayleyPerm(CayleyPermutation([0]), [cell,])] in self.requirements:
+            return True
 
     def delete_rows_and_columns(
         self, cols: Iterable[int], rows: Iterable[int]
@@ -426,6 +441,9 @@ class Tiling(CombinatorialClass):
 
     def objects_of_size(self, n: int, **parameters: int) -> Iterator[GriddedCayleyPerm]:
         yield from self.gridded_cayley_permutations(n)
+
+    def copy(self):
+        return Tiling(self.obstructions,self.requirements,self.dimensions)
 
     def __repr__(self) -> str:
         return f"Tiling({self.obstructions}, {self.requirements}, {self.dimensions})"

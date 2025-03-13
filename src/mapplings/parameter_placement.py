@@ -44,14 +44,6 @@ class ParameterPlacement:
             index_of_pattern, new_mappling.containing_parameters
         )
         new_enumeration_parameters = new_mappling.enumeration_parameters
-        print(
-            MappedTiling(
-                new_mappling.tiling,
-                new_avoiding_parameters,
-                new_containing_parameters,
-                new_enumeration_parameters,
-            ).reduced_str()
-        )
         return MappedTiling(
             new_mappling.tiling,
             new_avoiding_parameters,
@@ -127,8 +119,7 @@ class ParameterPlacement:
         ).directionless_point_placement(self.cell_in_param(index_of_pattern))
         new_map = self.new_containing_param_map(index_of_pattern, point_placed_ghost)
         new_containing_param = Parameter(point_placed_ghost, new_map)
-        containing_parameters.append([new_containing_param])
-        return containing_parameters
+        return [[new_containing_param]] + containing_parameters
 
     def cell_in_param(self, index_of_pattern: int):
         """The cell in the parameter where the point is placed."""

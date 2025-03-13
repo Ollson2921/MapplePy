@@ -51,9 +51,14 @@ class RowColMap:
         """
         Return the preimages of a gridded Cayley permutation with respect to the map.
         """
+        # for i in self.product_of_cols(gcp):
+        #     print(i)
+        # for i in self.product_of_rows(gcp):
+        #     print(i)
+        # print(self.product_of_rows(gcp))
         for cols, rows in product(self.product_of_cols(gcp), self.product_of_rows(gcp)):
             new_positions = tuple(zip(cols, rows))
-            # print(GriddedCayleyPerm(gcp.pattern, new_positions))
+            #print(GriddedCayleyPerm(gcp.pattern, new_positions))
             yield GriddedCayleyPerm(gcp.pattern, new_positions)
 
     def product_of_rows(self, gcp: GriddedCayleyPerm) -> Iterator[Tuple[int, ...]]:

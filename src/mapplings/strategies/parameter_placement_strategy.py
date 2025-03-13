@@ -25,7 +25,7 @@ from parameter_placement import ParameterPlacement
 Cell = Tuple[int, int]
 
 
-class MTRequirementPlacementStrategy(
+class MTParameterPlacementStrategy(
     DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]
 ):
     """Places the parameter at the indices in the direction and cell given in the mappling."""
@@ -96,7 +96,7 @@ class MTRequirementPlacementStrategy(
 
     def __repr__(self) -> str:
         return (
-            f"MTRequirementPlacementStrategy(gcps={self.gcps}, "
+            f"MTParameterPlacementStrategy(gcps={self.gcps}, "
             f"indices={self.indices}, direction={self.direction}, "
             f"ignore_parent={self.ignore_parent})"
         )
@@ -113,6 +113,33 @@ class MTRequirementPlacementStrategy(
         return d
 
     @classmethod
-    def from_dict(cls, d: dict) -> "MTRequirementPlacementStrategy":
+    def from_dict(cls, d: dict) -> "MTParameterPlacementStrategy":
         gcps = tuple(GriddedCayleyPerm.from_dict(gcp) for gcp in d.pop("gcps"))
         return cls(gcps=gcps, **d)
+
+
+class MTParameterPlacementFactory(StrategyFactory[MappedTiling]):
+    def __call__(
+        self, comb_class: MappedTiling
+    ) -> Iterator[MTParameterPlacementStrategy]:
+        """Factory to place every point of a containing parameter into a mappling in every possible way."""
+        for c_list in comb_class.containing_parameters:
+            if len(c_list)==1:
+                param = c_list[0]
+                points = sorted(list(param.ghost.point_cells()))
+                for i in range(len(points)):
+                    cell = (param.map.col_map[points[i][0]],param.map.row_map[points[i][1]])
+                    if comb_class.tiling.cell_is_active(cell):
+                        if not comb_class.tiling.cell_is_point_cell(cell):
+                            for direction in Directions:
+                                yield MTParameterPlacementStrategy(comb_class,param,i,direction,cell)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MTParameterPlacementFactory":
+        return cls(**d)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "Parameter placement"

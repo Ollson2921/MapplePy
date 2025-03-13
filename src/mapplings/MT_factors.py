@@ -42,6 +42,7 @@ class MTFactor:
                     for T in new_t_factors:
                         final_t_factor += T
                 all_factors.append(final_t_factor)
+        print(all_factors)
         return all_factors
 
     # def is_factorable(self, confidence = 8) -> bool:
