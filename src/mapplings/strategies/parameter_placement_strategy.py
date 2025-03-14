@@ -129,10 +129,9 @@ class MTParameterPlacementFactory(StrategyFactory[MappedTiling]):
                 points = sorted(list(param.ghost.point_cells()))
                 for i in range(len(points)):
                     cell = (param.map.col_map[points[i][0]],param.map.row_map[points[i][1]])
-                    if comb_class.tiling.cell_is_active(cell):
-                        if not comb_class.tiling.cell_is_point_cell(cell):
-                            for direction in Directions:
-                                yield MTParameterPlacementStrategy(comb_class,param,i,direction,cell)
+                    if not comb_class.tiling.cell_is_point_cell(cell):
+                        for direction in Directions:
+                            yield MTParameterPlacementStrategy(comb_class,param,i,direction,cell)
 
     @classmethod
     def from_dict(cls, d: dict) -> "MTParameterPlacementFactory":
