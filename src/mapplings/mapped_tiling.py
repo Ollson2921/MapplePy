@@ -247,7 +247,7 @@ class MappedTiling(CombinatorialClass):
 
     def full_cleanup(self):
         """Applies every cleanup function"""
-        new_mappling = self.tidy_containing_parameters2()
+        new_mappling = self.tidy_containing_parameters()
         if not new_mappling:
             return MappedTiling(Tiling([], [], self.tiling.dimensions), [], [], [])
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
@@ -362,7 +362,14 @@ class MappedTiling(CombinatorialClass):
         return [param.back_map_obs_and_reqs(tiling) for param in param_list]
 
     def tidy_containing_parameters(self):  # Good
-        """Does the same as the original, but outputs a mapped tiling"""
+        """For parameters with empty tilings, if it is the only
+         one in a list then the mappling is empty, otherwise remove the empty
+         parameter.
+        If only one parameter in a list and it maps to base tiling by the identity map
+        then map obs and reqs down and remove the parameter list.
+        Note: As we always assume a parameter maps to the whole tiling, we defined a row
+         col map as being trivial iff the dimenstions of the tiling and ghost are the same.
+        """
         new_containing_parameters = []
         new_tiling = self.tiling
         for param_list in self.containing_parameters:
@@ -386,7 +393,6 @@ class MappedTiling(CombinatorialClass):
             new_containing_parameters,
             self.enumeration_parameters,
         )
-
 
     def reap_contradictory_ghosts_from_list(self, parameter_list):  # Good?
         """Removes parameters which are contradictory from parameter list"""
