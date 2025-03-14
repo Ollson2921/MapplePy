@@ -113,72 +113,56 @@ class Parameter:
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
+    def fuse_valid_rows_or_cols(self,direction):
+        '''fully fuses rows or cols of the parameter if they are fusable and map to the same index.
+        direction = 0 for cols, directions = 1 for rows'''
+        new_ghost = self.ghost
+        new_maps = (self.map.col_map,self.map.row_map)
+        i, extend = 0, 1 
+        while i + extend < new_ghost.dimensions[0]:
+            if new_maps[direction][i] == new_maps[direction][i+extend]:
+                if new_ghost.is_fuseable(0, i):
+                    new_ghost = new_ghost.delete_rows_and_columns(*([i],[])[::(-1)^direction])
+                    del new_maps[direction][i+extend]
+                    extend += 1
+                    continue
+            i += extend  
+            extend = 1
+        return Parameter(new_ghost,RowColMap(*new_maps).standardise_map())
+    
     def reduce_by_fusion(self):
-        new_ghost, new_col_map, new_row_map = (
-            self.ghost,
-            self.map.col_map.copy(),
-            self.map.row_map.copy(),
-        )
-        i, j = 0, 0
-        while i < new_ghost.dimensions[0] - 1:
-            if new_col_map[i] == new_col_map[i + 1]:
-                if self.ghost.is_fuseable(0, i):
-                    new_ghost = new_ghost.fuse(0, i)
-                    del new_col_map[i]
-            i += 1
-        while j < new_ghost.dimensions[1] - 1:
-            if new_row_map[j] == new_row_map[j + 1]:
-                if self.ghost.is_fuseable(1, j):
-                    new_ghost = new_ghost.fuse(1, j)
-                    del new_col_map[j]
-            j += 1
-        return Parameter(
-            new_ghost, RowColMap(new_col_map, new_row_map).standardise_map()
-        )
+        '''Fuses valid rows and columns'''
+        return self.fuse_valid_rows_or_cols(0).fuse_valid_rows_or_cols(1)
+        
+    def reduce_empty_rows_or_cols(self, direction, preimages):
+        '''Removes empty rows or columns if they share an image with another row or column. 
+        direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages'''
+        new_maps = (self.map.col_map,self.map.row_map)
+        currently_empty = self.ghost.find_empty_rows_and_columns()
+        to_remove = ([],[])
+        for i in preimages.keys():
+            if len(preimages[i]) == 1:
+                continue
+            new_indices_remove = []
+            keep_something = 1
+            for idx in preimages[i]:
+                try:
+                    currently_empty[direction].remove(idx)
+                    new_indices_remove[direction].append(idx)
+                except:
+                    keep_something = 0
+                    continue
+            to_remove[direction] += new_indices_remove[keep_something:]
+        for idx in to_remove[direction]:
+            del new_maps[direction][idx]
+        new_ghost = self.ghost.remove_empty_rows_and_columns(*to_remove)
+        return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
     
     def reduce_empty_rows_and_cols(self):
-        new_ghost, new_col_map, new_row_map = (
-            self.ghost,
-            self.map.col_map.copy(),
-            self.map.row_map.copy(),
-        )
-        empty_cols, empty_rows = new_ghost.find_empty_rows_and_columns()
-        cols_to_remove,rows_to_remove = [],[]
-        for i in range(new_ghost.dimensions[0]):
-            preimages = self.map.preimages_of_col(i)
-            if len(preimages) == 1:
-                continue
-            new_cols_to_remove = []
-            keep_something = 1
-            for col in preimages:
-                try:
-                    empty_cols.remove(col)
-                    new_cols_to_remove.append(col)
-                except:
-                    keep_something = 0
-                    continue
-            cols_to_remove += new_cols_to_remove[keep_something:]
-        for i in range(new_ghost.dimensions[1]):
-            preimages = self.map.preimages_of_row(i)
-            if len(preimages) == 1:
-                continue
-            new_rows_to_remove = []
-            keep_something = 1
-            for row in preimages:
-                try:
-                    empty_rows.remove(row)
-                    new_rows_to_remove.append(row)
-                except:
-                    keep_something = 0
-                    continue
-            rows_to_remove += new_rows_to_remove[keep_something:]
-        for col in cols_to_remove:
-            del new_col_map[col]
-        for row in rows_to_remove:
-            del new_row_map[row]
-        new_ghost = new_ghost.delete_rows_and_columns(cols_to_remove,rows_to_remove)
-        new_map = RowColMap(new_col_map,new_row_map).standardise_map()
-        return Parameter(new_ghost,new_map)
+        '''Removes empty rows and columns if they share an image with another row or column'''
+        col_preimages = { i : self.map.preimages_of_col(i) for i in set(self.map.col_map.keys())}
+        row_preimages = { i : self.map.preimages_of_row(i) for i in set(self.map.row_map.keys())}
+        return self.reduce_empty_rows_or_cols(0, col_preimages).reduce_empty_rows_or_cols(1, row_preimages)
 
     def copy(self):
         return Parameter(self.ghost, self.map)
@@ -312,7 +296,6 @@ class MappedTiling(CombinatorialClass):
         )
     
 
-
     def fuse_parameters(self):
         '''Fuses valid rows and cols in every parameter'''
         avoiding_parameters, containing_parameters = [], []
@@ -378,7 +361,7 @@ class MappedTiling(CombinatorialClass):
     def tidy_containing_parameters2(self):  # Good
         """Does the same as the original, but outputs a mapped tiling"""
         new_containing_parameters = []
-        new_tiling = self.tiling.copy()
+        new_tiling = self.tiling
         for param_list in self.containing_parameters:
             param_list = self.back_maps_obs_and_reqs_for_param_list(new_tiling, param_list)
             if len(param_list) == 1:

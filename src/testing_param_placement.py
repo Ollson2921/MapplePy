@@ -67,6 +67,8 @@ def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
         ).param_placement(direction, i).reduce_empty_rows_and_cols_in_parameters().full_cleanup()
         yield new_mappling
 
+
+
 for mappling in fully_place_parameter(M0, P0, 4):
     print( mappling.reduced_str())
     print('=======================')
