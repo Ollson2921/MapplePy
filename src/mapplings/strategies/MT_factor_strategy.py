@@ -29,7 +29,11 @@ class AbstractFactorStrategy:
         factor_cells = MTFactor(comb_class).find_factor_cells()
         if not MTFactor(comb_class).is_factorable(factor_cells):
             raise StrategyDoesNotApply
-        return MTFactor(comb_class).make_factors(factor_cells)
+        return self.simplify(MTFactor(comb_class).make_factors(factor_cells))
+
+    def simplify(self, comb_class: MappedTiling) -> MappedTiling:
+        """TODO: which simplifications do we want here (if any??)"""
+        return comb_class
 
     def extra_parameters(
         self,

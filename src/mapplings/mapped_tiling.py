@@ -119,33 +119,36 @@ class Parameter:
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
-    def fuse_valid_rows_or_cols(self,direction):
-        '''fully fuses rows or cols of the parameter if they are fusable and map to the same index.
-        direction = 0 for cols, directions = 1 for rows'''
+    def fuse_valid_rows_or_cols(self, direction):
+        """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
+        direction = 0 for cols, directions = 1 for rows"""
         new_ghost = self.ghost
-        new_maps = (self.map.col_map,self.map.row_map)
-        i, extend = 0, 1 
+        new_maps = (self.map.col_map, self.map.row_map)
+        i, extend = 0, 1
         while i + extend < new_ghost.dimensions[0]:
-            if new_maps[direction][i] == new_maps[direction][i+extend]:
+            if new_maps[direction][i] == new_maps[direction][i + extend]:
                 if new_ghost.is_fuseable(0, i):
-                    new_ghost = new_ghost.delete_rows_and_columns(*([i],[])[::(-1)^direction])
-                    del new_maps[direction][i+extend]
+                    new_ghost = new_ghost.delete_rows_and_columns(
+                        *([i], [])[:: (-1) ^ direction]
+                    )
+                    del new_maps[direction][i + extend]
                     extend += 1
                     continue
-            i += extend  
+            i += extend
             extend = 1
-        return Parameter(new_ghost,RowColMap(*new_maps).standardise_map())
-    
+        return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
+
     def reduce_by_fusion(self):
-        '''Fuses valid rows and columns'''
+        """Fuses valid rows and columns"""
         return self.fuse_valid_rows_or_cols(0).fuse_valid_rows_or_cols(1)
-        
+
     def reduce_empty_rows_or_cols(self, direction, preimages):
-        '''Removes empty rows or columns if they share an image with another row or column. 
-        direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages'''
-        new_maps = (self.map.col_map,self.map.row_map)
+        """Removes empty rows or columns if they share an image with another row or column.
+        direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages
+        """
+        new_maps = (self.map.col_map, self.map.row_map)
         currently_empty = self.ghost.find_empty_rows_and_columns()
-        to_remove = ([],[])
+        to_remove = ([], [])
         for i in preimages.keys():
             if len(preimages[i]) == 1:
                 continue
@@ -163,12 +166,17 @@ class Parameter:
             del new_maps[direction][idx]
         new_ghost = new_ghost.delete_rows_and_columns(*to_remove)
         return Parameter(new_ghost, RowColMap(*new_maps))
-        
+
     def reduce_empty_rows_and_cols(self):
-        col_preimages = {i : self.map.preimages_of_col(i) for i in set(self.map.col_map.values())}
-        row_preimages = {i : self.map.preimages_of_row(i) for i in set(self.map.row_map.values())}
-        return self.reduce_empty_rows_or_cols(0,col_preimages).reduce_empty_rows_or_cols(1,row_preimages)
-    
+        col_preimages = {
+            i: self.map.preimages_of_col(i) for i in set(self.map.col_map.values())
+        }
+        row_preimages = {
+            i: self.map.preimages_of_row(i) for i in set(self.map.row_map.values())
+        }
+        return self.reduce_empty_rows_or_cols(
+            0, col_preimages
+        ).reduce_empty_rows_or_cols(1, row_preimages)
 
     def copy(self):
         return Parameter(self.ghost, self.map)
@@ -270,7 +278,6 @@ class MappedTiling(CombinatorialClass):
             .fuse_parameters()
         )
 
-
     def fuse_parameters(self):
         """Fuses valid rows and cols in every parameter"""
         avoiding_parameters, containing_parameters = [], []
@@ -314,12 +321,7 @@ class MappedTiling(CombinatorialClass):
         for avoider in self.avoiding_parameters:
             placeable_req = new_mappling.avoider_can_be_placed(avoider)
             if placeable_req:
-                new_mappling = MappedTiling(
-                    new_mappling.tiling.add_obstruction(placeable_req[0]),
-                    self.avoiding_parameters,
-                    self.containing_parameters,
-                    self.enumeration_parameters,
-                )
+                new_mappling = new_mappling.add_obstructions([placeable_req[0]])
             else:
                 new_avoiders.append(avoider)
         return MappedTiling(

@@ -233,7 +233,7 @@ print("====================Initial Mappling====================")
 print(M1.reduced_str())
 initial_counts = []
 for i in range(n):
-    initial_counts.append(M1.get_terms(i).values())
+    initial_counts.append(M1.get_terms(i))
 print(initial_counts)
 
 print("====================Start Parameter Placement====================")
@@ -242,13 +242,13 @@ print("++++ First Point Placed ++++")
 print(param_placement[0].reduced_str())
 new_counts = []
 for i in range(n):
-    new_counts.append(param_placement[0].get_terms(i).values())
+    new_counts.append(param_placement[0].get_terms(i))
 print(new_counts)
 print("++++ Second Point Placed ++++")
 print(param_placement[1].reduced_str())
 new_counts = []
 for i in range(n):
-    new_counts.append(param_placement[1].get_terms(i).values())
+    new_counts.append(param_placement[1].get_terms(i))
 print(new_counts)
 
 print("====================Start Factoring====================")
@@ -259,5 +259,5 @@ for factor in MTFactor(param_placement[-1]).find_factors():
     print(factor.reduced_str())
     new_counts = []
     for j in range(n):
-        new_counts.append(factor.get_terms(j).values())
+        new_counts.append(factor.get_terms(j))
     print(new_counts)

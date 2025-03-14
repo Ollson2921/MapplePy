@@ -1,5 +1,5 @@
 """Places a point requirement in a mappling in extreme directions.
-0 = rightmost 
+0 = rightmost
 1 = topmost, taking the rightmost if there are multiple
 2 = topmost, taking the leftmost if there are multiple
 3 = leftmost
@@ -17,7 +17,7 @@ from gridded_cayley_permutations.point_placements import (
     Left_top,
     Right_top,
 )
-from gridded_cayley_permutations import GriddedCayleyPerm
+from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
 from mapped_tiling import MappedTiling, Parameter
 from parameter_placement import ParameterPlacement
@@ -57,9 +57,32 @@ class MTParameterPlacementStrategy(
     ) -> Tuple[MappedTiling, ...]:
         """Either the cells doesn't contain gcp so add it as obstruction
         or it contains an occurrence of it furthest in the direction given
-        so add it as a requirement in every possible way.
-        TODO: add option for no occurrence of parameter?"""
-        return self.algorithm().param_placement(self.index_of_pattern, self.direction)
+        so add it as a requirement in every possible way."""
+        return self.simplify(
+            self.algorithm().param_placement(self.index_of_pattern, self.direction)
+        )
+
+    def simplify(self, comb_class: MappedTiling) -> MappedTiling:
+        new_mappling = comb_class.tidy_containing_parameters()
+        if not new_mappling:
+            return MappedTiling(
+                Tiling([], [], comb_class.tiling.dimensions), [], [], []
+            )
+        new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
+        avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
+            avoiding_parameters
+        )
+        new_mappling = MappedTiling(
+            new_mappling.tiling,
+            avoiding_parameters,
+            new_mappling.containing_parameters,
+            new_mappling.enumeration_parameters,
+        )
+        return (
+            new_mappling.remove_empty_rows_and_columns()
+            .reduce_empty_rows_and_cols_in_parameters()
+            .fuse_parameters()
+        )
 
     def extra_parameters(
         self,
@@ -124,14 +147,19 @@ class MTParameterPlacementFactory(StrategyFactory[MappedTiling]):
     ) -> Iterator[MTParameterPlacementStrategy]:
         """Factory to place every point of a containing parameter into a mappling in every possible way."""
         for c_list in comb_class.containing_parameters:
-            if len(c_list)==1:
+            if len(c_list) == 1:
                 param = c_list[0]
                 points = sorted(list(param.ghost.point_cells()))
                 for i in range(len(points)):
-                    cell = (param.map.col_map[points[i][0]],param.map.row_map[points[i][1]])
+                    cell = (
+                        param.map.col_map[points[i][0]],
+                        param.map.row_map[points[i][1]],
+                    )
                     if not comb_class.tiling.cell_is_point_cell(cell):
                         for direction in Directions:
-                            yield MTParameterPlacementStrategy(comb_class,param,i,direction,cell)
+                            yield MTParameterPlacementStrategy(
+                                comb_class, param, i, direction, cell
+                            )
 
     @classmethod
     def from_dict(cls, d: dict) -> "MTParameterPlacementFactory":
