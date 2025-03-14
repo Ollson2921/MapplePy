@@ -149,37 +149,25 @@ class Parameter:
         for i in preimages.keys():
             if len(preimages[i]) == 1:
                 continue
-            new_indices_remove = []
+            new_indices_to_remove = []
             keep_something = 1
             for idx in preimages[i]:
                 try:
                     currently_empty[direction].remove(idx)
-                    new_indices_remove[direction].append(idx)
+                    new_indices_to_remove[direction].append(idx)
                 except:
                     keep_something = 0
                     continue
-            cols_to_remove += new_cols_to_remove[keep_something:]
-        for i in range(new_ghost.dimensions[1]):
-            preimages = self.map.preimages_of_row(i)
-            if len(preimages) == 1:
-                continue
-            new_rows_to_remove = []
-            keep_something = 1
-            for row in preimages:
-                try:
-                    empty_rows.remove(row)
-                    new_rows_to_remove.append(row)
-                except:
-                    keep_something = 0
-                    continue
-            rows_to_remove += new_rows_to_remove[keep_something:]
-        for col in cols_to_remove:
-            del new_col_map[col]
-        for row in rows_to_remove:
-            del new_row_map[row]
-        new_ghost = new_ghost.delete_rows_and_columns(cols_to_remove,rows_to_remove)
-        new_map = RowColMap(new_col_map,new_row_map).standardise_map()
-        return Parameter(new_ghost,new_map)
+            to_remove[direction] += new_indices_to_remove[keep_something:]
+        for idx in to_remove[direction]:
+            del new_maps[direction][idx]
+        new_ghost = new_ghost.delete_rows_and_columns(*to_remove)
+        return Parameter(new_ghost, RowColMap(*new_maps))
+        
+    def reduce_empty_rows_and_cols(self):
+        col_preimages = {i : self.map.preimages_of_col(i) for i in set(self.map.col_map.values())}
+        row_preimages = {i : self.map.preimages_of_row(i) for i in set(self.map.row_map.values())}
+        return self.reduce_empty_rows_or_cols(0,col_preimages).reduce_empty_rows_or_cols(1,row_preimages)
 
     def copy(self):
         return Parameter(self.ghost, self.map)
