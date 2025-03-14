@@ -106,7 +106,13 @@ class Parameter:
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
         """
-        new_obs, new_reqs = list(self.ghost.obstructions) + self.map.preimage_of_obstructions(tiling.obstructions), list(self.ghost.requirements) + self.map.preimage_of_requirements(tiling.requirements)
+        new_obs, new_reqs = list(
+            self.ghost.obstructions
+        ) + self.map.preimage_of_obstructions(tiling.obstructions), list(
+            self.ghost.requirements
+        ) + self.map.preimage_of_requirements(
+            tiling.requirements
+        )
         return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions), self.map)
 
     def sub_parameter(self, factor):
@@ -114,6 +120,7 @@ class Parameter:
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
     def reduce_by_fusion(self):
+        """Fuses valid rows and cols in the parameter"""
         new_ghost, new_col_map, new_row_map = (
             self.ghost,
             self.map.col_map.copy(),
@@ -135,15 +142,17 @@ class Parameter:
         return Parameter(
             new_ghost, RowColMap(new_col_map, new_row_map).standardise_map()
         )
-    
+
     def reduce_empty_rows_and_cols(self):
+        """Removed empty rows and cols in the parameter if another row/col maps
+        to the same place in the base tiling"""
         new_ghost, new_col_map, new_row_map = (
             self.ghost,
             self.map.col_map.copy(),
             self.map.row_map.copy(),
         )
         empty_cols, empty_rows = new_ghost.find_empty_rows_and_columns()
-        cols_to_remove,rows_to_remove = [],[]
+        cols_to_remove, rows_to_remove = [], []
         for i in range(new_ghost.dimensions[0]):
             preimages = self.map.preimages_of_col(i)
             if len(preimages) == 1:
@@ -176,9 +185,9 @@ class Parameter:
             del new_col_map[col]
         for row in rows_to_remove:
             del new_row_map[row]
-        new_ghost = new_ghost.delete_rows_and_columns(cols_to_remove,rows_to_remove)
-        new_map = RowColMap(new_col_map,new_row_map).standardise_map()
-        return Parameter(new_ghost,new_map)
+        new_ghost = new_ghost.delete_rows_and_columns(cols_to_remove, rows_to_remove)
+        new_map = RowColMap(new_col_map, new_row_map).standardise_map()
+        return Parameter(new_ghost, new_map)
 
     def copy(self):
         return Parameter(self.ghost, self.map)
@@ -252,39 +261,33 @@ class MappedTiling(CombinatorialClass):
             any(any(True for _ in param.preimage_of_gcp(gcp)) for param in params)
             for params in self.containing_parameters
         )
-    
-    def avoider_can_be_placed(self,avoider : Parameter):
-        '''returns the index of a requirement in the avoider that can be added to the tiling as an obstruction if it exists
-        for now, this only happens if the avoider is trivial other than that single requirement'''
-        if self.tiling.dimensions != avoider.ghost.dimensions:
-            return
-        if set(self.tiling.obstructions) != set(avoider.ghost.obstructions):
-            return
-        temp_tiling_reqs = self.tiling.requirements
-        placeable_req = None
-        for req_list in avoider.ghost.requirements:
-            try:
-                temp_tiling_reqs.remove(req_list)
-            except:
-                if placeable_req:
-                    return
-                placeable_req = req_list
-        if len(placeable_req) == 1:
-            return placeable_req
-
 
     ## Tidying functions ##
 
     def full_cleanup(self):
-        '''Applies every cleanup function'''
+        """Applies every cleanup function"""
         new_mappling = self.tidy_containing_parameters2()
         if not new_mappling:
-            return MappedTiling(Tiling([],[],self.tiling.dimensions),[],[],[])
+            return MappedTiling(Tiling([], [], self.tiling.dimensions), [], [], [])
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
-        avoiding_parameters = [param.back_map_obs_and_reqs(new_mappling.tiling) for param in new_mappling.avoiding_parameters]
-        avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(avoiding_parameters)
-        new_mappling= MappedTiling(new_mappling.tiling,avoiding_parameters,new_mappling.containing_parameters,new_mappling.enumeration_parameters)
-        return new_mappling.remove_empty_rows_and_columns().reduce_empty_rows_and_cols_in_parameters().fuse_parameters()    
+        avoiding_parameters = [
+            param.back_map_obs_and_reqs(new_mappling.tiling)
+            for param in new_mappling.avoiding_parameters
+        ]
+        avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
+            avoiding_parameters
+        )
+        new_mappling = MappedTiling(
+            new_mappling.tiling,
+            avoiding_parameters,
+            new_mappling.containing_parameters,
+            new_mappling.enumeration_parameters,
+        )
+        return (
+            new_mappling.remove_empty_rows_and_columns()
+            .reduce_empty_rows_and_cols_in_parameters()
+            .fuse_parameters()
+        )
 
     def cleanup(self):  # Good
         """Tidies all parameter lists (apart from enumeration parameters)
@@ -310,11 +313,9 @@ class MappedTiling(CombinatorialClass):
         return MappedTiling(
             tiling, avoiding_parameters, containing_parameters, enumeration_parameters
         )
-    
-
 
     def fuse_parameters(self):
-        '''Fuses valid rows and cols in every parameter'''
+        """Fuses valid rows and cols in every parameter"""
         avoiding_parameters, containing_parameters = [], []
         for avoider in self.avoiding_parameters:
             avoiding_parameters.append(avoider.reduce_by_fusion())
@@ -328,9 +329,9 @@ class MappedTiling(CombinatorialClass):
             containing_parameters,
             self.enumeration_parameters,
         )
-    
+
     def reduce_empty_rows_and_cols_in_parameters(self):
-        '''removes valid rows and cols in every parameter'''
+        """removes valid rows and cols in every parameter"""
         avoiding_parameters, containing_parameters, enumerating_parameters = [], [], []
         for avoider in self.avoiding_parameters:
             avoiding_parameters.append(avoider.reduce_empty_rows_and_cols())
@@ -348,19 +349,48 @@ class MappedTiling(CombinatorialClass):
             containing_parameters,
             enumerating_parameters,
         )
-    
+
     def insert_valid_avoiders(self):
-        '''Adds requirements from every avoider that is near-trivial and removes that avoider'''
+        """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         new_avoiders = []
-        new_mappling  = self.copy()
+        new_mappling = self.copy()
         for avoider in self.avoiding_parameters:
             placeable_req = new_mappling.avoider_can_be_placed(avoider)
             if placeable_req:
-                new_mappling = MappedTiling(new_mappling.tiling.add_obstruction(placeable_req[0]),self.avoiding_parameters,self.containing_parameters,self.enumeration_parameters)
+                new_mappling = MappedTiling(
+                    new_mappling.tiling.add_obstruction(placeable_req[0]),
+                    self.avoiding_parameters,
+                    self.containing_parameters,
+                    self.enumeration_parameters,
+                )
             else:
                 new_avoiders.append(avoider)
-        return MappedTiling(new_mappling.tiling,new_avoiders,self.containing_parameters,self.enumeration_parameters)
+        return MappedTiling(
+            new_mappling.tiling,
+            new_avoiders,
+            self.containing_parameters,
+            self.enumeration_parameters,
+        )
 
+    def avoider_can_be_placed(self, avoider: Parameter):
+        """returns the index of a requirement in the avoider that can be added to the tiling as an obstruction if it exists
+        for now, this only happens if the avoider is trivial other than that single requirement
+        """
+        if self.tiling.dimensions != avoider.ghost.dimensions:
+            return
+        if set(self.tiling.obstructions) != set(avoider.ghost.obstructions):
+            return
+        temp_tiling_reqs = self.tiling.requirements
+        placeable_req = None
+        for req_list in avoider.ghost.requirements:
+            try:
+                temp_tiling_reqs.remove(req_list)
+            except:
+                if placeable_req:
+                    return
+                placeable_req = req_list
+        if len(placeable_req) == 1:
+            return placeable_req
 
     def remove_empty_ghosts_from_list(
         self, avoiding_parameters: List[Parameter]
@@ -374,13 +404,14 @@ class MappedTiling(CombinatorialClass):
         """Map all obs and reqs in the tiling to the parameters in the parameter list"""
         return [param.back_map_obs_and_reqs(tiling) for param in param_list]
 
-
     def tidy_containing_parameters2(self):  # Good
         """Does the same as the original, but outputs a mapped tiling"""
         new_containing_parameters = []
         new_tiling = self.tiling.copy()
         for param_list in self.containing_parameters:
-            param_list = self.back_maps_obs_and_reqs_for_param_list(new_tiling, param_list)
+            param_list = self.back_maps_obs_and_reqs_for_param_list(
+                new_tiling, param_list
+            )
             if len(param_list) == 1:
                 if param_list[0].ghost.is_empty():
                     return False
@@ -389,8 +420,15 @@ class MappedTiling(CombinatorialClass):
                 else:
                     new_containing_parameters.append(param_list)
             else:
-                new_containing_parameters.append(new_tiling.remove_empty_ghosts_from_list(param_list))
-        return MappedTiling(new_tiling,self.avoiding_parameters,new_containing_parameters,self.enumeration_parameters)
+                new_containing_parameters.append(
+                    self.remove_empty_ghosts_from_list(param_list)
+                )
+        return MappedTiling(
+            new_tiling,
+            self.avoiding_parameters,
+            new_containing_parameters,
+            self.enumeration_parameters,
+        )
 
     def tidy_containing_parameters(
         self, containing_parameters: List[List[Parameter]]
@@ -468,19 +506,6 @@ class MappedTiling(CombinatorialClass):
         self, confidence=8
     ):  # TODO: Make this better and based on theory and correct
         return len(set(self.objects_of_size(confidence))) == 0
-
-    def pop_parameter(self, parameter_index=0):  # BAD
-        """removes the parameter at an index and creates a new mapped tiling"""
-        param = self.parameters.pop(parameter_index)
-        return MappedTiling(self.tiling, [param])
-
-    def pop_all_parameters(self):  # BAD
-        """yields all mapped tilings with a single parameter"""
-        while len(self.parameters) > 0:
-            yield self.pop_parameter()
-
-    def add_parameter(self, parameter: Parameter):  # BAD
-        self.parameters.append(parameter)
 
     def add_obs_to_param_list(
         self, parameters: List[Parameter], obs: List[GriddedCayleyPerm]
@@ -601,7 +626,12 @@ class MappedTiling(CombinatorialClass):
         )
 
     def copy(self):
-        return MappedTiling(self.tiling,self.avoiding_parameters,self.containing_parameters,self.enumeration_parameters)
+        return MappedTiling(
+            self.tiling,
+            self.avoiding_parameters,
+            self.containing_parameters,
+            self.enumeration_parameters,
+        )
 
     def __eq__(self, other) -> bool:
         return (
