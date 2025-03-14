@@ -4,7 +4,7 @@ from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
 
 obs = [GriddedCayleyPerm(CayleyPermutation([0, 1, 2]), ((0, 0), (0, 0), (0, 0)))]
-obs = []
+
 
 base_tiling = Tiling(obs, [], (1, 1))
 
@@ -66,7 +66,6 @@ def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
             new_mappling, new_param, cell
         ).param_placement(direction, i).reduce_empty_rows_and_cols_in_parameters().full_cleanup()
         yield new_mappling
-
 
 
 for mappling in fully_place_parameter(M0, P0, 4):

@@ -124,15 +124,17 @@ class Parameter:
         direction = 0 for cols, directions = 1 for rows'''
         new_ghost = self.ghost
         new_maps = (self.map.col_map,self.map.row_map)
-        i, extend = 0, 1 
-        while i + extend < new_ghost.dimensions[0]:
+        i, j, extend = 0, 0, 1 
+        while i + extend < self.ghost.dimensions[direction]:
+            print(i,j,extend)
             if new_maps[direction][i] == new_maps[direction][i+extend]:
-                if new_ghost.is_fuseable(0, i):
-                    new_ghost = new_ghost.delete_rows_and_columns(*([i],[])[::(-1)^direction])
+                if new_ghost.is_fuseable(direction, j):
+                    new_ghost = new_ghost.delete_rows_and_columns(*([j],[])[::(-1)**direction])
                     del new_maps[direction][i+extend]
                     extend += 1
                     continue
-            i += extend  
+            i += extend
+            j +=1  
             extend = 1
         return Parameter(new_ghost,RowColMap(*new_maps).standardise_map())
     
@@ -145,24 +147,24 @@ class Parameter:
         direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages'''
         new_maps = (self.map.col_map,self.map.row_map)
         currently_empty = self.ghost.find_empty_rows_and_columns()
-        to_remove = ([],[])
+        to_remove = []
         for i in preimages.keys():
+            new_indices_to_remove = []
             if len(preimages[i]) == 1:
                 continue
-            new_indices_to_remove = []
             keep_something = 1
             for idx in preimages[i]:
                 try:
                     currently_empty[direction].remove(idx)
-                    new_indices_to_remove[direction].append(idx)
+                    new_indices_to_remove.append(idx)
                 except:
                     keep_something = 0
-                    continue
-            to_remove[direction] += new_indices_to_remove[keep_something:]
-        for idx in to_remove[direction]:
+            to_remove += new_indices_to_remove[keep_something:]
+        for idx in to_remove:
             del new_maps[direction][idx]
-        new_ghost = new_ghost.delete_rows_and_columns(*to_remove)
-        return Parameter(new_ghost, RowColMap(*new_maps))
+        remove_in_direction = (to_remove,[])[::(-1)**direction]
+        new_ghost = self.ghost.delete_rows_and_columns(*remove_in_direction)
+        return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
         
     def reduce_empty_rows_and_cols(self):
         col_preimages = {i : self.map.preimages_of_col(i) for i in set(self.map.col_map.values())}
