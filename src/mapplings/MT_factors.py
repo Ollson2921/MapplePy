@@ -38,11 +38,9 @@ class MTFactor:
                         queue = [t for t in queue if t not in temp]
                     if not new_t_factors:
                         break
-                    # print(new_t_factors)
                     for T in new_t_factors:
                         final_t_factor += T
                 all_factors.append(final_t_factor)
-        print(all_factors)
         return all_factors
 
     # def is_factorable(self, confidence = 8) -> bool:
