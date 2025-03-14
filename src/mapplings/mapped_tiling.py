@@ -126,7 +126,6 @@ class Parameter:
         new_maps = (self.map.col_map,self.map.row_map)
         i, j, extend = 0, 0, 1 
         while i + extend < self.ghost.dimensions[direction]:
-            print(i,j,extend)
             if new_maps[direction][i] == new_maps[direction][i+extend]:
                 if new_ghost.is_fuseable(direction, j):
                     new_ghost = new_ghost.delete_rows_and_columns(*([j],[])[::(-1)**direction])
@@ -142,11 +141,10 @@ class Parameter:
         '''Fuses valid rows and columns'''
         return self.fuse_valid_rows_or_cols(0).fuse_valid_rows_or_cols(1)
         
-    def reduce_empty_rows_or_cols(self, direction, preimages):
+    def reduce_empty_rows_or_cols(self, direction, preimages, currently_empty):
         '''Removes empty rows or columns if they share an image with another row or column. 
         direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages'''
         new_maps = (self.map.col_map,self.map.row_map)
-        currently_empty = self.ghost.find_empty_rows_and_columns()
         to_remove = []
         for i in preimages.keys():
             new_indices_to_remove = []
@@ -155,7 +153,7 @@ class Parameter:
             keep_something = 1
             for idx in preimages[i]:
                 try:
-                    currently_empty[direction].remove(idx)
+                    currently_empty.remove(idx)
                     new_indices_to_remove.append(idx)
                 except:
                     keep_something = 0
@@ -169,7 +167,8 @@ class Parameter:
     def reduce_empty_rows_and_cols(self):
         col_preimages = {i : self.map.preimages_of_col(i) for i in set(self.map.col_map.values())}
         row_preimages = {i : self.map.preimages_of_row(i) for i in set(self.map.row_map.values())}
-        return self.reduce_empty_rows_or_cols(0,col_preimages).reduce_empty_rows_or_cols(1,row_preimages)
+        currently_empty = self.ghost.find_empty_rows_and_columns()
+        return self.reduce_empty_rows_or_cols(0,col_preimages,currently_empty[0]).reduce_empty_rows_or_cols(1,row_preimages,currently_empty[1])
     
 
     def copy(self):
