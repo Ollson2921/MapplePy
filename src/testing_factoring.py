@@ -212,7 +212,6 @@ def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
         mappling.enumeration_parameters,
     )
     for i in range(len(param.ghost.point_cells())):
-        print(i)
         new_param = new_mappling.containing_parameters[0][0]
         temp_map = new_param.map
         points_to_place = sorted(new_param.ghost.point_cells())
@@ -232,25 +231,17 @@ def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
 n = 7  # how far to check counts
 print("====================Initial Mappling====================")
 print(M1.reduced_str())
-initial_counts = []
-# for i in range(n):
-#     initial_counts.append(M1.get_terms(i).values())
-# print(initial_counts)
+print("Counts: ", M1.initial_conditions(n))
 
 print("====================Start Parameter Placement====================")
 param_placement = list(fully_place_parameter(M0, P0, 4))
 print("++++ First Point Placed ++++")
 print(param_placement[0].reduced_str())
-# new_counts = []
-# for i in range(n):
-#     new_counts.append(param_placement[0].get_terms(i).values())
-# print(new_counts)
+print("Counts: ", param_placement[0].initial_conditions(n))
+
 print("++++ Second Point Placed ++++")
 print(param_placement[1].reduced_str())
-# new_counts = []
-# for i in range(n):
-#     new_counts.append(param_placement[1].get_terms(i).values())
-# print(new_counts)
+print("Counts: ", param_placement[1].initial_conditions(n))
 
 print("====================Start Factoring====================")
 i = 0
@@ -258,3 +249,4 @@ for factor in MTFactor(param_placement[-1]).find_factors():
     print("----- Factor:", i)
     i += 1
     print(factor.reduced_str())
+    print("Counts: ", factor.initial_conditions(n))
