@@ -376,6 +376,7 @@ class Tiling(CombinatorialClass):
             all_obs.append(GriddedCayleyPerm(CayleyPermutation([0, 0]), [cell, cell]))
         return Tiling(all_obs, all_reqs, (2 * dimensions[0] + 1, 2 * dimensions[1] + 1))
 
+
     ### CSS methods
 
     def to_jsonable(self) -> dict:

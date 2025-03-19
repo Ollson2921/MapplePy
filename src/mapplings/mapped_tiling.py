@@ -554,6 +554,12 @@ class MappedTiling(CombinatorialClass):
             new_map = P.reduce_row_col_map(col_preimages, row_preimages)
             new_parameters.append(Parameter(new_parameter, new_map))
         return new_parameters
+    
+    def add_parameters(self,avoiding_parameters,containing_parameters,enumeration_parameters):
+        return MappedTiling(self.ghost,
+                            self.avoiding_parameters + avoiding_parameters,
+                            self.containing_parameters + containing_parameters,
+                            self.enumeration_parameters + enumeration_parameters)
 
     def all_parameters(self):  # Good
         """Returns a list of all parameters."""
