@@ -27,9 +27,10 @@ class AbstractFactorStrategy:
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         factor_cells = MTFactor(comb_class).find_factor_cells()
-        if not MTFactor(comb_class).is_factorable(factor_cells):
+        factors =  MTFactor(comb_class).make_factors(factor_cells)
+        if not MTFactor(comb_class).is_factorable(factors):
             raise StrategyDoesNotApply
-        return self.simplify(MTFactor(comb_class).make_factors(factor_cells))
+        return self.simplify(factors)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         """TODO: which simplifications do we want here (if any??)"""
@@ -51,6 +52,92 @@ class AbstractFactorStrategy:
         Return a string that describe the operation performed on the mappling.
         """
         return "Factor the mappling into factors"
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[Optional[GriddedCayleyPerm], ...],
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+        raise NotImplementedError
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        return self.formal_step()
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"ignore_parent={self.ignore_parent}, "
+            f"workable={self.workable})"
+        )
+
+    # JSON methods
+
+    def to_jsonable(self) -> dict:
+        """Return a dictionary form of the strategy."""
+        d: dict = super().to_jsonable()
+        d.pop("inferrable")
+        d.pop("possibly_empty")
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "AbstractFactorStrategy":
+        return cls(**d)
+    
+
+class AbstractILFactorStrategy:
+    def __init__(
+        self,
+        ignore_parent: bool = True,
+        workable: bool = True,
+    ):
+        # TODO: input should include partition: Iterable[Iterable[Cell]] to
+        #       allow for interleaving factors.
+        super().__init__(
+            ignore_parent=ignore_parent, workable=workable, inferrable=True
+        )
+
+    def decomposition_function(
+        self, comb_class: MappedTiling
+    ) -> Tuple[MappedTiling, ...]:
+        factor_cells = MTFactor(comb_class).find_IL_factor_cells()
+        factors = MTFactor(comb_class).make_factors(factor_cells)
+        if not MTFactor(comb_class).is_factorable(factors):
+            raise StrategyDoesNotApply
+        return self.simplify(factors)
+
+    def simplify(self, comb_class: MappedTiling) -> MappedTiling:
+        """TODO: which simplifications do we want here (if any??)"""
+        return comb_class
+
+    def extra_parameters(
+        self,
+        comb_class: MappedTiling,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[Dict[str, str], ...]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+            if children is None:
+                raise StrategyDoesNotApply("Strategy does not apply")
+        return tuple({} for _ in children)
+
+    def formal_step(self) -> str:
+        """
+        Return a string that describe the operation performed on the mappling.
+        """
+        return "Factor the mappling into interleaving factors"
 
     def backward_map(
         self,

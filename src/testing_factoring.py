@@ -227,6 +227,22 @@ def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
         )
         yield new_mappling
 
+des3 =CayleyPermutation((2,1,0))
+IL_TEST = Tiling([GriddedCayleyPerm(point,[(0,0)]),
+        GriddedCayleyPerm(point,[(0,1)]),
+        GriddedCayleyPerm(point,[(1,0)]),
+        GriddedCayleyPerm(point,[(2,1)]),
+        GriddedCayleyPerm(point,[(1,2)]),
+        GriddedCayleyPerm(point,[(0,2)]),
+        GriddedCayleyPerm(asc2,[(1,1),(1,1)]),
+        GriddedCayleyPerm(des2,[(1,1),(1,1)]),
+        GriddedCayleyPerm(cay,[(1,1),(1,1)]),
+        GriddedCayleyPerm(des3,[(2,0),(2,0),(2,0)]),
+        GriddedCayleyPerm(des3,[(2,2),(2,2),(2,2)])
+        ],
+        [[GriddedCayleyPerm(point,[(1,1)])]],(3,3))
+
+
 
 n = 7  # how far to check counts
 print("====================Initial Mappling====================")

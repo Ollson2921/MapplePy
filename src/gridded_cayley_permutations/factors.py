@@ -79,6 +79,19 @@ class Factors:
             factors.append(factor)
         factors = sorted(sorted(f) for f in factors)
         return factors
+    
+    def find_IL_factors_tracked(self):
+        """Returns a partition of the cells that is the Interleaving factors."""
+        self.combine_cells_in_obs_and_reqs()
+        factors = []
+        for val in set(self.cells_dict.values()):
+            factor = []
+            for cell in self.cells:
+                if self.cells_dict[cell] == val:
+                    factor.append(cell)
+            factors.append(factor)
+        factors = sorted(sorted(f) for f in factors)
+        return factors
 
 
 class ShuffleFactors(Factors):
