@@ -25,7 +25,7 @@ SpecialPatterns = [special_pattern_0]
 class SpecialInsertionStrategy(
     DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]
 ):
-    """Places the requirements in gcps at the indices in the direction given in the mappling."""
+    """Adds the indicated special pattern as an avoiding parameter and as a length 1 containing parameter list."""
 
     def __init__(
         self,
@@ -39,7 +39,7 @@ class SpecialInsertionStrategy(
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        """Adds a special pattern as either an avoiding parameter or a length 1 containing parameter list"""
+        """Adds the indicated special pattern as either an avoiding parameter or a length 1 containing parameter list"""
         new_pattern = self.pattern.back_map_obs_and_reqs(comb_class.tiling)
         containing = self.simplify(MappedTiling(comb_class.add_parameters([],[[new_pattern]],[])))
         avoiding = self.simplify(MappedTiling(comb_class.add_parameters([new_pattern],[],[])))
@@ -56,7 +56,7 @@ class SpecialInsertionStrategy(
         return tuple({} for _ in self.decomposition_function(comb_class))
 
     def formal_step(self):
-        return f"Inserted pattern {self.index}"
+        return f"Inserted special pattern {self.index}"
 
     def backward_map(
         self,
@@ -83,7 +83,7 @@ class SpecialInsertionStrategy(
 
     def __repr__(self) -> str:
         return (
-            f"SpecialInsertionFactory(pattern {self.index}, "
+            f"SpecialInsertionFactory(special_pattern_{self.index}, "
         )
 
     def to_jsonable(self) -> dict:
@@ -110,7 +110,7 @@ class SpecialInsertionFactory(StrategyFactory[MappedTiling]):
             len(comb_class.avoiding_parameters), 
             len(comb_class.containing_parameters), 
             len(comb_class.enumeration_parameters)]):
-            for i in range(1):
+            for i in range(1): #We must change the range when we add more special patterns
                 yield SpecialInsertionStrategy(i)
 
     @classmethod
