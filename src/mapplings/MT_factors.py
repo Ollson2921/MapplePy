@@ -42,7 +42,6 @@ class MTFactor:
                         final_t_factor += T
                 all_factors.append(final_t_factor)
         return all_factors
-    
 
     # def is_factorable(self, confidence = 8) -> bool:
     #     """Returns True if no more than 1 factor is nontrivial in regards.
@@ -63,20 +62,24 @@ class MTFactor:
             if non_trivial_factors > 1:
                 return False
         return True
-    
-    def factor_avoiders(avoiding_parameters, factor):
-        '''factor is a list of cells for a single factor. 
-        Returns the factored avoiding parameters'''
+
+    def factor_avoiders(avoiding_parameters, factor, factored_tiling: Tiling):
+        """factor is a list of cells for a single factor.
+        Returns the factored avoiding parameters
+        Skips any parameters which are the same as the factored tiling"""
         new_parameters = []
         for avoiding_param in avoiding_parameters:
-                new_factor = avoiding_param.sub_parameter(factor)
-                if new_factor.ghost.active_cells():
-                    new_parameters.append(new_factor)
+            new_factor = avoiding_param.sub_parameter(factor)
+            if new_factor.ghost == factored_tiling:
+                continue
+            if new_factor.ghost.active_cells():
+                new_parameters.append(new_factor)
         return new_parameters
-    
+
     def factor_containers(containing_parameters, factor):
-        '''factor is a list of cells for a single factor. 
-        Returns 0 if the factor is invalid, otherwise returns the factored containing parameters'''
+        """factor is a list of cells for a single factor.
+        Returns 0 if the factor is invalid, otherwise returns the factored containing parameters
+        """
         new_parameters = []
         for c_list in containing_parameters:
             new_c_list = []
@@ -89,10 +92,10 @@ class MTFactor:
             else:
                 return 0
         return new_parameters
-    
+
     def factor_enumerators(enumeration_parameters, factor):
-        '''factor is a list of cells for a single factor. 
-        Returns the factored enumeration parameters'''
+        """factor is a list of cells for a single factor.
+        Returns the factored enumeration parameters"""
         new_parameters = []
         for e_list in enumeration_parameters:
             for enumeration_parameter in e_list:
@@ -106,21 +109,24 @@ class MTFactor:
 
     def make_factors(self, factor_cells):
         for factor in factor_cells:
-            factor_containing_parameters = MTFactor.factor_containers(self.mappling.containing_parameters,factor)
+            factor_containing_parameters = MTFactor.factor_containers(
+                self.mappling.containing_parameters, factor
+            )
             if type(factor_containing_parameters) is int:
                 continue
+            factored_tiling = self.mappling.tiling.sub_tiling(factor)
             yield MappedTiling(
-                self.mappling.tiling.sub_tiling(factor),
-                MTFactor.factor_avoiders(self.mappling.avoiding_parameters, factor),
+                factored_tiling,
+                self.factor_avoiders(
+                    self.mappling.avoiding_parameters, factor, factored_tiling
+                ),
                 factor_containing_parameters,
-                MTFactor.factor_avoiders(self.mappling.enumeration_parameters, factor),
+                self.factor_avoiders(self.mappling.enumeration_parameters, factor),
             ).remove_empty_rows_and_columns()
 
     def find_factors(self):
         return self.make_factors(self.find_factor_cells())
-    
-    
-    
+
     ####### Interleaving Factors ########
     def find_IL_factor_cells(self):
         """Returns a partition of the cells so that the mapped tiling is factored."""
@@ -157,10 +163,6 @@ class MTFactor:
                         final_t_factor += T
                 all_factors.append(final_t_factor)
         return all_factors
-    
-    
-    
-
 
     @staticmethod
     def map_p_factor_to_t_factor(p_factor, parameter, t_factors):
