@@ -103,6 +103,31 @@ class RowColMap:
             for result in self.partition(n - i, k - 1):
                 yield [i] + result
 
+    def expand_at_index(
+        self, number_of_cols, number_of_rows, col_index, row_index
+    ):
+        """Adds number_of_cols new columns to the at col_index and
+        Adds number_of_rows new rows to the map at row_index
+            Assumes we've modified the parameter and the tiling in the same way"""
+        new_col_map, new_row_map = dict(), dict()
+        """This bit moves the existing mappings"""
+        for item in self.col_map.items():
+            adjust = int(item[0] >= col_index) * number_of_cols
+            new_col_map[item[0] + adjust] = item[1] + adjust
+        for item in self.row_map.items():
+            adjust = int(item[0] >= row_index) * number_of_rows
+            new_row_map[item[0] + adjust] = item[1] + adjust
+        """This bit adds the new dictionary items"""
+        original_col, original_row = (
+            self.col_map[col_index],
+            self.row_map[row_index],
+        )
+        for i in range(number_of_cols):
+            new_col_map[col_index + i] = original_col + i
+        for i in range(number_of_rows):
+            new_row_map[row_index + i] = original_row + i
+        return RowColMap(new_col_map, new_row_map)
+
     def preimages_of_row_of_gcp(
         self, row: int, gcp: GriddedCayleyPerm
     ) -> Iterable[int]:

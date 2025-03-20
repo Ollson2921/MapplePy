@@ -67,31 +67,6 @@ class Parameter:
             if self.ghost.gcp_in_tiling(gcp):
                 yield gcp
 
-    def expand_row_col_map_at_index(
-        self, number_of_cols, number_of_rows, col_index, row_index
-    ):
-        """Adds number_of_cols new columns to the at col_index and
-        Adds number_of_rows new rows to the map at row_index
-            Assumes we've modified the parameter and the tiling in the same way"""
-        new_col_map, new_row_map = dict(), dict()
-        """This bit moves the existing mappings"""
-        for item in self.map.col_map.items():
-            adjust = int(item[0] >= col_index) * number_of_cols
-            new_col_map[item[0] + adjust] = item[1] + adjust
-        for item in self.map.row_map.items():
-            adjust = int(item[0] >= row_index) * number_of_rows
-            new_row_map[item[0] + adjust] = item[1] + adjust
-        """This bit adds the new dictionary items"""
-        original_col, original_row = (
-            self.map.col_map[col_index],
-            self.map.row_map[row_index],
-        )
-        for i in range(number_of_cols):
-            new_col_map[col_index + i] = original_col + i
-        for i in range(number_of_rows):
-            new_row_map[row_index + i] = original_row + i
-        return RowColMap(new_col_map, new_row_map)
-
     def reduce_row_col_map(self, col_preimages, row_preimages):
         """This function removes rows and collumns from the map and standardizes the output"""
         new_col_map, new_row_map = self.map.col_map.copy(), self.map.row_map.copy()
