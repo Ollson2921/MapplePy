@@ -107,9 +107,9 @@ class SpecialInsertionFactory(StrategyFactory[MappedTiling]):
     ) -> Iterator[SpecialInsertionStrategy]:
         """Factory to place each special parameter if the base tiling is 1x1 and has no parameters."""
         if all([comb_class.tiling.dimensions == (1,1),
-            len(comb_class.avoiding_parameters), 
-            len(comb_class.containing_parameters), 
-            len(comb_class.enumeration_parameters)]):
+            not len(comb_class.avoiding_parameters), 
+            not len(comb_class.containing_parameters), 
+            not len(comb_class.enumeration_parameters)]):
             for i in range(1): #We must change the range when we add more special patterns
                 yield SpecialInsertionStrategy(i)
 
