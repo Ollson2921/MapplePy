@@ -67,10 +67,6 @@ class MTFactor:
         """factor is a list of cells for a single factor.
         Returns the factored avoiding parameters
         Skips any parameters which are the same as the factored tiling"""
-
-    def factor_avoiders(self, avoiding_parameters, factor):
-        """factor is a list of cells for a single factor.
-        Returns the factored avoiding parameters"""
         new_parameters = []
         for avoiding_param in avoiding_parameters:
             new_factor = avoiding_param.sub_parameter(factor)
