@@ -162,6 +162,9 @@ class RowColMap:
             if value == col:
                 keys.append(key)
         return keys
+    
+    def preimage_map(self):
+        return {i: self.preimages_of_col(i) for i in set(self.col_map.values())}, {i: self.preimages_of_row(i) for i in set(self.row_map.values())}
 
     def subset_of_map(self, col_values, row_values):
         """restricts row/col map to only the col_values and row_values of the preimage"""
