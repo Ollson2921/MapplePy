@@ -64,14 +64,15 @@ class MTFactor:
                 return False
         return True
     
-    def factor_avoiders(avoiding_parameters, factor):
+    def factor_avoiders(self, avoiding_parameters, factor):
         '''factor is a list of cells for a single factor. 
         Returns the factored avoiding parameters'''
         new_parameters = []
         for avoiding_param in avoiding_parameters:
                 new_factor = avoiding_param.sub_parameter(factor)
                 if new_factor.ghost.active_cells():
-                    new_parameters.append(new_factor)
+                    if new_factor.ghost != self.mappling.tiling:
+                        new_parameters.append(new_factor)
         return new_parameters
     
     def factor_containers(containing_parameters, factor):
