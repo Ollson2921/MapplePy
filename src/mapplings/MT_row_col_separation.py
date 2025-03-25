@@ -3,7 +3,7 @@ from gridded_cayley_permutations import Tiling
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope_folder.strategies.row_column_separation import LessThanRowColSeparation, LessThanOrEqualRowColSeparation
 
-class MTRowColSeperation:
+class MTRowColSeparation:
     def __init__(self, mapped_tiling: MappedTiling):
         self.tiling = mapped_tiling.tiling
         self.avoiding_parameters = mapped_tiling.avoiding_parameters
@@ -71,7 +71,7 @@ class MTRowColSeperation:
 
 
 
-class MTRowColSeperation_EQ:
+class MTRowColSeparation_EQ:
     def __init__(self, mapped_tiling: MappedTiling):
         self.tiling = mapped_tiling.tiling
         self.avoiding_parameters = mapped_tiling.avoiding_parameters
