@@ -20,10 +20,10 @@ class MTRowColSeperation:
         new_map, temp_map = dict(), dict()
         additions = 0
         for item in self.preimage_map[direction].items():
-            if direction == 0:
-                preimages = param.map.preimages_of_col(item[0])
-            else:
+            if direction:
                 preimages = param.map.preimages_of_row(item[0])
+            else:
+                preimages = param.map.preimages_of_col(item[0])
             for index in preimages:
                 new_map[index + additions] = item[1][0]
                 temp_map[index + additions] = index
