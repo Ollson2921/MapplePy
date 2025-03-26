@@ -4,7 +4,7 @@ from gridded_cayley_permutations import Tiling
 
 
 class MTFactor:
-    def __init__(self, MappedTiling):
+    def __init__(self, MappedTiling : MappedTiling):
         self.mappling = MappedTiling
 
     def find_factor_cells(self):
@@ -75,6 +75,24 @@ class MTFactor:
             if new_factor.ghost.active_cells():
                 new_parameters.append(new_factor)
         return new_parameters
+    
+    def gather_avoiding_factors(self, avoiding_parameters, factor_cells):
+        """factor is a list of cells for a single factor.
+        Returns the factored avoiding parameters
+        Skips any parameters which are the same as the factored tiling"""
+        final_factors = [MappedTiling(self.mappling.tiling.sub_tiling(cells),[],[],[]) for cells in factor_cells]
+        for avoider in avoiding_parameters:
+            non_trivial_contributions = 0
+            for i in range(len(factor_cells)):
+                new_parameter = avoider.sub_parameter(factor_cells[i])
+                if new_parameter.ghost == final_factors[i].tiling:
+                    continue
+                if new_parameter.ghost.active_cells():
+                    non_trivial_contributions += 1
+                    if non_trivial_contributions > 1:
+                        return False
+                    final_factors[i].add_parameters([new_parameter],[],[])
+        return final_factors
 
     def factor_containers(containing_parameters, factor):
         """factor is a list of cells for a single factor.
