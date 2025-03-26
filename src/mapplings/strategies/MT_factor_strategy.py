@@ -27,8 +27,8 @@ class AbstractFactorStrategy:
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         factor_cells = MTFactor(comb_class).find_factor_cells()
-        factors = list(MTFactor(comb_class).make_factors(factor_cells))
-        if not MTFactor(comb_class).is_factorable(factors):
+        factors = MTFactor(comb_class).make_factors(factor_cells)
+        if not factors:
             raise StrategyDoesNotApply
         return self.simplify(factors)
 
@@ -113,8 +113,8 @@ class AbstractILFactorStrategy:
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         factor_cells = MTFactor(comb_class).find_IL_factor_cells()
-        factors = list(MTFactor(comb_class).make_factors(factor_cells))
-        if not MTFactor(comb_class).is_factorable(factors):
+        factors = MTFactor(comb_class).make_factors(factor_cells)
+        if not factors:
             raise StrategyDoesNotApply
         return self.simplify(factors)
 

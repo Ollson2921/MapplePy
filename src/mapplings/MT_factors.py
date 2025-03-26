@@ -65,39 +65,39 @@ class MTFactor:
                 return False
         return True
 
-    def factor_avoiders(self, avoiding_parameters, factor, factored_tiling: Tiling):
+    def factor_avoiders(self, avoiding_parameters, factor):
         """factor is a list of cells for a single factor.
         Returns the factored avoiding parameters
         Skips any parameters which are the same as the factored tiling"""
         new_parameters = []
         for avoiding_param in avoiding_parameters:
-            new_factor = avoiding_param.sub_parameter(factor)
-            if new_factor.ghost.active_cells():
-                new_parameters.append(new_factor)
+            new_parameters.append(avoiding_param.sub_parameter(factor))
         return new_parameters
 
     def gather_avoiding_factors(self, avoiding_parameters, factor_cells):
         """factor is a list of cells for a single factor.
         Returns the factored avoiding parameters
         Skips any parameters which are the same as the factored tiling"""
-        final_factors = [
-            MappedTiling(self.mappling.tiling.sub_tiling(cells), [], [], [])
-            for cells in factor_cells
-        ]
-        for avoider in avoiding_parameters:
-            non_trivial_contributions = 0
-            for i in range(len(factor_cells)):
-                new_parameter = avoider.sub_parameter(factor_cells[i])
-                if new_parameter.ghost == final_factors[i].tiling:
-                    continue
-                if new_parameter.ghost.active_cells():
-                    non_trivial_contributions += 1
-                    if non_trivial_contributions > 1:
-                        return False
-                    final_factors[i].add_parameters([new_parameter], [], [])
-        return final_factors
+        if len(factor_cells) == 1:
+            return -1
+        non_trivial_contributions = [0 for _ in avoiding_parameters]
+        new_factors = [MappedTiling(self.mappling.tiling.sub_tiling(cells), self.factor_avoiders(avoiding_parameters,cells),[],[]).remove_empty_rows_and_columns() for cells in factor_cells]
+        for i in range(len(new_factors)):
+            new_avoiders = []
+            for j in range(len(non_trivial_contributions)):
+                check_param = new_factors[i].avoiding_parameters[j]
+                if check_param.ghost.active_cells():
+                    if  check_param.ghost != new_factors[i].tiling:
+                        non_trivial_contributions[j] += 1
+                        if non_trivial_contributions[j] > 1:
+                            print("avoider issues")
+                            return -1
+                        new_avoiders.append(check_param)
+            new_factors[i] = MappedTiling(new_factors[i].tiling, new_avoiders,[],[])
+        return new_factors
 
-    def factor_containers(containing_parameters, factor):
+
+    def factor_containers(self, containing_parameters, factor):
         """factor is a list of cells for a single factor.
         Returns 0 if the factor is invalid, otherwise returns the factored containing parameters
         """
@@ -129,32 +129,17 @@ class MTFactor:
         return new_parameters
 
     def make_factors(self, factor_cells):
-        for factor in factor_cells:
-            factor_containing_parameters = MTFactor.factor_containers(
-                self.mappling.containing_parameters, factor
-            )
-            if type(factor_containing_parameters) is int:
+        factors = self.gather_avoiding_factors(self.mappling.avoiding_parameters,factor_cells)
+        if factors == -1:
+            return False
+        for i in range(len(factor_cells)):
+            containing_params = self.factor_containers(self.mappling.containing_parameters, factor_cells[i])
+            if containing_params == -1:
+                factors[i] = MappedTiling(Tiling([],[],(1,1)))
                 continue
-            factored_tiling = self.mappling.tiling.sub_tiling(factor)
-            new_mt = MappedTiling(
-                factored_tiling,
-                self.factor_avoiders(
-                    self.mappling.avoiding_parameters, factor, factored_tiling
-                ),
-                factor_containing_parameters,
-                self.factor_enumerators(self.mappling.enumeration_parameters, factor),
-            ).remove_empty_rows_and_columns()
-            new_av_params = [
-                param
-                for param in new_mt.avoiding_parameters
-                if param.ghost != new_mt.tiling
-            ]
-            yield MappedTiling(
-                new_mt.tiling,
-                new_av_params,
-                new_mt.containing_parameters,
-                new_mt.enumeration_parameters,
-            )
+            enumeration_params = self.factor_enumerators(self.mappling.containing_parameters, factor_cells[i])
+            factors[i] = factors[i].add_parameters([], containing_params, enumeration_params) 
+        return factors
 
     def find_factors(self):
         return self.make_factors(self.find_factor_cells())
