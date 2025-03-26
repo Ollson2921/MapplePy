@@ -2,7 +2,7 @@ from typing import Dict, Iterable, Iterator, Optional, Tuple
 from comb_spec_searcher import DisjointUnionStrategy, StrategyFactory
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
-from mapped_tiling import Parameter, MappedTiling
+from mapplings.mapped_tiling import Parameter, MappedTiling
 from gridded_cayley_permutations.row_col_map import RowColMap
 
 Cell = Tuple[int, int]
@@ -10,21 +10,22 @@ Cell = Tuple[int, int]
 point = CayleyPermutation((0,))
 
 special_pattern_0 = Parameter(
-    Tiling.from_vincular(CayleyPermutation((0,1)),[]).add_obstructions(
-        [GriddedCayleyPerm(point,[(0,0)]),
-         GriddedCayleyPerm(point,[(2,0)]),
-         GriddedCayleyPerm(point,[(0,2)]),
-         GriddedCayleyPerm(point,[(2,2)]),
-         GriddedCayleyPerm(point,[(4,4)]),
-         ]
-    ), RowColMap({0:0,1:0,2:0,3:0,4:0},{0:0,1:0,2:0,3:0,4:0}))
+    Tiling.from_vincular(CayleyPermutation((0, 1)), []).add_obstructions(
+        [
+            GriddedCayleyPerm(point, [(0, 0)]),
+            GriddedCayleyPerm(point, [(2, 0)]),
+            GriddedCayleyPerm(point, [(0, 2)]),
+            GriddedCayleyPerm(point, [(2, 2)]),
+            GriddedCayleyPerm(point, [(4, 4)]),
+        ]
+    ),
+    RowColMap({0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}),
+)
 
 SpecialPatterns = [special_pattern_0]
 
 
-class SpecialInsertionStrategy(
-    DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]
-):
+class SpecialInsertionStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
     """Adds the indicated special pattern as an avoiding parameter and as a length 1 containing parameter list."""
 
     def __init__(
@@ -41,13 +42,13 @@ class SpecialInsertionStrategy(
     ) -> Tuple[MappedTiling, ...]:
         """Adds the indicated special pattern as either an avoiding parameter or a length 1 containing parameter list"""
         new_pattern = self.pattern.back_map_obs_and_reqs(comb_class.tiling)
-        containing = self.simplify(MappedTiling(comb_class.add_parameters([],[[new_pattern]],[])))
-        avoiding = self.simplify(MappedTiling(comb_class.add_parameters([new_pattern],[],[])))
-        return (containing,avoiding) 
+        containing = self.simplify(comb_class.add_parameters([], [[new_pattern]], []))
+        avoiding = self.simplify(comb_class.add_parameters([new_pattern], [], []))
+        return (containing, avoiding)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         return comb_class
-        
+
     def extra_parameters(
         self,
         comb_class: MappedTiling,
@@ -82,9 +83,7 @@ class SpecialInsertionStrategy(
         return self.formal_step()
 
     def __repr__(self) -> str:
-        return (
-            f"SpecialInsertionFactory(special_pattern_{self.index}, "
-        )
+        return f"SpecialInsertionFactory(special_pattern_{self.index}, "
 
     def to_jsonable(self) -> dict:
         """Return a dictionary form of the strategy."""
@@ -102,15 +101,19 @@ class SpecialInsertionStrategy(
 
 
 class SpecialInsertionFactory(StrategyFactory[MappedTiling]):
-    def __call__(
-        self, comb_class: MappedTiling
-    ) -> Iterator[SpecialInsertionStrategy]:
+    def __call__(self, comb_class: MappedTiling) -> Iterator[SpecialInsertionStrategy]:
         """Factory to place each special parameter if the base tiling is 1x1 and has no parameters."""
-        if all([comb_class.tiling.dimensions == (1,1),
-            not len(comb_class.avoiding_parameters), 
-            not len(comb_class.containing_parameters), 
-            not len(comb_class.enumeration_parameters)]):
-            for i in range(1): #We must change the range when we add more special patterns
+        if all(
+            [
+                comb_class.tiling.dimensions == (1, 1),
+                not len(comb_class.avoiding_parameters),
+                not len(comb_class.containing_parameters),
+                not len(comb_class.enumeration_parameters),
+            ]
+        ):
+            for i in range(
+                1
+            ):  # We must change the range when we add more special patterns
                 yield SpecialInsertionStrategy(i)
 
     @classmethod

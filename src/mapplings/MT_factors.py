@@ -4,7 +4,7 @@ from gridded_cayley_permutations import Tiling
 
 
 class MTFactor:
-    def __init__(self, MappedTiling : MappedTiling):
+    def __init__(self, MappedTiling: MappedTiling):
         self.mappling = MappedTiling
 
     def find_factor_cells(self):
@@ -56,6 +56,8 @@ class MTFactor:
     #     return True
 
     def is_factorable(self, factors):
+        if len(factors) == 1:
+            return False
         non_trivial_factors = 0
         for factor in factors:
             non_trivial_factors += int(not factor.avoiders_are_trivial())
@@ -63,24 +65,25 @@ class MTFactor:
                 return False
         return True
 
-    def factor_avoiders(avoiding_parameters, factor, factored_tiling: Tiling):
+    def factor_avoiders(self, avoiding_parameters, factor, factored_tiling: Tiling):
         """factor is a list of cells for a single factor.
         Returns the factored avoiding parameters
         Skips any parameters which are the same as the factored tiling"""
         new_parameters = []
         for avoiding_param in avoiding_parameters:
             new_factor = avoiding_param.sub_parameter(factor)
-            if new_factor.ghost == factored_tiling:
-                continue
             if new_factor.ghost.active_cells():
                 new_parameters.append(new_factor)
         return new_parameters
-    
+
     def gather_avoiding_factors(self, avoiding_parameters, factor_cells):
         """factor is a list of cells for a single factor.
         Returns the factored avoiding parameters
         Skips any parameters which are the same as the factored tiling"""
-        final_factors = [MappedTiling(self.mappling.tiling.sub_tiling(cells),[],[],[]) for cells in factor_cells]
+        final_factors = [
+            MappedTiling(self.mappling.tiling.sub_tiling(cells), [], [], [])
+            for cells in factor_cells
+        ]
         for avoider in avoiding_parameters:
             non_trivial_contributions = 0
             for i in range(len(factor_cells)):
@@ -91,7 +94,7 @@ class MTFactor:
                     non_trivial_contributions += 1
                     if non_trivial_contributions > 1:
                         return False
-                    final_factors[i].add_parameters([new_parameter],[],[])
+                    final_factors[i].add_parameters([new_parameter], [], [])
         return final_factors
 
     def factor_containers(containing_parameters, factor):
@@ -111,7 +114,7 @@ class MTFactor:
                 return 0
         return new_parameters
 
-    def factor_enumerators(enumeration_parameters, factor):
+    def factor_enumerators(self, enumeration_parameters, factor):
         """factor is a list of cells for a single factor.
         Returns the factored enumeration parameters"""
         new_parameters = []
@@ -133,14 +136,25 @@ class MTFactor:
             if type(factor_containing_parameters) is int:
                 continue
             factored_tiling = self.mappling.tiling.sub_tiling(factor)
-            yield MappedTiling(
+            new_mt = MappedTiling(
                 factored_tiling,
                 self.factor_avoiders(
                     self.mappling.avoiding_parameters, factor, factored_tiling
                 ),
                 factor_containing_parameters,
-                self.factor_avoiders(self.mappling.enumeration_parameters, factor),
+                self.factor_enumerators(self.mappling.enumeration_parameters, factor),
             ).remove_empty_rows_and_columns()
+            new_av_params = [
+                param
+                for param in new_mt.avoiding_parameters
+                if param.ghost != new_mt.tiling
+            ]
+            yield MappedTiling(
+                new_mt.tiling,
+                new_av_params,
+                new_mt.containing_parameters,
+                new_mt.enumeration_parameters,
+            )
 
     def find_factors(self):
         return self.make_factors(self.find_factor_cells())

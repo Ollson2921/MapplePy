@@ -109,7 +109,7 @@ class MTRequirementPlacement:
                 if new_ghost.is_empty():
                     continue
                 new_n, new_m = new_ghost.dimensions
-                new_map = parameter.expand_row_col_map_at_index(
+                new_map = parameter.map.expand_at_index(
                     new_n - n, new_m - m, param_cell[0], param_cell[1]
                 )
                 new_param_list.add(Parameter(new_ghost, new_map))
@@ -183,9 +183,7 @@ class MTRequirementPlacement:
         and correct map."""
         n, m = parameter.ghost.dimensions
         new_n, new_m = new_ghost.dimensions
-        new_map = parameter.expand_row_col_map_at_index(
-            new_n - n, new_m - m, cell[0], cell[1]
-        )
+        new_map = parameter.map.expand_at_index(new_n - n, new_m - m, cell[0], cell[1])
         return Parameter(new_ghost, new_map)
 
 

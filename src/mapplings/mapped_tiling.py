@@ -185,6 +185,17 @@ class MappedTiling(CombinatorialClass):
 
     ## Combintatorial class stuff ##
 
+    def is_atom(self):
+        return self.tiling.is_atom() and not self.all_parameters()
+
+    def minimum_size_of_object(self) -> int:
+        assert not self.is_empty()
+        i = 0
+        while True:
+            for _ in self.objects_of_size(i):
+                return i
+            i += 1
+
     def objects_of_size(self, n, **parameters):  # Good
         for val in self.get_objects(n).values():
             for gcp in val:
@@ -529,12 +540,16 @@ class MappedTiling(CombinatorialClass):
             new_map = P.reduce_row_col_map(col_preimages, row_preimages)
             new_parameters.append(Parameter(new_parameter, new_map))
         return new_parameters
-    
-    def add_parameters(self,avoiding_parameters,containing_parameters,enumeration_parameters):
-        return MappedTiling(self.ghost,
-                            self.avoiding_parameters + avoiding_parameters,
-                            self.containing_parameters + containing_parameters,
-                            self.enumeration_parameters + enumeration_parameters)
+
+    def add_parameters(
+        self, avoiding_parameters, containing_parameters, enumeration_parameters
+    ):
+        return MappedTiling(
+            self.tiling,
+            self.avoiding_parameters + avoiding_parameters,
+            self.containing_parameters + containing_parameters,
+            self.enumeration_parameters + enumeration_parameters,
+        )
 
     def all_parameters(self):  # Good
         """Returns a list of all parameters."""
@@ -565,8 +580,8 @@ class MappedTiling(CombinatorialClass):
             (
                 self.tiling,
                 tuple(self.avoiding_parameters),
-                tuple(self.containing_parameters),
-                tuple(self.enumeration_parameters),
+                tuple(tuple(clist) for clist in self.containing_parameters),
+                tuple(tuple(elist) for elist in self.enumeration_parameters),
             )
         )
 

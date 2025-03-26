@@ -19,8 +19,8 @@ from gridded_cayley_permutations.point_placements import (
 )
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
-from mapped_tiling import MappedTiling, Parameter
-from parameter_placement import ParameterPlacement
+from mapplings.mapped_tiling import MappedTiling, Parameter
+from mapplings.parameter_placement import ParameterPlacement
 
 Cell = Tuple[int, int]
 
@@ -70,7 +70,7 @@ class MTParameterPlacementStrategy(
             )
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
-            avoiding_parameters
+            comb_class.avoiding_parameters
         )
         new_mappling = MappedTiling(
             new_mappling.tiling,
@@ -81,7 +81,7 @@ class MTParameterPlacementStrategy(
         return (
             new_mappling.remove_empty_rows_and_columns()
             .reduce_empty_rows_and_cols_in_parameters()
-            .fuse_parameters()
+            .fuse_parameters(),
         )
 
     def extra_parameters(

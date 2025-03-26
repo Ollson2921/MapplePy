@@ -19,8 +19,11 @@ from gridded_cayley_permutations.point_placements import (
 )
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
-from mapped_tiling import MappedTiling
-from MT_point_placement import MTRequirementPlacement, MTPartialPointPlacements
+from mapplings.mapped_tiling import MappedTiling
+from mapplings.MT_point_placement import (
+    MTRequirementPlacement,
+    MTPartialPointPlacements,
+)
 
 Cell = Tuple[int, int]
 
@@ -54,11 +57,13 @@ class MTRequirementPlacementStrategy(
         """Either the cells doesn't contain gcp so add it as obstruction
         or it contains an occurrence of it furthest in the direction given
         so add it as a requirement in every possible way."""
-        return (comb_class.add_obstructions(self.gcps),) + self.simplify(
-            self.algorithm(comb_class).point_placement(
-                self.gcps, self.indices, self.direction
-            )
+        placed_points = self.algorithm(comb_class).point_placement(
+            self.gcps, self.indices, self.direction
         )
+        new_mapplings = []
+        for placed_point in placed_points:
+            new_mapplings.append(self.simplify(placed_point))
+        return (comb_class.add_obstructions(self.gcps),) + tuple(new_mapplings)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         new_mappling = comb_class.tidy_containing_parameters()
@@ -68,7 +73,7 @@ class MTRequirementPlacementStrategy(
             )
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
-            avoiding_parameters
+            comb_class.avoiding_parameters
         )
         new_mappling = MappedTiling(
             new_mappling.tiling,

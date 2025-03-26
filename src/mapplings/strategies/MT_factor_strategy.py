@@ -27,7 +27,7 @@ class AbstractFactorStrategy:
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         factor_cells = MTFactor(comb_class).find_factor_cells()
-        factors =  MTFactor(comb_class).make_factors(factor_cells)
+        factors = list(MTFactor(comb_class).make_factors(factor_cells))
         if not MTFactor(comb_class).is_factorable(factors):
             raise StrategyDoesNotApply
         return self.simplify(factors)
@@ -95,7 +95,7 @@ class AbstractFactorStrategy:
     @classmethod
     def from_dict(cls, d: dict) -> "AbstractFactorStrategy":
         return cls(**d)
-    
+
 
 class AbstractILFactorStrategy:
     def __init__(
@@ -113,7 +113,7 @@ class AbstractILFactorStrategy:
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         factor_cells = MTFactor(comb_class).find_IL_factor_cells()
-        factors = MTFactor(comb_class).make_factors(factor_cells)
+        factors = list(MTFactor(comb_class).make_factors(factor_cells))
         if not MTFactor(comb_class).is_factorable(factors):
             raise StrategyDoesNotApply
         return self.simplify(factors)
@@ -185,6 +185,12 @@ class AbstractILFactorStrategy:
 
 class FactorStrategy(
     AbstractFactorStrategy, CartesianProductStrategy[MappedTiling, GriddedCayleyPerm]
+):
+    pass
+
+
+class ILFactorStrategy(
+    AbstractILFactorStrategy, CartesianProductStrategy[MappedTiling, GriddedCayleyPerm]
 ):
     pass
 
