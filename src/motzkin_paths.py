@@ -68,3 +68,20 @@ print(mappling)
 #     print(preimage)
 
 # print(mappling.find_factors())
+
+from mapplings import MappedTiling, Parameter, MappedTileScopePack, MappedTileScope
+from cayley_permutations import CayleyPermutation
+from gridded_cayley_permutations import GriddedCayleyPerm, Tiling, RowColMap
+from tilescope_folder import TileScope, TileScopePack
+from comb_spec_searcher.rule_db import RuleDBForest
+
+ruledb = RuleDBForest()
+scope = MappedTileScope(
+    mappling, MappedTileScopePack.MTpoint_placement(), debug=True, ruledb=ruledb
+)
+spec = scope.auto_search()
+print(spec)
+spec.show()
+for i in range(10):
+    print(spec.count_objects_of_size(i))
+print(spec.get_genf())

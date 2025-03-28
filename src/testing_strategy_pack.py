@@ -5,7 +5,7 @@ from tilescope_folder import TileScope, TileScopePack
 from comb_spec_searcher.rule_db import RuleDBForest
 
 
-basis = "012"
+basis = "00"
 
 basis_patterns = [CayleyPermutation.standardise(p) for p in basis.split("_")]
 
@@ -16,17 +16,17 @@ tiling = Tiling(
     (1, 1),
 )
 
-# ghost = Tiling.from_vincular(CayleyPermutation((0, 1, 2)), [1])
-# parameter = Parameter(
-#     ghost,
-#     RowColMap(
-#         {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0},
-#         {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0},
-#     ),
-# )
-# parameter = parameter.back_map_obs_and_reqs(tiling)
+ghost = Tiling.from_vincular(CayleyPermutation((0, 1, 2)), [1])
+parameter = Parameter(
+    ghost,
+    RowColMap(
+        {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0},
+        {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0},
+    ),
+)
+parameter = parameter.back_map_obs_and_reqs(tiling)
 
-mt = MappedTiling(tiling, [], [], [])
+mt = MappedTiling(tiling, [parameter], [], [])
 
 ruledb = RuleDBForest()
 scope = MappedTileScope(
