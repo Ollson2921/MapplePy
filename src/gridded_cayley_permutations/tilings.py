@@ -489,11 +489,18 @@ class Tiling(CombinatorialClass):
         if self.dimensions == (0, 0):
             return "+---+\n| \u03b5 |\n+---+\n"
         crossing_string = "Crossing obstructions: \n"
+        point_rows = self.point_rows()
 
         cell_basis = defaultdict(list)
         for ob in self.obstructions:
             if ob.is_local() and len(ob) > 0:
                 cell_basis[ob.positions[0]].append(ob.pattern)
+            elif (
+                len(ob.pattern) == 2
+                and ob.positions[0][1] == ob.positions[1][1]
+                and ob.positions[0][1] in point_rows
+            ):
+                continue
             else:
                 crossing_string += str(ob) + "\n"
         basis_key = {}
@@ -536,6 +543,10 @@ class Tiling(CombinatorialClass):
             fill_rows[j] = (
                 fill_rows[j][: 2 + 4 * i] + str(key) + fill_rows[j][3 + 4 * i :]
             )
+
+        for pr in point_rows:
+            fill_rows[pr] = fill_rows[pr][:-1] + "*\n"
+
         grid = edge_row + edge_row.join(reversed(fill_rows)) + edge_row
 
         key_string = "Key: \n"
@@ -559,3 +570,11 @@ class Tiling(CombinatorialClass):
 
     def __bool__(self) -> bool:
         return self == Tiling.empty_tiling()
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Tiling):
+            return NotImplemented
+        return self.dimensions < other.dimensions or (
+            self.dimensions == other.dimensions
+            and len(self.obstructions) < len(other.obstructions)
+        )

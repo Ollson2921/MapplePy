@@ -160,6 +160,12 @@ class Parameter:
     def __repr__(self):
         return str((repr(self.ghost), str(self.map)))
 
+    def __leq__(self, other):
+        return self.ghost <= other.ghost
+
+    def __lt__(self, other):
+        return self.ghost < other.ghost
+
     def reduced_str(self):
         """Returns a string representation of the parameter without the
         crossing obs and reqs."""
@@ -590,10 +596,14 @@ class MappedTiling(CombinatorialClass):
         return hash(
             (
                 self.tiling,
-                hash(tuple(self.avoiding_parameters)),
-                hash(tuple(hash(tuple(clist)) for clist in self.containing_parameters)),
-                hash(
-                    tuple(hash(tuple(elist)) for elist in self.enumeration_parameters)
+                tuple(sorted(self.avoiding_parameters)),
+                tuple(
+                    sorted(tuple(sorted(clist)) for clist in self.containing_parameters)
+                ),
+                tuple(
+                    sorted(
+                        tuple(sorted(elist)) for elist in self.enumeration_parameters
+                    )
                 ),
             )
         )
