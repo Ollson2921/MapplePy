@@ -10,11 +10,12 @@ from .strategies import (
     MTRequirementPlacementStrategy,
     MTPointPlacementFactory,
     MTPartialRequirementPlacementStrategy,
-    RowInsertionFactory,
-    ColInsertionFactory,
+    RowPlacementFactory,
+    ColPlacementFactory,
     SpecialInsertionFactory,
     SpecialInsertionStrategy,
     SpecialPatterns,
+    MTCellInsertionFactory,
 )
 
 
@@ -27,20 +28,21 @@ class MappedTileScopePack(StrategyPack):
         return MappedTileScopePack(
             initial_strats=[
                 FactorStrategy(),
-                ILFactorStrategy(),
-                MTLessThanOrEqualRowColSeparationStrategy(),
+                MTPointPlacementFactory(),
+                # ILFactorStrategy(),
             ],  # Iterable[Strategy]
             inferral_strats=[
                 MTLessThanRowColSeparationStrategy(),
                 # MTParamLessThanRowColSeparationStrategy(),
-                MTParameterPlacementFactory(),
+                # MTParameterPlacementFactory(),
             ],  # Iterable[Strategy]
             expansion_strats=[
                 [
-                    MTPointPlacementFactory(),
-                    RowInsertionFactory(),
-                    ColInsertionFactory(),
-                    SpecialInsertionFactory(),
+                    MTCellInsertionFactory(),
+                    # RowInsertionFactory(),
+                    # ColInsertionFactory(),
+                    # SpecialInsertionFactory(),
+                    # MTLessThanOrEqualRowColSeparationStrategy(),
                 ]
             ],  # Iterable[Iterable[Strategy]]
             ver_strats=[AtomStrategy()],  # Iterable[Strategy]

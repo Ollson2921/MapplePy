@@ -81,25 +81,32 @@ class MTFactor:
         if len(factor_cells) == 1:
             return -1
         non_trivial_contributions = [0 for _ in avoiding_parameters]
-        new_factors = [MappedTiling(self.mappling.tiling.sub_tiling(cells), self.factor_avoiders(avoiding_parameters,cells),[],[]).remove_empty_rows_and_columns() for cells in factor_cells]
+        new_factors = [
+            MappedTiling(
+                self.mappling.tiling.sub_tiling(cells),
+                self.factor_avoiders(avoiding_parameters, cells),
+                [],
+                [],
+            ).remove_empty_rows_and_columns()
+            for cells in factor_cells
+        ]
         for i in range(len(new_factors)):
             new_avoiders = []
             for j in range(len(non_trivial_contributions)):
                 check_param = new_factors[i].avoiding_parameters[j]
                 if check_param.ghost.active_cells():
-                    if  check_param.ghost != new_factors[i].tiling:
+                    if check_param.ghost != new_factors[i].tiling:
                         non_trivial_contributions[j] += 1
                         if non_trivial_contributions[j] > 1:
                             print("avoider issues")
                             return -1
                         new_avoiders.append(check_param)
-            new_factors[i] = MappedTiling(new_factors[i].tiling, new_avoiders,[],[])
+            new_factors[i] = MappedTiling(new_factors[i].tiling, new_avoiders, [], [])
         return new_factors
-
 
     def factor_containers(self, containing_parameters, factor):
         """factor is a list of cells for a single factor.
-        Returns 0 if the factor is invalid, otherwise returns the factored containing parameters
+        Returns -1 if the factor is invalid, otherwise returns the factored containing parameters
         """
         new_parameters = []
         for c_list in containing_parameters:
@@ -111,7 +118,7 @@ class MTFactor:
             if new_c_list:
                 new_parameters.append(new_c_list)
             else:
-                return 0
+                return
         return new_parameters
 
     def factor_enumerators(self, enumeration_parameters, factor):
@@ -124,21 +131,29 @@ class MTFactor:
                 new_factor = enumeration_parameter.sub_parameter(factor)
                 if new_factor.ghost.active_cells():
                     new_e_list.append(new_factor)
-            if new_e_list:
-                new_parameters.append(new_e_list)
+                if new_e_list:
+                    new_parameters.append(new_e_list)
         return new_parameters
 
     def make_factors(self, factor_cells):
-        factors = self.gather_avoiding_factors(self.mappling.avoiding_parameters,factor_cells)
+        factors = self.gather_avoiding_factors(
+            self.mappling.avoiding_parameters, factor_cells
+        )
         if factors == -1:
             return False
         for i in range(len(factor_cells)):
-            containing_params = self.factor_containers(self.mappling.containing_parameters, factor_cells[i])
+            containing_params = self.factor_containers(
+                self.mappling.containing_parameters, factor_cells[i]
+            )
             if containing_params == -1:
-                factors[i] = MappedTiling(Tiling([],[],(1,1)))
+                factors[i] = MappedTiling(Tiling([], [], (1, 1)))
                 continue
-            enumeration_params = self.factor_enumerators(self.mappling.containing_parameters, factor_cells[i])
-            factors[i] = factors[i].add_parameters([], containing_params, enumeration_params) 
+            enumeration_params = self.factor_enumerators(
+                self.mappling.containing_parameters, factor_cells[i]
+            )
+            factors[i] = factors[i].add_parameters(
+                [], containing_params, enumeration_params
+            )
         return factors
 
     def find_factors(self):

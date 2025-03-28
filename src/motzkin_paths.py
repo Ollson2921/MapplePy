@@ -48,7 +48,7 @@ mappling = MappedTiling(
     [[]],
 )
 
-print(mappling)
+# print(mappling)
 
 
 # print(Tiling.from_vincular(CayleyPermutation((0, 1, 0)), (0,)))
@@ -75,11 +75,13 @@ from gridded_cayley_permutations import GriddedCayleyPerm, Tiling, RowColMap
 from tilescope_folder import TileScope, TileScopePack
 from comb_spec_searcher.rule_db import RuleDBForest
 
+mappling = mappling.reduce_empty_rows_and_cols_in_parameters()
+
 ruledb = RuleDBForest()
 scope = MappedTileScope(
-    mappling, MappedTileScopePack.MTpoint_placement(), debug=True, ruledb=ruledb
+    mappling, MappedTileScopePack.MTpoint_placement(), debug=False, ruledb=ruledb
 )
-spec = scope.auto_search()
+spec = scope.auto_search(status_update=5)
 print(spec)
 spec.show()
 for i in range(10):

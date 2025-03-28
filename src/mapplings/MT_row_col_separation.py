@@ -57,15 +57,11 @@ class MTRowColSeparation:
         ]
         new_containers = []
         for c_list in self.containing_parameters:
-            new_c_list = [
-                self.adjust_parameter(param) for param in self.containing_parameters
-            ]
+            new_c_list = [self.adjust_parameter(param) for param in c_list]
             new_containers.append(new_c_list)
         new_enumerators = []
         for e_list in self.enumeration_parameters:
-            new_e_list = [
-                self.adjust_parameter(param) for param in self.enumeration_parameters
-            ]
+            new_e_list = [self.adjust_parameter(param) for param in e_list]
             new_enumerators.append(new_e_list)
         seperated = self.separation.row_col_separation()
         for T in seperated:

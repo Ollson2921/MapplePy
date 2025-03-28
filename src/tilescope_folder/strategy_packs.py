@@ -39,21 +39,20 @@ class TileScopePack(StrategyPack):
     @classmethod
     def point_placement(cls):
         return TileScopePack(
-            initial_strats=[
-                FactorStrategy(),
-                LessThanOrEqualRowColSeparationStrategy(),
-                FusionFactory(),
-            ],  # Iterable[Strategy]
             inferral_strats=[
                 RemoveEmptyRowsAndColumnsStrategy(),
                 LessThanRowColSeparationStrategy(),
+            ],  # Iterable[Strategy]
+            initial_strats=[
+                FactorStrategy(),
+                LessThanOrEqualRowColSeparationStrategy(),
             ],  # Iterable[Strategy]
             expansion_strats=[
                 [
                     CellInsertionFactory(),
                     PointPlacementFactory(),
-                    RowInsertionFactory(),
-                    ColInsertionFactory(),
+                    # RowInsertionFactory(),
+                    # ColInsertionFactory(),
                 ]
             ],  # Iterable[Iterable[Strategy]]
             ver_strats=[AtomStrategy()],  # Iterable[Strategy]

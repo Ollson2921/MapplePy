@@ -12,8 +12,9 @@ from .requirement_placement_strategy import (
     MTRequirementPlacementStrategy,
     MTPointPlacementFactory,
     MTPartialRequirementPlacementStrategy,
-    RowInsertionFactory,
-    ColInsertionFactory,
+    RowPlacementFactory,
+    ColPlacementFactory,
+    MTCellInsertionFactory,
 )
 from .special_insertion_strategy import (
     SpecialInsertionFactory,
