@@ -181,8 +181,7 @@ class Parameter:
                 while k < abs(difference):
                     parameters[choice] = parameters[choice].split_and_squish_in_range(min_index, max_index + k, direction)
                     k += 1
-                    yield parameters
-        #return parameters[0], parameters[1]
+        return parameters[0], parameters[1]
 
     def copy(self):
         return Parameter(self.ghost, self.map)
