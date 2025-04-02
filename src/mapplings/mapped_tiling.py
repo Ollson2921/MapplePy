@@ -76,7 +76,7 @@ class Parameter:
             del new_row_map[index]
         return RowColMap(new_col_map, new_row_map).standardise_map()
 
-    def back_map_obs_and_reqs(self, tiling=Tiling):
+    def back_map_obs_and_reqs(self, tiling : Tiling, simplify = 0):
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
@@ -88,7 +88,7 @@ class Parameter:
         ) + self.map.preimage_of_requirements(
             tiling.requirements
         )
-        return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions), self.map)
+        return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions,simplify), self.map)
 
     def sub_parameter(self, factor):
         preimage_of_cells = self.map.preimage_of_cells(factor)
@@ -153,6 +153,36 @@ class Parameter:
         return self.reduce_empty_rows_or_cols(
             0, col_preimages, currently_empty[0]
         ).reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
+    
+    def split_and_squish_in_range(self, min_index, max_index, direction):
+        '''Used in expand together. splits each row/column in the range of min_index, max_index.
+        each way the parameter is split contributes to a final parameter made by backmapping obs and reqs without simplifying'''
+        maps = [{i : i for i in range(self.ghost.dimensions[0])}, {i : i for i in range(self.ghost.dimensions[1])}]
+        new_parameter = Parameter(Tiling([],[],(self.ghost.dimensions[0] + int(direction == 0),self.ghost.dimensions[1] + int(direction == 1))), self.map)
+        for i in range(min_index, max_index+1):
+            maps[direction] = {k: k - int(k>i) for k in range(self.ghost.dimensions[direction]+1)}
+            new_parameter = Parameter(new_parameter.ghost,RowColMap(*tuple(maps))).back_map_obs_and_reqs(self.ghost, simplify = 1)
+        original_maps = [self.map.col_map, self.map.row_map]
+        original_maps[direction] = {k: original_maps[direction][k - int(k > max_index)] for k in range(self.ghost.dimensions[direction]+1)}
+        return Parameter(new_parameter.ghost,RowColMap(*tuple(original_maps)))
+    
+    def expand_together(self, other):
+        '''Transforms self and other into parameters with the same dimension while respecting the row col map.
+        The returned parameters are not simplified.'''
+        parameters = [self,other]
+        for direction in (0,1):
+            preimage_maps = self.map.preimage_map()[direction], other.map.preimage_map()[direction]
+            for i in preimage_maps[0].keys():
+                preimage_maps = parameters[0].map.preimage_map()[direction], parameters[1].map.preimage_map()[direction]
+                difference = len(preimage_maps[0][i])-len(preimage_maps[1][i])
+                choice = int(difference>0)
+                min_index, max_index = min(preimage_maps[choice][i]), max(preimage_maps[choice][i])
+                k = 0
+                while k < abs(difference):
+                    parameters[choice] = parameters[choice].split_and_squish_in_range(min_index, max_index + k, direction)
+                    k += 1
+                    yield parameters
+        #return parameters[0], parameters[1]
 
     def copy(self):
         return Parameter(self.ghost, self.map)

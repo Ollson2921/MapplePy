@@ -27,17 +27,25 @@ class Tiling(CombinatorialClass):
         obstructions: Iterable[GriddedCayleyPerm],
         requirements: Iterable[Iterable[GriddedCayleyPerm]],
         dimensions: Tuple[int, int],
+        simplify = 0
     ) -> None:
+        '''simplify 0 does a full simplication, removing redundancies
+        simplify 1 only removes repeated entries
+        other values don't simplify at all'''
         self.obstructions = tuple(obstructions)
-        self.requirements = tuple(tuple(req) for req in requirements)
+        self.requirements = tuple(tuple(set(req)) for req in requirements)
         self.dimensions = tuple(dimensions)
+        if simplify == 0:
+            algorithm = SimplifyObstructionsAndRequirements(
+                self.obstructions, self.requirements, self.dimensions
+            )
+            algorithm.simplify()
+            self.obstructions = algorithm.obstructions
+            self.requirements = algorithm.requirements
+        elif simplify == 1:
+            self.obstructions = tuple(set(self.obstructions))
+            self.requirements = tuple(set(self.requirements))
 
-        algorithm = SimplifyObstructionsAndRequirements(
-            self.obstructions, self.requirements, self.dimensions
-        )
-        algorithm.simplify()
-        self.obstructions = algorithm.obstructions
-        self.requirements = algorithm.requirements
 
     def _gridded_cayley_permutations(self, size: int) -> Iterator[GriddedCayleyPerm]:
         """
