@@ -67,10 +67,8 @@ class MTRequirementPlacementStrategy(
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         new_mappling = comb_class.tidy_containing_parameters()
-        if not new_mappling:
-            return MappedTiling(
-                Tiling([], [], comb_class.tiling.dimensions), [], [], []
-            )
+        if not new_mappling.tiling:
+            return new_mappling
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
             comb_class.avoiding_parameters
@@ -181,7 +179,7 @@ class MTPartialRequirementPlacementStrategy(MTRequirementPlacementStrategy):
         return f"Partially placed the point of the requirement {self.gcps} at indices {self.indices} in direction {self.direction}"
 
 
-class RowInsertionFactory(StrategyFactory[MappedTiling]):
+class RowPlacementFactory(StrategyFactory[MappedTiling]):
     def __call__(
         self, comb_class: MappedTiling
     ) -> Iterator[MTRequirementPlacementStrategy]:
@@ -199,17 +197,17 @@ class RowInsertionFactory(StrategyFactory[MappedTiling]):
                 yield MTRequirementPlacementStrategy(all_gcps, indices, direction)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "RowInsertionFactory":
+    def from_dict(cls, d: dict) -> "RowPlacementFactory":
         return cls(**d)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
     def __str__(self) -> str:
-        return "Row insertion"
+        return "Row placement"
 
 
-class ColInsertionFactory(StrategyFactory[MappedTiling]):
+class ColPlacementFactory(StrategyFactory[MappedTiling]):
     def __call__(
         self, comb_class: MappedTiling
     ) -> Iterator[MTRequirementPlacementStrategy]:
@@ -227,11 +225,97 @@ class ColInsertionFactory(StrategyFactory[MappedTiling]):
                 yield MTRequirementPlacementStrategy(all_gcps, indices, direction)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "RowInsertionFactory":
+    def from_dict(cls, d: dict) -> "ColPlacementFactory":
         return cls(**d)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
     def __str__(self) -> str:
-        return "Column insertion"
+        return "Column placement"
+
+
+class MTRequirementInsertionStrategy(
+    DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]
+):
+    def __init__(self, gcps: Iterable[GriddedCayleyPerm], ignore_parent: bool = False):
+        super().__init__(ignore_parent=ignore_parent)
+        self.gcps = frozenset(gcps)
+
+    def decomposition_function(
+        self, comb_class: MappedTiling
+    ) -> Tuple[MappedTiling, ...]:
+        return (
+            comb_class.add_obstructions(self.gcps),
+            comb_class.add_requirement_list(self.gcps),
+        )
+
+    def extra_parameters(
+        self,
+        comb_class: MappedTiling,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[Dict[str, str], ...]:
+        return tuple({} for _ in self.decomposition_function(comb_class))
+
+    def formal_step(self):
+        return f"Either avoid or contain {self.gcps}"
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[Optional[GriddedCayleyPerm], ...],
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+        raise NotImplementedError
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[Optional[GriddedCayleyPerm], ...]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        return self.formal_step()
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(" f"ignore_parent={self.ignore_parent})"
+
+    def to_jsonable(self) -> dict:
+        """Return a dictionary form of the strategy."""
+        d: dict = super().to_jsonable()
+        d.pop("workable")
+        d.pop("inferrable")
+        d.pop("possibly_empty")
+        d["gcps"] = [gcp.to_jsonable() for gcp in self.gcps]
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MTRequirementInsertionStrategy":
+        gcps = tuple(GriddedCayleyPerm.from_dict(gcp) for gcp in d.pop("gcps"))
+        return cls(gcps=gcps, **d)
+
+
+class MTCellInsertionFactory(StrategyFactory[MappedTiling]):
+    def __call__(
+        self, comb_class: MappedTiling
+    ) -> Iterator[MTRequirementInsertionStrategy]:
+        for cell in comb_class.tiling.active_cells():
+            gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
+            strategy = MTRequirementInsertionStrategy(gcps, ignore_parent=False)
+            yield strategy
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MTCellInsertionFactory":
+        return cls(**d)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "Cell Insertion"

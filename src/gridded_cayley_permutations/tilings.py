@@ -96,10 +96,18 @@ class Tiling(CombinatorialClass):
             if len(ob) == 1:
                 active_cells.discard(ob.positions[0])
         return active_cells
-    
+
     def cell_is_active(self, cell):
-        '''returns true if cell is not empty'''
-        return GriddedCayleyPerm(CayleyPermutation([0]), [cell,]) in self.obstructions
+        """returns true if cell is not empty"""
+        return (
+            GriddedCayleyPerm(
+                CayleyPermutation([0]),
+                [
+                    cell,
+                ],
+            )
+            in self.obstructions
+        )
 
     def positive_cells(self):
         """Returns a set of cells that are positive in the tiling.
@@ -127,16 +135,32 @@ class Tiling(CombinatorialClass):
             ):
                 point_cells.add(cell)
         return point_cells
-    
+
     def cell_is_point_cell(self, cell):
-        '''returns true if cell is a point cell'''
-        if not GriddedCayleyPerm(CayleyPermutation([0, 1]), [cell, cell]) in self.obstructions:
+        """returns true if cell is a point cell"""
+        if (
+            not GriddedCayleyPerm(CayleyPermutation([0, 1]), [cell, cell])
+            in self.obstructions
+        ):
             return False
-        if not GriddedCayleyPerm(CayleyPermutation([1, 0]), [cell, cell]) in self.obstructions:
+        if (
+            not GriddedCayleyPerm(CayleyPermutation([1, 0]), [cell, cell])
+            in self.obstructions
+        ):
             return False
-        if not GriddedCayleyPerm(CayleyPermutation([0, 0]), [cell, cell]) in self.obstructions:
+        if (
+            not GriddedCayleyPerm(CayleyPermutation([0, 0]), [cell, cell])
+            in self.obstructions
+        ):
             return False
-        if [GriddedCayleyPerm(CayleyPermutation([0]), [cell,])] in self.requirements:
+        if [
+            GriddedCayleyPerm(
+                CayleyPermutation([0]),
+                [
+                    cell,
+                ],
+            )
+        ] in self.requirements:
             return True
 
     def delete_rows_and_columns(
@@ -376,7 +400,6 @@ class Tiling(CombinatorialClass):
             all_obs.append(GriddedCayleyPerm(CayleyPermutation([0, 0]), [cell, cell]))
         return Tiling(all_obs, all_reqs, (2 * dimensions[0] + 1, 2 * dimensions[1] + 1))
 
-
     ### CSS methods
 
     def to_jsonable(self) -> dict:
@@ -444,7 +467,7 @@ class Tiling(CombinatorialClass):
         yield from self.gridded_cayley_permutations(n)
 
     def copy(self):
-        return Tiling(self.obstructions,self.requirements,self.dimensions)
+        return Tiling(self.obstructions, self.requirements, self.dimensions)
 
     def __repr__(self) -> str:
         return f"Tiling({self.obstructions}, {self.requirements}, {self.dimensions})"
@@ -457,15 +480,27 @@ class Tiling(CombinatorialClass):
         grid, key_string, crossing_string, requirements_string = self.find_string()
         return grid + key_string
 
+    @classmethod
+    def empty_tiling(cls) -> "Tiling":
+        return Tiling([GriddedCayleyPerm(CayleyPermutation([]), [])], [], (0, 0))
+
     def find_string(self) -> str:
+        """TODO: fix for empty tiling."""
         if self.dimensions == (0, 0):
-            return "+---+\n| \u03B5 |\n+---+\n"
+            return "+---+\n| \u03b5 |\n+---+\n"
         crossing_string = "Crossing obstructions: \n"
+        point_rows = self.point_rows()
 
         cell_basis = defaultdict(list)
         for ob in self.obstructions:
             if ob.is_local() and len(ob) > 0:
                 cell_basis[ob.positions[0]].append(ob.pattern)
+            elif (
+                len(ob.pattern) == 2
+                and ob.positions[0][1] == ob.positions[1][1]
+                and ob.positions[0][1] in point_rows
+            ):
+                continue
             else:
                 crossing_string += str(ob) + "\n"
         basis_key = {}
@@ -508,6 +543,10 @@ class Tiling(CombinatorialClass):
             fill_rows[j] = (
                 fill_rows[j][: 2 + 4 * i] + str(key) + fill_rows[j][3 + 4 * i :]
             )
+
+        for pr in point_rows:
+            fill_rows[pr] = fill_rows[pr][:-1] + "*\n"
+
         grid = edge_row + edge_row.join(reversed(fill_rows)) + edge_row
 
         key_string = "Key: \n"
@@ -528,3 +567,14 @@ class Tiling(CombinatorialClass):
 
     def __hash__(self) -> int:
         return hash((self.obstructions, self.requirements, self.dimensions))
+
+    def __bool__(self) -> bool:
+        return self == Tiling.empty_tiling()
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Tiling):
+            return NotImplemented
+        return self.dimensions < other.dimensions or (
+            self.dimensions == other.dimensions
+            and len(self.obstructions) < len(other.obstructions)
+        )

@@ -160,6 +160,12 @@ class Parameter:
     def __repr__(self):
         return str((repr(self.ghost), str(self.map)))
 
+    def __leq__(self, other):
+        return self.ghost <= other.ghost
+
+    def __lt__(self, other):
+        return self.ghost < other.ghost
+
     def reduced_str(self):
         """Returns a string representation of the parameter without the
         crossing obs and reqs."""
@@ -243,8 +249,8 @@ class MappedTiling(CombinatorialClass):
     def full_cleanup(self):
         """Applies every cleanup function"""
         new_mappling = self.tidy_containing_parameters()
-        if not new_mappling:
-            return MappedTiling(Tiling([], [], self.tiling.dimensions), [], [], [])
+        if not new_mappling.tiling:
+            return new_mappling
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
         avoiding_parameters = [
             param.back_map_obs_and_reqs(new_mappling.tiling)
@@ -357,7 +363,7 @@ class MappedTiling(CombinatorialClass):
         If only one parameter in a list and it maps to base tiling by the identity map
         then map obs and reqs down and remove the parameter list.
         Note: As we always assume a parameter maps to the whole tiling, we defined a row
-         col map as being trivial iff the dimenstions of the tiling and ghost are the same.
+         col map as being trivial iff the dimensions of the tiling and ghost are the same.
         """
         new_containing_parameters = []
         new_tiling = self.tiling
@@ -365,9 +371,11 @@ class MappedTiling(CombinatorialClass):
             param_list = self.back_maps_obs_and_reqs_for_param_list(
                 new_tiling, param_list
             )
+            if len(param_list) == 0:
+                return MappedTiling(Tiling.empty_tiling(), [], [], [])
             if len(param_list) == 1:
                 if param_list[0].ghost.is_empty():
-                    return False
+                    return MappedTiling(Tiling.empty_tiling(), [], [], [])
                 if param_list[0].ghost.dimensions == self.tiling.dimensions:
                     new_tiling = param_list[0].back_map_obs_and_reqs(new_tiling).ghost
                 else:
@@ -383,7 +391,9 @@ class MappedTiling(CombinatorialClass):
             self.enumeration_parameters,
         )
 
-    def reap_contradictory_ghosts_from_list(self, parameter_list):  # Good?
+    def reap_contradictory_ghosts_from_list(
+        self, parameter_list: list[Parameter]
+    ):  # Good?
         """Removes parameters which are contradictory from parameter list"""
         return [A for A in parameter_list if not A.is_contradictory(self.tiling)]
 
@@ -495,6 +505,10 @@ class MappedTiling(CombinatorialClass):
             new_enumeration_parameters,
         )
 
+    def add_requirement_list(self, req_list: List[GriddedCayleyPerm]):
+        """Adds a requirement list to the tiling and the parameters."""
+        return self.add_requirements([req_list])
+
     def remove_empty_rows_and_columns(self):  # Good
         """Finds and removes empty rows and cols in the base tiling then removes the
         corresponding rows and columns in the parameters"""
@@ -570,18 +584,27 @@ class MappedTiling(CombinatorialClass):
     def __eq__(self, other) -> bool:
         return (
             self.tiling == other.tiling
-            and self.avoiding_parameters == other.avoiding_parameters
-            and self.containing_parameters == other.containing_parameters
-            and self.enumeration_parameters == other.enumeration_parameters
+            and sorted(tuple(self.avoiding_parameters))
+            == sorted(tuple(other.avoiding_parameters))
+            and sorted(tuple(self.containing_parameters))
+            == sorted(tuple(other.containing_parameters))
+            and sorted(tuple(self.enumeration_parameters))
+            == sorted(tuple(other.enumeration_parameters))
         )
 
     def __hash__(self) -> int:
         return hash(
             (
                 self.tiling,
-                tuple(self.avoiding_parameters),
-                tuple(tuple(clist) for clist in self.containing_parameters),
-                tuple(tuple(elist) for elist in self.enumeration_parameters),
+                tuple(sorted(self.avoiding_parameters)),
+                tuple(
+                    sorted(tuple(sorted(clist)) for clist in self.containing_parameters)
+                ),
+                tuple(
+                    sorted(
+                        tuple(sorted(elist)) for elist in self.enumeration_parameters
+                    )
+                ),
             )
         )
 
