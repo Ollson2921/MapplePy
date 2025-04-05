@@ -91,6 +91,8 @@ class Parameter:
         return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions), self.map)
 
     def sub_parameter(self, factor):
+        """For a given factor of cells in the tiling, finds the preimage of these cells in
+        the parameter and returns a new parameter with a subghost but the same map."""
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
@@ -118,7 +120,7 @@ class Parameter:
         """Fuses valid rows and columns"""
         return self.fuse_valid_rows_or_cols(0).fuse_valid_rows_or_cols(1)
 
-    def reduce_empty_rows_or_cols(self, direction, preimages, currently_empty):
+    def _reduce_empty_rows_or_cols(self, direction, preimages, currently_empty):
         """Removes empty rows or columns if they share an image with another row or column.
         direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages
         """
@@ -143,6 +145,7 @@ class Parameter:
         return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
 
     def reduce_empty_rows_and_cols(self):
+        """ "Removes empty rows and columns in the parameter"""
         col_preimages = {
             i: self.map.preimages_of_col(i) for i in set(self.map.col_map.values())
         }
@@ -150,9 +153,9 @@ class Parameter:
             i: self.map.preimages_of_row(i) for i in set(self.map.row_map.values())
         }
         currently_empty = self.ghost.find_empty_rows_and_columns()
-        return self.reduce_empty_rows_or_cols(
+        return self._reduce_empty_rows_or_cols(
             0, col_preimages, currently_empty[0]
-        ).reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
+        )._reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
 
     def copy(self):
         return Parameter(self.ghost, self.map)
@@ -188,6 +191,10 @@ class MappedTiling(CombinatorialClass):
         self.containing_parameters = containing_parameters
         self.enumeration_parameters = enumeration_parameters
         self.tiling = tiling
+        # if self.is_empty():
+        #     self.avoiding_parameters = []
+        #     self.containing_parameters = [[]]
+        #     self.enumeration_parameters = [[]]
 
     ## Combintatorial class stuff ##
 

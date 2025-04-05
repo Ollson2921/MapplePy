@@ -33,7 +33,9 @@ class AbstractFactorStrategy:
         return self.simplify(factors)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
-        """TODO: which simplifications do we want here (if any??)"""
+        """TODO: which simplifications do we want here?"""
+        if comb_class.is_empty():
+            return MappedTiling(Tiling.empty_tiling(), [], [], [])
         return comb_class
 
     def extra_parameters(
