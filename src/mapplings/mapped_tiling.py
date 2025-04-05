@@ -259,17 +259,20 @@ class MappedTiling(CombinatorialClass):
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
             avoiding_parameters
         )
-        new_mappling = MappedTiling(
-            new_mappling.tiling,
-            avoiding_parameters,
-            new_mappling.containing_parameters,
-            new_mappling.enumeration_parameters,
-        )
-        return (
-            new_mappling.remove_empty_rows_and_columns()
+        new_mappling = (
+            MappedTiling(
+                new_mappling.tiling,
+                avoiding_parameters,
+                new_mappling.containing_parameters,
+                new_mappling.enumeration_parameters,
+            )
+            .remove_empty_rows_and_columns()
             .reduce_empty_rows_and_cols_in_parameters()
             .fuse_parameters()
         )
+        if new_mappling.is_empty():
+            return MappedTiling(Tiling.empty_tiling(), [], [], [])
+        return new_mappling
 
     def fuse_parameters(self):
         """Fuses valid rows and cols in every parameter"""
@@ -358,12 +361,12 @@ class MappedTiling(CombinatorialClass):
 
     def tidy_containing_parameters(self):  # Good
         """For parameters with empty tilings, if it is the only
-         one in a list then the mappling is empty, otherwise remove the empty
-         parameter.
+        one in a list then the mappling is empty, otherwise remove the empty
+        parameter.
         If only one parameter in a list and it maps to base tiling by the identity map
         then map obs and reqs down and remove the parameter list.
         Note: As we always assume a parameter maps to the whole tiling, we defined a row
-         col map as being trivial iff the dimensions of the tiling and ghost are the same.
+        col map as being trivial iff the dimensions of the tiling and ghost are the same.
         """
         new_containing_parameters = []
         new_tiling = self.tiling
@@ -619,8 +622,34 @@ class MappedTiling(CombinatorialClass):
             ],
         )
 
+    def are_contradictory_parameters(self):
+        """Returns True if there is a contradiction between the avoiding and
+        containing parameters - if a len 1 containing parameter list is the
+        same as an avoiding parameter."""
+        if not self.avoiding_parameters:
+            return False
+        len_one_cont_params = [
+            contain_list
+            for contain_list in self.containing_parameters
+            if len(contain_list) == 1
+        ]
+        if not len_one_cont_params:
+            return False
+        if any(
+            contain_list[0] == avoiding_parameter
+            for contain_list in len_one_cont_params
+            for avoiding_parameter in self.avoiding_parameters
+        ):
+            return True
+        return False
+
     def is_empty(self) -> bool:
-        return self.tiling.is_empty()
+        """Assume this is run after all cleanup functions have been applied.
+
+        Returns True if the tiling is empty or there is a contradiction between
+        containing and avoiding parameters.
+        TODO: Are there any other times when a mapped tiling is empty?"""
+        return self.tiling.is_empty() or self.are_contradictory_parameters()
 
     def __repr__(self):
         return str(

@@ -70,17 +70,20 @@ class MTParameterPlacementStrategy(
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
             comb_class.avoiding_parameters
         )
-        new_mappling = MappedTiling(
-            new_mappling.tiling,
-            avoiding_parameters,
-            new_mappling.containing_parameters,
-            new_mappling.enumeration_parameters,
-        )
-        return (
-            new_mappling.remove_empty_rows_and_columns()
+        new_mappling = (
+            MappedTiling(
+                new_mappling.tiling,
+                avoiding_parameters,
+                new_mappling.containing_parameters,
+                new_mappling.enumeration_parameters,
+            )
+            .remove_empty_rows_and_columns()
             .reduce_empty_rows_and_cols_in_parameters()
-            .fuse_parameters(),
+            .fuse_parameters()
         )
+        if new_mappling.is_empty():
+            return MappedTiling(Tiling.empty_tiling(), [], [], [])
+        return new_mappling
 
     def extra_parameters(
         self,
