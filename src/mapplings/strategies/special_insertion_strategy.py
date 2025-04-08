@@ -32,10 +32,11 @@ class SpecialInsertionStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayley
         self,
         index: int,
         ignore_parent: bool = False,
+        possibly_empty: bool = True,
     ):
         self.index = index
         self.pattern = SpecialPatterns[index]
-        super().__init__(ignore_parent=ignore_parent)
+        super().__init__(ignore_parent=ignore_parent, possibly_empty=possibly_empty)
 
     def decomposition_function(
         self, comb_class: MappedTiling

@@ -16,11 +16,15 @@ class AbstractFactorStrategy:
         self,
         ignore_parent: bool = True,
         workable: bool = True,
+        possibly_empty: bool = True,
     ):
         # TODO: input should include partition: Iterable[Iterable[Cell]] to
         #       allow for interleaving factors.
         super().__init__(
-            ignore_parent=ignore_parent, workable=workable, inferrable=True
+            ignore_parent=ignore_parent,
+            workable=workable,
+            inferrable=True,
+            possibly_empty=possibly_empty,
         )
 
     def decomposition_function(
@@ -33,8 +37,10 @@ class AbstractFactorStrategy:
         return self.simplify(factors)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
-        """TODO: which simplifications do we want here (if any??)"""
-        return comb_class
+        new_mappling = comb_class.tidy_containing_parameters()
+        if not new_mappling.tiling:
+            return new_mappling
+        return new_mappling.insert_valid_avoiders().reap_all_contradictions()
 
     def extra_parameters(
         self,
@@ -120,7 +126,7 @@ class AbstractILFactorStrategy:
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         """TODO: which simplifications do we want here (if any??)"""
-        return comb_class
+        return comb_class.full_cleanup()
 
     def extra_parameters(
         self,

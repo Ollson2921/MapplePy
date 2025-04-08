@@ -40,6 +40,7 @@ class MTParameterPlacementStrategy(
         direction: int,
         cell: Cell,
         ignore_parent: bool = False,
+        possibly_empty: bool = True,
     ):
         self.mappling = mappling
         self.parameter = parameter
@@ -47,7 +48,7 @@ class MTParameterPlacementStrategy(
         self.direction = direction
         self.cell = cell
         assert direction in self.DIRECTIONS
-        super().__init__(ignore_parent=ignore_parent)
+        super().__init__(ignore_parent=ignore_parent, possibly_empty=possibly_empty)
 
     def algorithm(self) -> ParameterPlacement:
         return ParameterPlacement(self.mappling, self.parameter, self.cell)

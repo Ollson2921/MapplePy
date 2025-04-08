@@ -16,6 +16,7 @@ from .strategies import (
     SpecialInsertionStrategy,
     SpecialPatterns,
     MTCellInsertionFactory,
+    RootVerificationStrategy,
 )
 
 
@@ -24,7 +25,7 @@ class MappedTileScopePack(StrategyPack):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def MTpoint_placement(cls):
+    def MTpoint_placement(cls, rootmt):
         return MappedTileScopePack(
             initial_strats=[
                 FactorStrategy(),
@@ -45,7 +46,10 @@ class MappedTileScopePack(StrategyPack):
                     # MTLessThanOrEqualRowColSeparationStrategy(),
                 ]
             ],  # Iterable[Iterable[Strategy]]
-            ver_strats=[AtomStrategy()],  # Iterable[Strategy]
+            ver_strats=[
+                AtomStrategy(),
+                RootVerificationStrategy(rootmt),
+            ],  # Iterable[Strategy]
             name="Point Placement",
             symmetries=[],
             iterative=False,
