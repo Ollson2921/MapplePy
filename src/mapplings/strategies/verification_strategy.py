@@ -2,12 +2,12 @@ from typing import Optional, Type, TypeVar
 from comb_spec_searcher import VerificationStrategy
 from mapplings import MappedTiling
 
-RootVerificationStrategyType = TypeVar(
-    "RootVerificationStrategyType", bound="RootVerificationStrategy"
+RootAwareVerificationStrategyType = TypeVar(
+    "RootAwareVerificationStrategyType", bound="RootAwareVerificationStrategy"
 )
 
 
-class RootVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling]):
+class RootAwareVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling]):
     """
     A base class for a verification strategy that needs to know the basis the
     Tilescope is currently running.
@@ -22,9 +22,9 @@ class RootVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling])
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(
-        self: RootVerificationStrategyType,
+        self: RootAwareVerificationStrategyType,
         mapped_tiling: MappedTiling,
-    ) -> RootVerificationStrategyType:
+    ) -> RootAwareVerificationStrategyType:
         """
         Return a new version of the verification strategy with the given mappling instead
         of the current one.
@@ -36,7 +36,17 @@ class RootVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling])
         return self._rootmt
 
     def verified(self, comb_class: MappedTiling) -> bool:
-        return self.rootmt == comb_class
+        if (
+            comb_class.avoiding_parameters
+            or any(l for l in comb_class.containing_parameters)
+            or any(l for l in comb_class.enumeration_parameters)
+        ):
+            return False
+        if comb_class == self.rootmt:
+            return False
+        if comb_class.is_empty():
+            return False
+        return True
 
     def formal_step(self):
         return "the mappling is the same as the root"
@@ -48,8 +58,8 @@ class RootVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling])
 
     @classmethod
     def from_dict(
-        cls: Type[RootVerificationStrategyType], d: dict
-    ) -> RootVerificationStrategyType:
+        cls: Type[RootAwareVerificationStrategyType], d: dict
+    ) -> RootAwareVerificationStrategyType:
         if "rootmt" in d and d["rootmt"] is not None:
             rootmt: Optional[MappedTiling] = d["rootmt"]
         else:

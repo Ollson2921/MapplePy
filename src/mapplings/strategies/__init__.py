@@ -21,4 +21,4 @@ from .special_insertion_strategy import (
     SpecialInsertionStrategy,
     SpecialPatterns,
 )
-from .verification_strategy import RootVerificationStrategy
+from .verification_strategy import RootAwareVerificationStrategy

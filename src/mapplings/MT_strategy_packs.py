@@ -16,7 +16,7 @@ from .strategies import (
     SpecialInsertionStrategy,
     SpecialPatterns,
     MTCellInsertionFactory,
-    RootVerificationStrategy,
+    RootAwareVerificationStrategy,
 )
 
 
@@ -48,7 +48,7 @@ class MappedTileScopePack(StrategyPack):
             ],  # Iterable[Iterable[Strategy]]
             ver_strats=[
                 AtomStrategy(),
-                RootVerificationStrategy(rootmt),
+                RootAwareVerificationStrategy(rootmt),
             ],  # Iterable[Strategy]
             name="Point Placement",
             symmetries=[],

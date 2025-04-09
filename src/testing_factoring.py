@@ -251,17 +251,17 @@ IL_TEST = Tiling(
 n = 7  # how far to check counts
 print("====================Initial Mappling====================")
 print(M1.reduced_str())
-print("Counts: ", M1.initial_conditions(n))
+# print("Counts: ", M1.initial_conditions(n))
 
 print("====================Start Parameter Placement====================")
 param_placement = list(fully_place_parameter(M0, P0, 4))
 print("++++ First Point Placed ++++")
 print(param_placement[0].reduced_str())
-print("Counts: ", param_placement[0].initial_conditions(n))
+# print("Counts: ", param_placement[0].initial_conditions(n))
 
 print("++++ Second Point Placed ++++")
 print(param_placement[1].reduced_str())
-print("Counts: ", param_placement[1].initial_conditions(n))
+# print("Counts: ", param_placement[1].initial_conditions(n))
 
 print("====================Start Factoring====================")
 i = 0
@@ -269,4 +269,4 @@ for factor in MTFactor(param_placement[-1]).find_factors():
     print("----- Factor:", i)
     i += 1
     print(factor.reduced_str())
-    print("Counts: ", factor.initial_conditions(n))
+    # print("Counts: ", factor.initial_conditions(n))
