@@ -41,12 +41,13 @@ class MTRequirementPlacementStrategy(
         indices: Iterable[int],
         direction: int,
         ignore_parent: bool = False,
+        possibly_empty: bool = True,
     ):
         self.gcps = tuple(gcps)
         self.indices = tuple(indices)
         self.direction = direction
         assert direction in self.DIRECTIONS
-        super().__init__(ignore_parent=ignore_parent)
+        super().__init__(ignore_parent=ignore_parent, possibly_empty=possibly_empty)
 
     def algorithm(self, mappling: MappedTiling) -> MTRequirementPlacement:
         return MTRequirementPlacement(mappling)
