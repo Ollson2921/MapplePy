@@ -1,0 +1,5 @@
+*.code-workspace
+*.pyc
+CayleyTilings.code-workspace
+*.DS_Store
+__pycache__/*
