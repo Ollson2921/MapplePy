@@ -64,24 +64,7 @@ class MTParameterPlacementStrategy(
         )
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
-        new_mappling = comb_class.tidy_containing_parameters()
-        if not new_mappling.tiling:
-            return new_mappling
-        new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
-        avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
-            comb_class.avoiding_parameters
-        )
-        new_mappling = MappedTiling(
-            new_mappling.tiling,
-            avoiding_parameters,
-            new_mappling.containing_parameters,
-            new_mappling.enumeration_parameters,
-        )
-        return (
-            new_mappling.remove_empty_rows_and_columns()
-            .reduce_empty_rows_and_cols_in_parameters()
-            .fuse_parameters(),
-        )
+        return comb_class.full_cleanup()
 
     def extra_parameters(
         self,

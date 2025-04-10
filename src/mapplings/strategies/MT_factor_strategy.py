@@ -42,6 +42,7 @@ class AbstractFactorStrategy:
             return new_mappling
         return new_mappling.insert_valid_avoiders().reap_all_contradictions()
 
+
     def extra_parameters(
         self,
         comb_class: MappedTiling,

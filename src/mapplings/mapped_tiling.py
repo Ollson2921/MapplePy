@@ -91,6 +91,8 @@ class Parameter:
         return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions), self.map)
 
     def sub_parameter(self, factor):
+        """For a given factor of cells in the tiling, finds the preimage of these cells in
+        the parameter and returns a new parameter with a subghost but the same map."""
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
@@ -118,7 +120,7 @@ class Parameter:
         """Fuses valid rows and columns"""
         return self.fuse_valid_rows_or_cols(0).fuse_valid_rows_or_cols(1)
 
-    def reduce_empty_rows_or_cols(self, direction, preimages, currently_empty):
+    def _reduce_empty_rows_or_cols(self, direction, preimages, currently_empty):
         """Removes empty rows or columns if they share an image with another row or column.
         direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages
         """
@@ -143,6 +145,7 @@ class Parameter:
         return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
 
     def reduce_empty_rows_and_cols(self):
+        """ "Removes empty rows and columns in the parameter"""
         col_preimages = {
             i: self.map.preimages_of_col(i) for i in set(self.map.col_map.values())
         }
@@ -150,9 +153,9 @@ class Parameter:
             i: self.map.preimages_of_row(i) for i in set(self.map.row_map.values())
         }
         currently_empty = self.ghost.find_empty_rows_and_columns()
-        return self.reduce_empty_rows_or_cols(
+        return self._reduce_empty_rows_or_cols(
             0, col_preimages, currently_empty[0]
-        ).reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
+        )._reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
 
     def copy(self):
         return Parameter(self.ghost, self.map)
@@ -188,6 +191,10 @@ class MappedTiling(CombinatorialClass):
         self.containing_parameters = containing_parameters
         self.enumeration_parameters = enumeration_parameters
         self.tiling = tiling
+        # if self.is_empty():
+        #     self.avoiding_parameters = []
+        #     self.containing_parameters = [[]]
+        #     self.enumeration_parameters = [[]]
 
     ## Combintatorial class stuff ##
 
@@ -259,17 +266,20 @@ class MappedTiling(CombinatorialClass):
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
             avoiding_parameters
         )
-        new_mappling = MappedTiling(
-            new_mappling.tiling,
-            avoiding_parameters,
-            new_mappling.containing_parameters,
-            new_mappling.enumeration_parameters,
-        )
-        return (
-            new_mappling.remove_empty_rows_and_columns()
+        new_mappling = (
+            MappedTiling(
+                new_mappling.tiling,
+                avoiding_parameters,
+                new_mappling.containing_parameters,
+                new_mappling.enumeration_parameters,
+            )
+            .remove_empty_rows_and_columns()
             .reduce_empty_rows_and_cols_in_parameters()
             .fuse_parameters()
         )
+        if new_mappling.is_empty():
+            return MappedTiling(Tiling.empty_tiling(), [], [], [])
+        return new_mappling
 
     def fuse_parameters(self):
         """Fuses valid rows and cols in every parameter"""
@@ -358,12 +368,12 @@ class MappedTiling(CombinatorialClass):
 
     def tidy_containing_parameters(self):  # Good
         """For parameters with empty tilings, if it is the only
-         one in a list then the mappling is empty, otherwise remove the empty
-         parameter.
+        one in a list then the mappling is empty, otherwise remove the empty
+        parameter.
         If only one parameter in a list and it maps to base tiling by the identity map
         then map obs and reqs down and remove the parameter list.
         Note: As we always assume a parameter maps to the whole tiling, we defined a row
-         col map as being trivial iff the dimensions of the tiling and ghost are the same.
+        col map as being trivial iff the dimensions of the tiling and ghost are the same.
         """
         new_containing_parameters = []
         new_tiling = self.tiling
@@ -619,8 +629,34 @@ class MappedTiling(CombinatorialClass):
             ],
         )
 
+    def are_contradictory_parameters(self):
+        """Returns True if there is a contradiction between the avoiding and
+        containing parameters - if a len 1 containing parameter list is the
+        same as an avoiding parameter."""
+        if not self.avoiding_parameters:
+            return False
+        len_one_cont_params = [
+            contain_list
+            for contain_list in self.containing_parameters
+            if len(contain_list) == 1
+        ]
+        if not len_one_cont_params:
+            return False
+        if any(
+            contain_list[0] == avoiding_parameter
+            for contain_list in len_one_cont_params
+            for avoiding_parameter in self.avoiding_parameters
+        ):
+            return True
+        return False
+
     def is_empty(self) -> bool:
-        return self.tiling.is_empty()
+        """Assume this is run after all cleanup functions have been applied.
+
+        Returns True if the tiling is empty or there is a contradiction between
+        containing and avoiding parameters.
+        TODO: Are there any other times when a mapped tiling is empty?"""
+        return self.tiling.is_empty() or self.are_contradictory_parameters()
 
     def __repr__(self):
         return str(
