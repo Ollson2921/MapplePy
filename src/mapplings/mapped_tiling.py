@@ -13,6 +13,8 @@ from gridded_cayley_permutations import (
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
+redundance_tolerance = 0 #Higher values globally increase sizes of GCPS used in redundancy checks
+
 
 class Parameter:
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
@@ -182,7 +184,30 @@ class Parameter:
                     parameters[choice] = parameters[choice].split_and_squish_in_range(min_index, max_index + k, direction)
                     k += 1
         return parameters[0], parameters[1]
-
+    
+    @staticmethod
+    def make_comparisons(parameters, base_dimensions, tolerance):
+        '''Creates a comparisons dictionary from a list of parameters.
+        comparisons[a] is the set of indices b such that the objects from a mappling with parameters[a] as an avoider are a subset of the objects with parameters[b] as an avoider.
+        The size of objects created is the maximum size of the upper bound of mimimal GCPS across all paramters plus the tolerance'''
+        if not parameters:
+            return {}
+        base_size = tolerance + max([param.ghost.maximum_length_of_minimum_gridded_cayley_perm() for param in parameters])
+        base_tiling = Tiling([],[],base_dimensions)
+        objects = []
+        for param in parameters:
+            objects.append(set(MappedTiling(base_tiling,[param],[],[]).objects_of_size(base_size)))
+        comparisons = {i: set() for i in range(len(parameters))}
+        for i in range(len(parameters)-1):
+            for j in range(i+1, len(parameters)):
+                if objects[i].issubset(objects[j]):
+                    comparisons[i].add(j)
+                    continue
+                if objects[j].issubset(objects[i]):
+                    comparisons[j].add(i)
+                    continue
+        return comparisons
+        
     def copy(self):
         return Parameter(self.ghost, self.map)
 
@@ -352,7 +377,7 @@ class MappedTiling(CombinatorialClass):
             self.containing_parameters,
             self.enumeration_parameters,
         )
-
+        
     def avoider_can_be_placed(self, avoider: Parameter):
         """returns the index of a requirement in the avoider that can be added to the tiling as an obstruction if it exists
         for now, this only happens if the avoider is trivial other than that single requirement
@@ -453,7 +478,19 @@ class MappedTiling(CombinatorialClass):
                     GriddedCayleyPerm(CayleyPermutation([0]), [(i, j)])
                 )
         self.parameters.append(new_ghost)
-
+        
+    def remove_redundant_parameters(self, tolerance = redundance_tolerance):
+        '''Removes reduncant parameters from the avoiding parameters, and from each containing parameter list.
+        Higher tolerance makes the function check largers GCPS'''
+        avoider_comparisons = Parameter.make_comparisons(self.avoiding_parameters, self.tiling.dimensions, tolerance)
+        supersets = set(chain(*avoider_comparisons.values()))
+        new_avoiders = [self.avoiding_parameters[i] for i in range(len(self.avoiding_parameters)) if i not in supersets]
+        new_containers = []
+        for c_list in self.containing_parameters:
+            container_comparisons = Parameter.make_comparisons(c_list, self.tiling.dimensions, tolerance)
+            new_containers.append([c_list[i] for i in range(len(c_list)) if not container_comparisons[i]])
+        return MappedTiling(self.tiling, new_avoiders, new_containers, self.enumeration_parameters)
+            
     def is_trivial(self, confidence=8):  # TODO: Make this better and based on theory
         return set(self.objects_of_size(confidence)) == set(
             self.tiling.objects_of_size(confidence)

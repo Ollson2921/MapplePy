@@ -26,8 +26,9 @@ class AbstractFactorStrategy:
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        factor_cells = MTFactor(comb_class).find_factor_cells()
-        factors = MTFactor(comb_class).make_factors(factor_cells)
+        algo = MTFactor(comb_class.remove_redundant_parameters())
+        factor_cells = algo.find_factor_cells()
+        factors = algo.make_factors(factor_cells)
         if not factors:
             raise StrategyDoesNotApply
         return self.simplify(factors)
@@ -112,7 +113,7 @@ class AbstractILFactorStrategy:
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        factor_cells = MTFactor(comb_class).find_IL_factor_cells()
+        factor_cells = MTFactor(comb_class.remove_redundant_parameters()).find_IL_factor_cells()
         factors = MTFactor(comb_class).make_factors(factor_cells)
         if not factors:
             raise StrategyDoesNotApply

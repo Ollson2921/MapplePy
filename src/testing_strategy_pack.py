@@ -28,6 +28,14 @@ parameter = parameter.back_map_obs_and_reqs(tiling)
 
 mt = MappedTiling(tiling, [parameter], [], [])
 
+
+base = Tiling([],[],(1,1))
+
+# P0 = Parameter(Tiling.from_vincular(CayleyPermutation((0,2,1)),[1]), RowColMap({0:0,1:0,2:0,3:0,4:0,5:0,6:0},{0:0,1:0,2:0,3:0,4:0,5:0,6:0}))
+# mappling = MappedTiling(base,[P0],[],[])
+
+
+
 ruledb = RuleDBForest()
 scope = MappedTileScope(
     mt, MappedTileScopePack.MTpoint_placement(), debug=True, ruledb=ruledb
