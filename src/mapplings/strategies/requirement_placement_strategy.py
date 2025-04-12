@@ -41,12 +41,13 @@ class MTRequirementPlacementStrategy(
         indices: Iterable[int],
         direction: int,
         ignore_parent: bool = False,
+        possibly_empty: bool = True,
     ):
         self.gcps = tuple(gcps)
         self.indices = tuple(indices)
         self.direction = direction
         assert direction in self.DIRECTIONS
-        super().__init__(ignore_parent=ignore_parent)
+        super().__init__(ignore_parent=ignore_parent, possibly_empty=possibly_empty)
 
     def algorithm(self, mappling: MappedTiling) -> MTRequirementPlacement:
         return MTRequirementPlacement(mappling)
@@ -66,24 +67,7 @@ class MTRequirementPlacementStrategy(
         return (comb_class.add_obstructions(self.gcps),) + tuple(new_mapplings)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
-        new_mappling = comb_class.tidy_containing_parameters()
-        if not new_mappling.tiling:
-            return new_mappling
-        new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
-        avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
-            comb_class.avoiding_parameters
-        )
-        new_mappling = MappedTiling(
-            new_mappling.tiling,
-            avoiding_parameters,
-            new_mappling.containing_parameters,
-            new_mappling.enumeration_parameters,
-        )
-        return (
-            new_mappling.remove_empty_rows_and_columns()
-            .reduce_empty_rows_and_cols_in_parameters()
-            .fuse_parameters()
-        )
+        return comb_class.full_cleanup()
 
     def extra_parameters(
         self,

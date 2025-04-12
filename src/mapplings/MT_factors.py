@@ -146,7 +146,7 @@ class MTFactor:
                 self.mappling.containing_parameters, factor_cells[i]
             )
             if containing_params == -1:
-                factors[i] = MappedTiling(Tiling([], [], (1, 1)))
+                factors[i] = MappedTiling(Tiling([], [], (1, 1)), [], [], [])
                 continue
             enumeration_params = self.factor_enumerators(
                 self.mappling.containing_parameters, factor_cells[i]
