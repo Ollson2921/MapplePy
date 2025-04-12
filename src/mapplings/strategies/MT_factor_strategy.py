@@ -41,8 +41,7 @@ class AbstractFactorStrategy:
         new_mappling = comb_class.tidy_containing_parameters()
         if not new_mappling.tiling:
             return new_mappling
-        return new_mappling.insert_valid_avoiders().reap_all_contradictions()
-
+        return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
 
     def extra_parameters(
         self,
@@ -127,12 +126,12 @@ class AbstractILFactorStrategy:
             raise StrategyDoesNotApply
         return tuple([self.simplify(factor) for factor in factors])
 
-    def simplify(self, comb_class) -> MappedTiling:
+    def simplify(self, comb_class : MappedTiling) -> MappedTiling:
         """TODO: which simplifications do we want here (if any??)"""
         new_mappling = comb_class.tidy_containing_parameters()
         if not new_mappling.tiling:
             return new_mappling
-        return new_mappling.insert_valid_avoiders().reap_all_contradictions()
+        return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
 
     def extra_parameters(
         self,

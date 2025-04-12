@@ -64,7 +64,7 @@ class MTRequirementPlacementStrategy(
         new_mapplings = []
         for placed_point in placed_points:
             new_mapplings.append(self.simplify(placed_point))
-        return (comb_class.add_obstructions(self.gcps),) + tuple(new_mapplings)
+        return (self.simplify(comb_class.add_obstructions_to_tiling(self.gcps)),) + tuple(new_mapplings)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         return comb_class.full_cleanup()

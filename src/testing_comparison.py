@@ -14,7 +14,7 @@ des2 = CayleyPermutation((1, 0))
 asc3 = CayleyPermutation((0, 1, 2))
 
 # Base = Tiling.from_vincular(point,[]).delete_rows_and_columns([],[0])
-# Cayley_Base = Tiling([GriddedCayleyPerm(cay, [(0,0),(0,0)])],[],(0,0))
+Cayley_Base = Tiling([GriddedCayleyPerm(cay, [(0,0),(0,0)])], [], (1,1))
 
 # G1 = Tiling.from_vincular(CayleyPermutation((0,2,1)),[1]).delete_rows_and_columns([],[0])
 # G2 = Tiling.from_vincular(CayleyPermutation((1,3,2,0)),[1]).delete_rows_and_columns([],[0])
@@ -41,7 +41,7 @@ fix_rows = [
 
 G = Tiling.from_vincular(CayleyPermutation((0,2,1)),[1,]).add_obstructions(fix_rows)
 A = Parameter(G,RowColMap({0:0,1:0,2:0,3:0,4:0,5:0,6:0},{0:0,1:0,2:0,3:0,4:0,5:0,6:0}))
-M0 = MappedTiling(Tiling([],[], (1,1)), [A], [], []).full_cleanup()
+M0 = MappedTiling(Cayley_Base, [A], [], []).full_cleanup()
 
 n=4
 #### MANUAL CONSTRUCTION
@@ -71,9 +71,6 @@ n=4
 #     print(factor)
 #     print("Counts: ", factor.initial_conditions(n))
 #     i+=1
-
-
-
     
 ruledb = RuleDBForest()
 scope = MappedTileScope(

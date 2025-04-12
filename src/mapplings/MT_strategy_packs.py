@@ -28,9 +28,9 @@ class MappedTileScopePack(StrategyPack):
     def MTpoint_placement(cls, rootmt):
         return MappedTileScopePack(
             initial_strats=[
-                FactorStrategy(),
+                # FactorStrategy(),
                 MTPointPlacementFactory(),
-                # ILFactorStrategy(),
+                ILFactorStrategy(),
             ],  # Iterable[Strategy]
             inferral_strats=[
                 # MTLessThanRowColSeparationStrategy(),
@@ -48,7 +48,7 @@ class MappedTileScopePack(StrategyPack):
             ],  # Iterable[Iterable[Strategy]]
             ver_strats=[
                 AtomStrategy(),
-                NoParameterVerificationStrategy(rootmt),
+                # NoParameterVerificationStrategy(rootmt),
             ],  # Iterable[Strategy]
             name="Point Placement",
             symmetries=[],

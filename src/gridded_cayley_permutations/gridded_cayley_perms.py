@@ -371,14 +371,7 @@ class GriddedCayleyPerm:
         return f"{self.pattern}: {','.join(str(cell) for cell in self.positions)}"
 
     def __lt__(self, other: "GriddedCayleyPerm") -> bool:
-        try:
-            return (self.pattern, self.positions) < (other.pattern, other.positions)
-        except:
-            print('='*20)
-            print((self.pattern, self.positions) , (other.pattern, other.positions))
-            print('='*20)
-            input('pause')
-            return False
+        return (self.pattern, self.positions) < (other.pattern, other.positions)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GriddedCayleyPerm):
