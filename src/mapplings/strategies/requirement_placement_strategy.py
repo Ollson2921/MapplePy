@@ -246,8 +246,8 @@ class MTRequirementInsertionStrategy(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         return (
-            comb_class.add_obstructions(self.gcps),
-            comb_class.add_requirement_list(self.gcps),
+            comb_class.add_obstructions(self.gcps).reap_all_contradictions(),
+            comb_class.add_requirement_list(self.gcps).reap_all_contradictions(),
         )
 
     def extra_parameters(

@@ -91,6 +91,14 @@ class Parameter:
             tiling.requirements
         )
         return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions,simplify), self.map)
+    
+    def back_map_point_obstructions(self, tiling : Tiling, simplify = 0):
+        """Places all obs and reqs of tiling into the parameter according to the row/col map.
+        Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
+        Doing this for req lists is weird...
+        """
+        new_obs = list(self.ghost.obstructions) + self.map.preimage_of_obstructions([ob for ob in tiling.obstructions if len(ob)==1])
+        return Parameter(Tiling(new_obs, self.ghost.requirements, self.ghost.dimensions,simplify), self.map)
 
     def sub_parameter(self, factor):
         preimage_of_cells = self.map.preimage_of_cells(factor)
@@ -190,8 +198,8 @@ class Parameter:
         '''Creates a comparisons dictionary from a list of parameters.
         comparisons[a] is the set of indices b such that the objects from a mappling with parameters[a] as an avoider are a subset of the objects with parameters[b] as an avoider.
         The size of objects created is the maximum size of the upper bound of mimimal GCPS across all paramters plus the tolerance'''
-        if not parameters:
-            return {}
+        if len(parameters)<=1:
+            return {0:{}}
         base_size = tolerance + max([param.ghost.maximum_length_of_minimum_gridded_cayley_perm() for param in parameters])
         base_tiling = Tiling([],[],base_dimensions)
         objects = []
@@ -302,12 +310,14 @@ class MappedTiling(CombinatorialClass):
 
     def full_cleanup(self):
         """Applies every cleanup function"""
+        if not self.tiling.active_cells():
+            return MappedTiling(Tiling.empty_tiling(),[],[],[])
         new_mappling = self.tidy_containing_parameters()
-        if not new_mappling.tiling:
-            return new_mappling
+        if not new_mappling.tiling.active_cells():
+            return MappedTiling(Tiling.empty_tiling(),[],[],[])
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
         avoiding_parameters = [
-            param.back_map_obs_and_reqs(new_mappling.tiling)
+            param.back_map_point_obstructions(new_mappling.tiling)
             for param in new_mappling.avoiding_parameters
         ]
         avoiding_parameters = new_mappling.remove_empty_ghosts_from_list(
@@ -317,7 +327,7 @@ class MappedTiling(CombinatorialClass):
             new_mappling.tiling,
             avoiding_parameters,
             new_mappling.containing_parameters,
-            new_mappling.enumeration_parameters,
+            new_mappling.enumeration_parameters
         )
         return (
             new_mappling.remove_empty_rows_and_columns()

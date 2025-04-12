@@ -89,36 +89,10 @@ des2 = CayleyPermutation((1, 0))
 asc3 = CayleyPermutation((0, 1, 2))
 obstructions = [
     GriddedCayleyPerm(point, ((0, 0),)),
-    GriddedCayleyPerm(point, ((0, 1),)),
     GriddedCayleyPerm(point, ((0, 2),)),
-    GriddedCayleyPerm(point, ((0, 3),)),
-    GriddedCayleyPerm(point, ((1, 0),)),
     GriddedCayleyPerm(point, ((2, 0),)),
-    GriddedCayleyPerm(point, ((3, 0),)),
-    GriddedCayleyPerm(point, ((1, 2),)),
-    GriddedCayleyPerm(point, ((1, 3),)),
-    GriddedCayleyPerm(point, ((2, 1),)),
-    GriddedCayleyPerm(point, ((3, 1),)),
     GriddedCayleyPerm(point, ((2, 2),)),
-    GriddedCayleyPerm(point, ((2, 3),)),
-    GriddedCayleyPerm(point, ((3, 2),)),
-    GriddedCayleyPerm(point, ((4, 3),)),
-    GriddedCayleyPerm(point, ((3, 4),)),
-    GriddedCayleyPerm(point, ((4, 1),)),
-    GriddedCayleyPerm(point, ((1, 4),)),
-    GriddedCayleyPerm(point, ((4, 4),)),
-    GriddedCayleyPerm(asc2, ((2, 4), (2, 4))),
-    GriddedCayleyPerm(asc2, ((4, 2), (4, 2))),
-    GriddedCayleyPerm(asc3, ((0, 4), (0, 4), (0, 4))),
-    GriddedCayleyPerm(asc3, ((0, 4), (0, 4), (2, 4))),
-    GriddedCayleyPerm(asc3, ((4, 0), (4, 0), (4, 0))),
-    GriddedCayleyPerm(asc3, ((4, 0), (4, 0), (4, 2))),
-    GriddedCayleyPerm(des2, ((1, 1), (1, 1))),
-    GriddedCayleyPerm(asc2, ((1, 1), (1, 1))),
-    GriddedCayleyPerm(cay, ((1, 1), (1, 1))),
-    GriddedCayleyPerm(des2, ((3, 3), (3, 3))),
-    GriddedCayleyPerm(asc2, ((3, 3), (3, 3))),
-    GriddedCayleyPerm(cay, ((3, 3), (3, 3))),
+    GriddedCayleyPerm(point, ((4, 4),))
 ]
 
 requirements = [
@@ -126,14 +100,14 @@ requirements = [
     [GriddedCayleyPerm(point, ((3, 3),))],
 ]
 
-T1 = Tiling(obstructions, requirements, (5, 5))
+T1 = Tiling.from_vincular(CayleyPermutation((0,1)),[]).add_obstructions(obstructions)
 temp = Tiling([GriddedCayleyPerm(cay, ((0, 0), (0, 0)))], [], (1, 1))
 
 
 P0 = Parameter(
     T1, RowColMap({0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0})
 )
-P0 = P0.back_map_obs_and_reqs(temp)
+#P0 = P0.back_map_obs_and_reqs(temp)
 
 T1 = P0.ghost
 

@@ -481,10 +481,14 @@ class Tiling(CombinatorialClass):
         return f"Tiling({self.obstructions}, {self.requirements}, {self.dimensions})"
 
     def __str__(self) -> str:
+        if self.dimensions == (0, 0):
+            return "+---+\n| \u03b5 |\n+---+\n"
         grid, key_string, crossing_string, requirements_string = self.find_string()
         return grid + key_string + crossing_string + requirements_string
 
     def reduced_str(self) -> str:
+        if self.dimensions == (0, 0):
+            return "+---+\n| \u03b5 |\n+---+\n"
         grid, key_string, crossing_string, requirements_string = self.find_string()
         return grid + key_string
 
@@ -577,7 +581,7 @@ class Tiling(CombinatorialClass):
         return hash((self.obstructions, self.requirements, self.dimensions))
 
     def __bool__(self) -> bool:
-        return self == Tiling.empty_tiling()
+        return not self.is_empty()
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Tiling):
@@ -586,3 +590,8 @@ class Tiling(CombinatorialClass):
             self.dimensions == other.dimensions
             and len(self.obstructions) < len(other.obstructions)
         )
+        
+    def issubset(self, other):
+        if not self.dimensions==other.dimensions:
+            return False
+        return set(self.obstructions).issubset(set(other.obstructions)) and set(self.requirements).issubset(set(other.requirements))
