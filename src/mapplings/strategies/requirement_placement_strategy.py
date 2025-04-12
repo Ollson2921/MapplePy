@@ -133,7 +133,7 @@ class MTPointPlacementFactory(StrategyFactory[MappedTiling]):
         """Factory to place a point requirement in a mappling in extreme directions
         in each positive cell of the base tiling."""
         for cell in comb_class.tiling.positive_cells():
-            for direction in Directions:
+            for direction in [4,]:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
                 indices = (0,)
                 yield MTRequirementPlacementStrategy(gcps, indices, direction)
@@ -230,8 +230,8 @@ class MTRequirementInsertionStrategy(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         return (
-            comb_class.add_obstructions(self.gcps).reap_all_contradictions(),
-            comb_class.add_requirement_list(self.gcps).reap_all_contradictions(),
+            comb_class.add_obstructions_to_tiling(self.gcps).reap_all_contradictions(),
+            comb_class.add_requirements_to_tiling([self.gcps]).reap_all_contradictions(),
         )
 
     def extra_parameters(

@@ -165,7 +165,7 @@ class Parameter:
         currently_empty = self.ghost.find_empty_rows_and_columns()
         return self._reduce_empty_rows_or_cols(
             0, col_preimages, currently_empty[0]
-        ).reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
+        )._reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
     
     def split_and_squish_in_range(self, min_index, max_index, direction):
         '''Used in expand together. splits each row/column in the range of min_index, max_index.
@@ -569,6 +569,15 @@ class MappedTiling(CombinatorialClass):
             )
             new_parameters.append(Parameter(new_parameter, parameter.map))
         return new_parameters
+    
+    def add_requirements_to_tiling(self,requirements):
+        new_tiling = self.tiling.add_requirements(requirements)
+        return MappedTiling(new_tiling,self.avoiding_parameters,self.containing_parameters,self.enumeration_parameters)
+    
+    def add_obstructions_to_tiling(self,obstructions):
+        new_tiling = self.tiling.add_obstructions(obstructions)
+        return MappedTiling(new_tiling,self.avoiding_parameters,self.containing_parameters,self.enumeration_parameters)
+
 
     def add_requirements(self, requirements: List[List[GriddedCayleyPerm]]):  # Good
         """Adds requirements to the mappling by adding them to each of the

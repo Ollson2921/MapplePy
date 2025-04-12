@@ -33,7 +33,7 @@ mt = MappedTiling(tiling, [parameter], [], [])
 
 ruledb = RuleDBForest()
 scope = MappedTileScope(
-    mt, MappedTileScopePack.MTpoint_placement(), debug=True, ruledb=ruledb
+    mt, MappedTileScopePack.MTpoint_placement(mt), debug=True, ruledb=ruledb
 )
 spec = scope.auto_search()
 print(spec)
