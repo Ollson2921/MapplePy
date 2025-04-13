@@ -59,9 +59,9 @@ class MTParameterPlacementStrategy(
         """Either the cells doesn't contain gcp so add it as obstruction
         or it contains an occurrence of it furthest in the direction given
         so add it as a requirement in every possible way."""
-        return self.simplify(
+        return (self.simplify(
             self.algorithm().param_placement(self.index_of_pattern, self.direction)
-        )
+        ),)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         return comb_class.full_cleanup()

@@ -1,8 +1,10 @@
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
-from mapplings import Parameter, MappedTiling, MTFactor, ParameterPlacement
+from mapplings import Parameter, MappedTiling, MTFactor, ParameterPlacement, MappedTileScopePack, MappedTileScope
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope_folder.strategies.factor import Factors
+from tilescope_folder import TileScope, TileScopePack
+from comb_spec_searcher.rule_db import RuleDBForest
 
 base_obs = [
     GriddedCayleyPerm(CayleyPermutation([0, 2, 1]), ((0, 0), (0, 0), (0, 0))),
@@ -221,26 +223,44 @@ IL_TEST = Tiling(
     (3, 3),
 )
 
+### Auto Search
+# ruledb = RuleDBForest()
+# scope = MappedTileScope(
+#     M1, MappedTileScopePack.MTpoint_placement(M1), debug=True, ruledb=ruledb
+# )
+# spec = scope.auto_search()
+# print(spec)
+# spec.show()
+# for i in range(10):
+#     print(spec.count_objects_of_size(i))
+# print(spec.get_genf())
 
-n = 7  # how far to check counts
-print("====================Initial Mappling====================")
-print(M1.reduced_str())
-# print("Counts: ", M1.initial_conditions(n))
 
-print("====================Start Parameter Placement====================")
-param_placement = list(fully_place_parameter(M0, P0, 4))
-print("++++ First Point Placed ++++")
-print(param_placement[0].reduced_str())
-# print("Counts: ", param_placement[0].initial_conditions(n))
+### Maunual 
+# n = 7  # how far to check counts
+# show_counts = False
+# print("====================Initial Mappling====================")
+# print(M1.reduced_str())
+# if show_counts:
+#     print("Counts: ", M1.initial_conditions(n))
 
-print("++++ Second Point Placed ++++")
-print(param_placement[1].reduced_str())
-# print("Counts: ", param_placement[1].initial_conditions(n))
+# print("====================Start Parameter Placement====================")
+# param_placement = list(fully_place_parameter(M0, P0, 4))
+# print("++++ First Point Placed ++++")
+# print(param_placement[0].reduced_str())
+# if show_counts:
+#     print("Counts: ", param_placement[0].initial_conditions(n))
 
-print("====================Start Factoring====================")
-i = 0
-for factor in MTFactor(param_placement[-1]).find_factors():
-    print("----- Factor:", i)
-    i += 1
-    print(factor.reduced_str())
-    # print("Counts: ", factor.initial_conditions(n))
+# print("++++ Second Point Placed ++++")
+# print(param_placement[1].reduced_str())
+# if show_counts:
+#     print("Counts: ", param_placement[1].initial_conditions(n))
+
+# print("====================Start Factoring====================")
+# i = 0
+# for factor in MTFactor(param_placement[-1]).find_factors():
+#     print("----- Factor:", i)
+#     i += 1
+#     print(factor)
+#     if show_counts:
+#         print("Counts: ", factor.initial_conditions(n))
