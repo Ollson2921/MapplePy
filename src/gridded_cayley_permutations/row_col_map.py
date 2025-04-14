@@ -258,6 +258,6 @@ class RowColMap:
     ) -> List[Tuple[int, int]]:
         """Return the preimage of the cells."""
         return list(chain.from_iterable(self.preimage_of_cell(cell) for cell in cells))
-
+    
     def __str__(self) -> str:
         return f"RowColMap({self.col_map}, {self.row_map})"

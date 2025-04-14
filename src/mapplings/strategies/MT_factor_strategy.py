@@ -30,18 +30,18 @@ class AbstractFactorStrategy:
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        factor_cells = MTFactor(comb_class).find_factor_cells()
-        factors = MTFactor(comb_class).make_factors(factor_cells)
+        algo = MTFactor(comb_class.remove_redundant_parameters())
+        factor_cells = algo.find_factor_cells()
+        factors = algo.make_factors(factor_cells)
         if not factors:
             raise StrategyDoesNotApply
-        return self.simplify(factors)
+        return tuple([self.simplify( factor) for factor in factors])
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         new_mappling = comb_class.tidy_containing_parameters()
         if not new_mappling.tiling:
             return new_mappling
-        return new_mappling.insert_valid_avoiders().reap_all_contradictions()
-
+        return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
 
     def extra_parameters(
         self,
@@ -104,7 +104,7 @@ class AbstractFactorStrategy:
         return cls(**d)
 
 
-class AbstractILFactorStrategy:
+class AbstractILFactorStrategy(Strategy[MappedTiling, GriddedCayleyPerm]):
     def __init__(
         self,
         ignore_parent: bool = True,
@@ -119,16 +119,49 @@ class AbstractILFactorStrategy:
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        factor_cells = MTFactor(comb_class).find_IL_factor_cells()
-        factors = MTFactor(comb_class).make_factors(factor_cells)
+        algo = MTFactor(comb_class.remove_redundant_parameters())
+        factor_cells = algo.find_IL_factor_cells()
+        factors = algo.make_factors(factor_cells)
         if not factors:
             raise StrategyDoesNotApply
-        return self.simplify(factors)
+        return tuple([self.simplify(factor) for factor in factors])
 
-    def simplify(self, comb_class: MappedTiling) -> MappedTiling:
+    def simplify(self, comb_class : MappedTiling) -> MappedTiling:
         """TODO: which simplifications do we want here (if any??)"""
-        return comb_class.full_cleanup()
-
+        new_mappling = comb_class.tidy_containing_parameters()
+        if not new_mappling.tiling:
+            return new_mappling
+        return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
+    
+    def can_be_equivalent(self):
+        return True
+    
+    def constructor(self, comb_class, children = None):
+        raise NotImplementedError
+    
+    def is_reversible(self, comb_class):
+        return False
+    
+    def is_two_way(self, comb_class):
+        return False
+    
+    def reverse_constructor(self, idx, comb_class, children = None):
+        raise NotImplementedError
+    
+    def shifts(
+        self,
+        comb_class,
+        children = None,
+    ) -> Tuple[int, ...]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+            if children is None:
+                raise StrategyDoesNotApply("Strategy does not apply")
+        min_points = tuple(c.minimum_size_of_object() for c in children)
+        point_sum = sum(min_points)
+        return tuple(point_sum - mpoint for mpoint in min_points)
+    
+    
     def extra_parameters(
         self,
         comb_class: MappedTiling,
@@ -197,7 +230,7 @@ class FactorStrategy(
 
 
 class ILFactorStrategy(
-    AbstractILFactorStrategy, CartesianProductStrategy[MappedTiling, GriddedCayleyPerm]
+    AbstractILFactorStrategy,
 ):
     pass
 

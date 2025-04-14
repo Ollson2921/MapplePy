@@ -27,17 +27,25 @@ class Tiling(CombinatorialClass):
         obstructions: Iterable[GriddedCayleyPerm],
         requirements: Iterable[Iterable[GriddedCayleyPerm]],
         dimensions: Tuple[int, int],
+        simplify = 1
     ) -> None:
+        '''simplify 0 does a full simplication, removing redundancies
+        simplify 1 only removes repeated entries
+        other values don't simplify at all'''
         self.obstructions = tuple(obstructions)
-        self.requirements = tuple(tuple(req) for req in requirements)
+        self.requirements = tuple(tuple(set(req)) for req in requirements)
         self.dimensions = tuple(dimensions)
+        if simplify == 1:
+            algorithm = SimplifyObstructionsAndRequirements(
+                self.obstructions, self.requirements, self.dimensions
+            )
+            algorithm.simplify()
+            self.obstructions = algorithm.obstructions
+            self.requirements = algorithm.requirements
+        elif simplify == 0:
+            self.obstructions = tuple(set(self.obstructions))
+            self.requirements = tuple(set(self.requirements))
 
-        algorithm = SimplifyObstructionsAndRequirements(
-            self.obstructions, self.requirements, self.dimensions
-        )
-        algorithm.simplify()
-        self.obstructions = algorithm.obstructions
-        self.requirements = algorithm.requirements
 
     def _gridded_cayley_permutations(self, size: int) -> Iterator[GriddedCayleyPerm]:
         """
@@ -473,10 +481,14 @@ class Tiling(CombinatorialClass):
         return f"Tiling({self.obstructions}, {self.requirements}, {self.dimensions})"
 
     def __str__(self) -> str:
+        if self.dimensions == (0, 0):
+            return "+---+\n| \u03b5 |\n+---+\n"
         grid, key_string, crossing_string, requirements_string = self.find_string()
         return grid + key_string + crossing_string + requirements_string
 
     def reduced_str(self) -> str:
+        if self.dimensions == (0, 0):
+            return "+---+\n| \u03b5 |\n+---+\n"
         grid, key_string, crossing_string, requirements_string = self.find_string()
         return grid + key_string
 
@@ -578,3 +590,8 @@ class Tiling(CombinatorialClass):
             self.dimensions == other.dimensions
             and len(self.obstructions) < len(other.obstructions)
         )
+        
+    def issubset(self, other):
+        if not self.dimensions==other.dimensions:
+            return False
+        return set(self.obstructions).issubset(set(other.obstructions)) and set(self.requirements).issubset(set(other.requirements))

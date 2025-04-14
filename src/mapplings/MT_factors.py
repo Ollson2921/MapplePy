@@ -87,7 +87,7 @@ class MTFactor:
                 self.factor_avoiders(avoiding_parameters, cells),
                 [],
                 [],
-            ).remove_empty_rows_and_columns()
+            ).remove_empty_rows_and_columns().reduce_empty_rows_and_cols_in_parameters().fuse_parameters()
             for cells in factor_cells
         ]
         for i in range(len(new_factors)):
@@ -95,11 +95,11 @@ class MTFactor:
             for j in range(len(non_trivial_contributions)):
                 check_param = new_factors[i].avoiding_parameters[j]
                 if check_param.ghost.active_cells():
-                    if check_param.ghost != new_factors[i].tiling:
+                    if not check_param.ghost.issubset(new_factors[i].tiling):
                         non_trivial_contributions[j] += 1
                         if non_trivial_contributions[j] > 1:
                             print("avoider issues")
-                            return -1
+                            # return -1
                         new_avoiders.append(check_param)
             new_factors[i] = MappedTiling(new_factors[i].tiling, new_avoiders, [], [])
         return new_factors
