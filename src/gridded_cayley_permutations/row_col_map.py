@@ -259,5 +259,11 @@ class RowColMap:
         """Return the preimage of the cells."""
         return list(chain.from_iterable(self.preimage_of_cell(cell) for cell in cells))
     
+    def __eq__(self, other) -> bool:
+        return self.col_map == other.col_map and self.row_map == other.row_map
+    
+    def __hash__(self):
+        return hash((tuple(self.col_map.items()), tuple(self.row_map.items())))
+    
     def __str__(self) -> str:
         return f"RowColMap({self.col_map}, {self.row_map})"
