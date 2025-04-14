@@ -224,6 +224,12 @@ class Parameter:
 
     def __repr__(self):
         return str((repr(self.ghost), str(self.map)))
+    
+    def __eq__(self,other) -> bool:
+        return self.ghost == other.ghost and self.map == other.map
+    
+    def __hash__(self):
+        return hash((self.ghost,self.map))
 
     def __leq__(self, other):
         return self.ghost <= other.ghost
