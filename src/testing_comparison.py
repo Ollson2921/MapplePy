@@ -43,54 +43,55 @@ G = Tiling.from_vincular(CayleyPermutation((0,2,1)),[1,]).add_obstructions(fix_r
 A = Parameter(G,RowColMap({0:0,1:0,2:0,3:0,4:0,5:0,6:0},{0:0,1:0,2:0,3:0,4:0,5:0,6:0}))
 M0 = MappedTiling(Tiling([],[],(1,1)), [A], [], []).full_cleanup()
 
+
 n=4
 show_count = False
 ### MANUAL CONSTRUCTION
-print("=============== ORIGINAL ===============")
-print(M0)
-if show_count:
-    print("Counts: ", M0.initial_conditions(n))
-print("=============== CELL INSERTION ===============")
-M0A = M0.add_obstructions_to_tiling([GriddedCayleyPerm(point,[(0,0),])]).reap_all_contradictions()
-M0C = M0.add_requirements_to_tiling([[GriddedCayleyPerm(point,[(0,0),])]]).reap_all_contradictions()
-print('------------ AVOIDS ------------')
-print(M0A)
-print('------------ CONTAINS ------------')
-print(M0C)
-if show_count:
-    print("Counts: ", M0A.initial_conditions(n), M0C.initial_conditions(n))
-M1 = MTRequirementPlacement(M0C).point_placement(M0C.tiling.requirements[0],(0,),4)[0].full_cleanup()
-print("=============== PLACED POINT ===============")
-print(M1)
-if show_count:
-    print("Counts: ", M1.initial_conditions(n))
-M2 = M1.remove_redundant_parameters()
-print("=============== REMOVED REDUNDANT PARAMETERS ===============")
-print(M2)
-if show_count:
-    print("Counts: ", M2.initial_conditions(n))
-print("=============== IL FACTORING ===============")
-i=0
-for factor in MTFactor(M2).make_factors(MTFactor(M2).find_IL_factor_cells()):
-    print('------------ FACTOR',i,'------------')
-    print(factor)
-    if show_count:
-        print("Counts: ", factor.initial_conditions(n))
-    i+=1
-    
-    
-    
-#### Auto Search
-# ruledb = RuleDBForest()
-# scope = MappedTileScope(
-#     M0, MappedTileScopePack.MTpoint_placement(M0), debug=True, ruledb=ruledb
-# )
-# spec = scope.auto_search()
-# print(spec)
-# spec.show()
-# for i in range(10):
-#     print(spec.count_objects_of_size(i))
-# print(spec.get_genf())
+# print("=============== ORIGINAL ===============")
+# print(M0)
+# if show_count:
+#     print("Counts: ", M0.initial_conditions(n))
+# print("=============== CELL INSERTION ===============")
+# M0A = M0.add_obstructions_to_tiling([GriddedCayleyPerm(point,[(0,0),])]).reap_all_contradictions()
+# M0C = M0.add_requirements_to_tiling([[GriddedCayleyPerm(point,[(0,0),])]]).reap_all_contradictions()
+# print('------------ AVOIDS ------------')
+# print(M0A)
+# print('------------ CONTAINS ------------')
+# print(M0C)
+# if show_count:
+#    print("Counts: ", M0A.initial_conditions(n), M0C.initial_conditions(n))
+# M1 = MTRequirementPlacement(M0C).point_placement(M0C.tiling.requirements[0],(0,),4)[0].full_cleanup()
+# print("=============== PLACED POINT ===============")
+# print(M1)
+# if show_count:
+#    print("Counts: ", M1.initial_conditions(n))
+# M2 = M1.remove_redundant_parameters()
+# print("=============== REMOVED REDUNDANT PARAMETERS ===============")
+# print(M2)
+# if show_count:
+#     print("Counts: ", M2.initial_conditions(n))
+# print("=============== IL FACTORING ===============")
+# i=0
+# Factors = MTFactor(M2).make_factors(MTFactor(M2).find_IL_factor_cells())
+# for factor in Factors:
+#     print('------------ FACTOR',i,'------------')
+#     print(factor)
+#     print(M0==factor)
+#     if show_count:
+#         print("Counts: ", factor.initial_conditions(n))
+#     i+=1
+ 
+### Auto Search
+ruledb = RuleDBForest()
+scope = MappedTileScope(
+    M0, MappedTileScopePack.MTpoint_placement(M0), debug=True, ruledb=ruledb
+)
+spec = scope.auto_search()
+print(spec)
+spec.show()
+for i in range(10):
+    print(spec.count_objects_of_size(i))
+print(spec.get_genf())
 
 
 

@@ -104,7 +104,7 @@ class AbstractFactorStrategy:
         return cls(**d)
 
 
-class AbstractILFactorStrategy:
+class AbstractILFactorStrategy(Strategy[MappedTiling, GriddedCayleyPerm]):
     def __init__(
         self,
         ignore_parent: bool = True,
@@ -132,7 +132,36 @@ class AbstractILFactorStrategy:
         if not new_mappling.tiling:
             return new_mappling
         return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
-
+    
+    def can_be_equivalent(self):
+        return True
+    
+    def constructor(self, comb_class, children = None):
+        raise NotImplementedError
+    
+    def is_reversible(self, comb_class):
+        return False
+    
+    def is_two_way(self, comb_class):
+        return False
+    
+    def reverse_constructor(self, idx, comb_class, children = None):
+        raise NotImplementedError
+    
+    def shifts(
+        self,
+        comb_class,
+        children = None,
+    ) -> Tuple[int, ...]:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+            if children is None:
+                raise StrategyDoesNotApply("Strategy does not apply")
+        min_points = tuple(c.minimum_size_of_object() for c in children)
+        point_sum = sum(min_points)
+        return tuple(point_sum - mpoint for mpoint in min_points)
+    
+    
     def extra_parameters(
         self,
         comb_class: MappedTiling,
@@ -201,7 +230,7 @@ class FactorStrategy(
 
 
 class ILFactorStrategy(
-    AbstractILFactorStrategy, CartesianProductStrategy[MappedTiling, GriddedCayleyPerm]
+    AbstractILFactorStrategy,
 ):
     pass
 

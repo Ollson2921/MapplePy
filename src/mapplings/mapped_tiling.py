@@ -13,7 +13,7 @@ from gridded_cayley_permutations import (
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
-redundance_tolerance = 0 #Higher values globally increase sizes of GCPS used in redundancy checks
+REDUNDANCE_TOLERANCE = 0 #Higher values globally increase sizes of GCPS used in redundancy checks
 
 
 class Parameter:
@@ -318,10 +318,10 @@ class MappedTiling(CombinatorialClass):
     def full_cleanup(self):
         """Applies every cleanup function"""
         if not self.tiling.active_cells():
-            return MappedTiling(Tiling.empty_tiling(),[],[],[])
+            return self.kill_to_empty_or_obstructed()
         new_mappling = self.tidy_containing_parameters()
         if not new_mappling.tiling.active_cells():
-            return MappedTiling(Tiling.empty_tiling(),[],[],[])
+            return new_mappling.kill_to_empty_or_obstructed()
         new_mappling = new_mappling.insert_valid_avoiders().reap_all_contradictions()
         avoiding_parameters = [
             param.back_map_point_obstructions(new_mappling.tiling)
@@ -341,10 +341,13 @@ class MappedTiling(CombinatorialClass):
             .reduce_empty_rows_and_cols_in_parameters()
             .fuse_parameters()
         )
-        if new_mappling.is_empty():
-            return MappedTiling(Tiling.empty_tiling(), [], [], [])
-        return new_mappling
 
+    def kill_to_empty_or_obstructed(self):
+        '''Used to decide how to kill mapplings in full_cleanup'''
+        if self.tiling.is_empty():
+            return MappedTiling(Tiling.empty_tiling,[],[],[])
+        return MappedTiling(Tiling([GriddedCayleyPerm(CayleyPermutation((0,)), ((0,0),))]),[],[],[])
+        
     def fuse_parameters(self):
         """Fuses valid rows and cols in every parameter"""
         avoiding_parameters, containing_parameters = [], []
@@ -499,7 +502,7 @@ class MappedTiling(CombinatorialClass):
                 )
         self.parameters.append(new_ghost)
         
-    def remove_redundant_parameters(self, tolerance = redundance_tolerance):
+    def remove_redundant_parameters(self, tolerance = REDUNDANCE_TOLERANCE):
         '''Removes reduncant parameters from the avoiding parameters, and from each containing parameter list.
         Higher tolerance makes the function check largers GCPS'''
         avoider_comparisons = Parameter.make_comparisons(self.avoiding_parameters, self.tiling.dimensions, tolerance)

@@ -48,7 +48,7 @@ class MappedTileScopePack(StrategyPack):
             ],  # Iterable[Iterable[Strategy]]
             ver_strats=[
                 AtomStrategy(),
-                # NoParameterVerificationStrategy(rootmt),
+                NoParameterVerificationStrategy(rootmt),
             ],  # Iterable[Strategy]
             name="Point Placement",
             symmetries=[],

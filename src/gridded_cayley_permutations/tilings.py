@@ -27,7 +27,7 @@ class Tiling(CombinatorialClass):
         obstructions: Iterable[GriddedCayleyPerm],
         requirements: Iterable[Iterable[GriddedCayleyPerm]],
         dimensions: Tuple[int, int],
-        simplify = 0
+        simplify = 1
     ) -> None:
         '''simplify 0 does a full simplication, removing redundancies
         simplify 1 only removes repeated entries
@@ -35,14 +35,14 @@ class Tiling(CombinatorialClass):
         self.obstructions = tuple(obstructions)
         self.requirements = tuple(tuple(set(req)) for req in requirements)
         self.dimensions = tuple(dimensions)
-        if simplify == 0:
+        if simplify == 1:
             algorithm = SimplifyObstructionsAndRequirements(
                 self.obstructions, self.requirements, self.dimensions
             )
             algorithm.simplify()
             self.obstructions = algorithm.obstructions
             self.requirements = algorithm.requirements
-        elif simplify == 1:
+        elif simplify == 0:
             self.obstructions = tuple(set(self.obstructions))
             self.requirements = tuple(set(self.requirements))
 
@@ -581,7 +581,7 @@ class Tiling(CombinatorialClass):
         return hash((self.obstructions, self.requirements, self.dimensions))
 
     def __bool__(self) -> bool:
-        return not self.is_empty()
+        return self == Tiling.empty_tiling()
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Tiling):
