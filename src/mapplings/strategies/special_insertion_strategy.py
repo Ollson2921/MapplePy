@@ -45,7 +45,7 @@ class SpecialInsertionStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayley
         new_pattern = self.pattern.back_map_obs_and_reqs(comb_class.tiling)
         containing = self.simplify(comb_class.add_parameters([], [[new_pattern]], []))
         avoiding = self.simplify(comb_class.add_parameters([new_pattern], [], []))
-        return (containing, avoiding)
+        return tuple(containing, avoiding)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         return comb_class

@@ -67,7 +67,7 @@ class MTRequirementPlacementStrategy(
         return (self.simplify(comb_class.add_obstructions_to_tiling(self.gcps)),) + tuple(new_mapplings)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
-        return comb_class.full_cleanup()
+        return comb_class.full_cleanup().remove_redundant_parameters()
 
     def extra_parameters(
         self,
@@ -133,7 +133,7 @@ class MTPointPlacementFactory(StrategyFactory[MappedTiling]):
         """Factory to place a point requirement in a mappling in extreme directions
         in each positive cell of the base tiling."""
         for cell in comb_class.tiling.positive_cells() - comb_class.tiling.point_cells():
-            for direction in Directions:
+            for direction in [4,]:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
                 indices = (0,)
                 yield MTRequirementPlacementStrategy(gcps, indices, direction)
@@ -289,7 +289,7 @@ class MTCellInsertionFactory(StrategyFactory[MappedTiling]):
     def __call__(
         self, comb_class: MappedTiling
     ) -> Iterator[MTRequirementInsertionStrategy]:
-        for cell in comb_class.tiling.active_cells():
+        for cell in comb_class.tiling.active_cells() - comb_class.tiling.positive_cells():
             gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
             strategy = MTRequirementInsertionStrategy(gcps, ignore_parent=False)
             yield strategy

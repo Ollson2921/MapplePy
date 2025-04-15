@@ -28,21 +28,21 @@ class MappedTileScopePack(StrategyPack):
     def MTpoint_placement(cls, rootmt):
         return MappedTileScopePack(
             initial_strats=[
-                # FactorStrategy(),
+                FactorStrategy(),
                 MTPointPlacementFactory(),
-                ILFactorStrategy(),
+                # ILFactorStrategy(),
             ],  # Iterable[Strategy]
             inferral_strats=[
                 # MTLessThanRowColSeparationStrategy(),
                 # MTParamLessThanRowColSeparationStrategy(),
-                # MTParameterPlacementFactory(),
+                MTParameterPlacementFactory(),
             ],  # Iterable[Strategy]
             expansion_strats=[
                 [
                     MTCellInsertionFactory(),
                     # RowInsertionFactory(),
                     # ColInsertionFactory(),
-                    # SpecialInsertionFactory(),
+                    SpecialInsertionFactory(),
                     # MTLessThanOrEqualRowColSeparationStrategy(),
                 ]
             ],  # Iterable[Iterable[Strategy]]

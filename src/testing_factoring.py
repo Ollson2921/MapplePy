@@ -224,16 +224,16 @@ IL_TEST = Tiling(
 )
 
 ### Auto Search
-# ruledb = RuleDBForest()
-# scope = MappedTileScope(
-#     M1, MappedTileScopePack.MTpoint_placement(M1), debug=True, ruledb=ruledb
-# )
-# spec = scope.auto_search()
-# print(spec)
-# spec.show()
-# for i in range(10):
-#     print(spec.count_objects_of_size(i))
-# print(spec.get_genf())
+ruledb = RuleDBForest()
+scope = MappedTileScope(
+    M1, MappedTileScopePack.MTpoint_placement(M1), debug=True, ruledb=ruledb
+)
+spec = scope.auto_search()
+print(spec)
+spec.show()
+for i in range(10):
+    print(spec.count_objects_of_size(i))
+print(spec.get_genf())
 
 
 ### Maunual 

@@ -98,8 +98,8 @@ class MTFactor:
                     if not check_param.ghost.issubset(new_factors[i].tiling):
                         non_trivial_contributions[j] += 1
                         if non_trivial_contributions[j] > 1:
-                            print("avoider issues")
-                            # return -1
+                            # print("avoider issues")
+                            return -1
                         new_avoiders.append(check_param)
             new_factors[i] = MappedTiling(new_factors[i].tiling, new_avoiders, [], [])
         return new_factors

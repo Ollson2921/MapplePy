@@ -218,6 +218,34 @@ class Parameter:
                     comparisons[j].add(i)
                     continue
         return comparisons
+    
+    def make_comparisons(parameters, base_dimensions, tolerance):
+        '''Creates a comparisons dictionary from a list of parameters.
+        comparisons[a] is the set of indices b such that the objects from a mappling with parameters[a] as an avoider are a subset of the objects with parameters[b] as an avoider.
+        The size of objects created is the maximum size of the upper bound of mimimal GCPS across all paramters plus the tolerance'''
+        if len(parameters)<=1:
+            return {0:{}}
+        base_size = tolerance + max([param.ghost.maximum_length_of_minimum_gridded_cayley_perm() for param in parameters])
+        base_tiling = Tiling([],[],base_dimensions)
+        objects = []
+        for param in parameters:
+            objects.append(set(MappedTiling(base_tiling,[param],[],[]).objects_of_size(base_size)))
+        comparisons = {i: set() for i in range(len(parameters))}
+        for i in range(len(parameters)-1):
+            for j in range(i+1, len(parameters)):
+                if objects[i].issubset(objects[j]):
+                    comparisons[i].add(j)
+                    continue
+                if objects[j].issubset(objects[i]):
+                    comparisons[j].add(i)
+                    continue
+        return comparisons
+    
+    def gcp_satisfies_as_avoider(self, gcp : GriddedCayleyPerm):
+        return not any(True for _ in self.preimage_of_gcp(gcp))
+    
+    def gcp_satisfies_as_container(self, gcp : GriddedCayleyPerm) -> bool:
+        return any(True for _ in self.preimage_of_gcp(gcp))
         
     def copy(self):
         return Parameter(self.ghost, self.map)
@@ -508,17 +536,17 @@ class MappedTiling(CombinatorialClass):
                 )
         self.parameters.append(new_ghost)
         
-    def remove_redundant_parameters(self, tolerance = REDUNDANCE_TOLERANCE):
-        '''Removes reduncant parameters from the avoiding parameters, and from each containing parameter list.
-        Higher tolerance makes the function check largers GCPS'''
-        avoider_comparisons = Parameter.make_comparisons(self.avoiding_parameters, self.tiling.dimensions, tolerance)
-        supersets = set(chain(*avoider_comparisons.values()))
-        new_avoiders = [self.avoiding_parameters[i] for i in range(len(self.avoiding_parameters)) if i not in supersets]
-        new_containers = []
-        for c_list in self.containing_parameters:
-            container_comparisons = Parameter.make_comparisons(c_list, self.tiling.dimensions, tolerance)
-            new_containers.append([c_list[i] for i in range(len(c_list)) if not container_comparisons[i]])
-        return MappedTiling(self.tiling, new_avoiders, new_containers, self.enumeration_parameters)
+    # def remove_redundant_parameters(self, tolerance = REDUNDANCE_TOLERANCE):
+    #     '''Removes reduncant parameters from the avoiding parameters, and from each containing parameter list.
+    #     Higher tolerance makes the function check largers GCPS'''
+    #     avoider_comparisons = Parameter.make_comparisons(self.avoiding_parameters, self.tiling.dimensions, tolerance)
+    #     supersets = set(chain(*avoider_comparisons.values()))
+    #     new_avoiders = [self.avoiding_parameters[i] for i in range(len(self.avoiding_parameters)) if i not in supersets]
+    #     new_containers = []
+    #     for c_list in self.containing_parameters:
+    #         container_comparisons = Parameter.make_comparisons(c_list, self.tiling.dimensions, tolerance)
+    #         new_containers.append([c_list[i] for i in range(len(c_list)) if not container_comparisons[i]])
+    #     return MappedTiling(self.tiling, new_avoiders, new_containers, self.enumeration_parameters)
             
     def is_trivial(self, confidence=8):  # TODO: Make this better and based on theory
         return set(self.objects_of_size(confidence)) == set(
@@ -658,6 +686,52 @@ class MappedTiling(CombinatorialClass):
             new_map = P.reduce_row_col_map(col_preimages, row_preimages)
             new_parameters.append(Parameter(new_parameter, new_map))
         return new_parameters
+    
+    def remove_redundant_parameters(self):
+        all_parameters = self.all_parameters()
+        if not all_parameters:
+            return self
+        check_size = REDUNDANCE_TOLERANCE + max([param.ghost.maximum_length_of_minimum_gridded_cayley_perm() for param in all_parameters])
+        print(check_size)
+        avoiding_relations = {i : set(range(len(self.avoiding_parameters))) - {i,} for i in range(len(self.avoiding_parameters))}
+        containing_relations = [{i : set(range(len(c_list))) - {i,} for i in range(len(c_list))} for c_list in self.containing_parameters]
+        for gcp in self.tiling.gridded_cayley_permutations(check_size):
+            #print(avoiding_relations)
+            if (not avoiding_relations
+                and not any(c for c in containing_relations)
+            ):
+                print('finished-')
+                return self
+            avoiding_values = set(chain(*avoiding_relations.values()))
+            containing_values = [set(chain(*c.values())) for c in containing_relations]
+            avoiding_check = {k : bool(self.avoiding_parameters[k].gcp_satisfies_as_avoider(gcp)) for k in set(avoiding_relations.keys()) | avoiding_values}
+            for A in avoiding_relations.keys():
+                for B in avoiding_relations[A]:
+                    if avoiding_check[B] and not avoiding_check[A]:
+                        avoiding_relations[A] = avoiding_relations[A] - {B,}
+            avoiding_relations = {i : avoiding_relations[i] for i in avoiding_relations.keys() if avoiding_relations[i]}
+            for i in range(len(containing_relations)):
+                c_list_relations = containing_relations[i]
+                if not c_list_relations:
+                    continue
+                c_list_check = {k : bool(self.containing_parameters[i][k].gcp_satisfies_as_container(gcp)) for k in set(c_list_relations.keys()) | containing_values[i]}
+                for A in c_list_relations.keys():
+                    for B in c_list_relations[A]:
+                        if  c_list_check[B] and not c_list_check[A]:
+                            c_list_relations[A] = c_list_relations[A] - {B,}
+                containing_relations[i] = {k : c_list_relations[k] for k in c_list_relations.keys() if c_list_relations[k]}
+        temp_avoiding_relations = dict((tuple(item[1] | {item[0],}),item[0]) for item in avoiding_relations.items())
+        temp_containing_relations = [dict((tuple(item[1] | {item[0],}),item[0]) for item in containing_relations[i].items()) for i in range(len(containing_relations))]
+        new_avoiding_parameters = [self.avoiding_parameters[i] for i in range(len(self.avoiding_parameters)) if i not in temp_avoiding_relations.values()]
+        new_containing_parameters = [[self.containing_parameters[i][j] for j in range(len(self.containing_parameters[i])) if j not in temp_containing_relations[i].values()] for i in range(len(self.containing_parameters))]
+        print('finished')
+        return MappedTiling(self.tiling, new_avoiding_parameters, new_containing_parameters, self.enumeration_parameters)
+                        
+            
+                    
+                        
+            
+        
 
     def add_parameters(
         self, avoiding_parameters, containing_parameters, enumeration_parameters

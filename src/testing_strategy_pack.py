@@ -24,7 +24,7 @@ parameter = Parameter(
         {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0},
     ),
 )
-parameter = parameter.back_map_obs_and_reqs(tiling)
+#parameter = parameter.back_map_obs_and_reqs(tiling)
 
 mt = MappedTiling(tiling, [parameter], [], [])
 
@@ -33,7 +33,7 @@ mt = MappedTiling(tiling, [parameter], [], [])
 
 ruledb = RuleDBForest()
 scope = MappedTileScope(
-    mt, MappedTileScopePack.MTpoint_placement(mt), debug=True, ruledb=ruledb
+    mt, MappedTileScopePack.MTpoint_placement(mt), debug=False, ruledb=ruledb
 )
 spec = scope.auto_search()
 print(spec)
