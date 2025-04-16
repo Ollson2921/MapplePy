@@ -67,7 +67,7 @@ class MTRequirementPlacementStrategy(
         return (self.simplify(comb_class.add_obstructions_to_tiling(self.gcps)),) + tuple(new_mapplings)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
-        return comb_class.full_cleanup()
+        return comb_class.full_cleanup()#.remove_redundant_parameters()
 
     def extra_parameters(
         self,
@@ -230,7 +230,7 @@ class MTRequirementInsertionStrategy(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
         return (
-            comb_class.add_obstructions_to_tiling(self.gcps).reap_all_contradictions(),
+            comb_class.add_obstructions_to_tiling(self.gcps).reap_all_contradictions().remove_empty_rows_and_columns(),
             comb_class.add_requirements_to_tiling([self.gcps]).reap_all_contradictions(),
         )
 
@@ -289,7 +289,7 @@ class MTCellInsertionFactory(StrategyFactory[MappedTiling]):
     def __call__(
         self, comb_class: MappedTiling
     ) -> Iterator[MTRequirementInsertionStrategy]:
-        for cell in comb_class.tiling.active_cells():
+        for cell in comb_class.tiling.active_cells() - comb_class.tiling.positive_cells():
             gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
             strategy = MTRequirementInsertionStrategy(gcps, ignore_parent=False)
             yield strategy

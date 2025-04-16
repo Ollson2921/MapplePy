@@ -44,8 +44,8 @@ mappling = MappedTiling(
         (1, 1),
     ),
     avoiding_parameters,
-    [[]],
-    [[]],
+    [],
+    [],
 )
 
 # print(mappling)
