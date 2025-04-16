@@ -95,7 +95,7 @@ class InsertionEncodingRequirementInsertionFactory(StrategyFactory[Tiling]):
 
 class CellInsertionFactory(StrategyFactory[Tiling]):
     def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
-        for cell in comb_class.active_cells():
+        for cell in comb_class.active_cells:
             gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
             strategy = RequirementInsertionStrategy(gcps, ignore_parent=False)
             yield strategy

@@ -1,19 +1,7 @@
 from comb_spec_searcher import StrategyFactory
 
 from gridded_cayley_permutations import Tiling
-from gridded_cayley_permutations.point_placements import (
-    PointPlacement,
-    PartialPointPlacements,
-    Directions,
-    Right_bot,
-    Left,
-    Right,
-    Left_bot,
-    Left_top,
-    Right_top,
-)
 from gridded_cayley_permutations import GriddedCayleyPerm
-from cayley_permutations import CayleyPermutation
 from comb_spec_searcher import Strategy
 from typing import Tuple, Optional, Dict, Set, Iterator
 from comb_spec_searcher.exception import StrategyDoesNotApply
@@ -46,7 +34,7 @@ class FusionStrategy(Strategy[Tiling, GriddedCayleyPerm]):
     #     return children
 
     def decomposition_function(self, tiling: Tiling) -> Tiling:
-        # if tiling.is_fuseable(self.direction, self.index):
+        # if tiling.is_fusable(self.direction, self.index):
         return (tiling.fuse(self.direction, self.index),)
         # raise AttributeError("Trying to fuse a tiling that does not fuse")
 
@@ -81,7 +69,7 @@ class FusionStrategy(Strategy[Tiling, GriddedCayleyPerm]):
             # constructor only enumerates when tracked.
             raise NotImplementedError("The fusion strategy was not tracked.")
         # Need to recompute some info to count, so ignoring passed in children
-        if not comb_class.is_fuseable(self.direction, self.index):
+        if not comb_class.is_fusable(self.direction, self.index):
             raise StrategyDoesNotApply("Strategy does not apply")
         child = comb_class.fuse(self.direction, self.index)
         assert children is None or children == (child,)
@@ -284,7 +272,7 @@ class FusionFactory(StrategyFactory[Tiling]):
         # print("Trying fusion")
         for direction in [1, 0]:
             for index in range(comb_class.dimensions[direction] - 1):
-                if comb_class.is_fuseable(direction, index):
+                if comb_class.is_fusable(direction, index):
                     yield FusionStrategy(direction, index)
 
     @classmethod

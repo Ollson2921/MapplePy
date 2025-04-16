@@ -10,10 +10,10 @@ class MTFactor:
     def find_factor_cells(self):
         """Returns a partition of the cells so that the mapped tiling is factored."""
         parameters = self.mappling.all_parameters()
-        all_factors = Factors(self.mappling.tiling).find_factors_tracked()
+        all_factors = list(Factors(self.mappling.tiling).find_factors_as_cells())
         for parameter in parameters:
             t_factors = all_factors
-            p_factors = Factors(parameter.ghost).find_factors_tracked()
+            p_factors = list(Factors(parameter.ghost).find_factors_as_cells())
             all_factors = []
             queue = t_factors
             while queue:
@@ -87,14 +87,17 @@ class MTFactor:
                 self.factor_avoiders(avoiding_parameters, cells),
                 [],
                 [],
-            ).remove_empty_rows_and_columns().reduce_empty_rows_and_cols_in_parameters().fuse_parameters()
+            )
+            .remove_empty_rows_and_columns()
+            .reduce_empty_rows_and_cols_in_parameters()
+            .fuse_parameters()
             for cells in factor_cells
         ]
         for i in range(len(new_factors)):
             new_avoiders = []
             for j in range(len(non_trivial_contributions)):
                 check_param = new_factors[i].avoiding_parameters[j]
-                if check_param.ghost.active_cells():
+                if check_param.ghost.active_cells:
                     if not check_param.ghost.issubset(new_factors[i].tiling):
                         non_trivial_contributions[j] += 1
                         if non_trivial_contributions[j] > 1:
@@ -113,7 +116,7 @@ class MTFactor:
             new_c_list = []
             for containing_param in c_list:
                 new_factor = containing_param.sub_parameter(factor)
-                if new_factor.ghost.active_cells():
+                if new_factor.ghost.active_cells:
                     new_c_list.append(new_factor)
             if new_c_list:
                 new_parameters.append(new_c_list)
@@ -129,7 +132,7 @@ class MTFactor:
             for enumeration_parameter in e_list:
                 new_e_list = []
                 new_factor = enumeration_parameter.sub_parameter(factor)
-                if new_factor.ghost.active_cells():
+                if new_factor.ghost.active_cells:
                     new_e_list.append(new_factor)
                 if new_e_list:
                     new_parameters.append(new_e_list)

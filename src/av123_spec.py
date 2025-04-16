@@ -7,12 +7,6 @@ from gridded_cayley_permutations.point_placements import (
     PointPlacement,
     PartialPointPlacements,
     Directions,
-    Right_bot,
-    Left,
-    Right,
-    Left_bot,
-    Left_top,
-    Right_top,
 )
 
 

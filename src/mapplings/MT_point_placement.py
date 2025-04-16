@@ -2,8 +2,8 @@ from typing import Dict, Tuple, List, Iterator
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.point_placements import (
     PointPlacement,
-    Left,
-    Right,
+    DIR_LEFT,
+    DIR_RIGHT,
 )
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
@@ -190,7 +190,7 @@ class MTRequirementPlacement:
 class MTPartialPointPlacements(MTRequirementPlacement):
     """TODO: update for mapplings"""
 
-    DIRECTIONS = [Left, Right]
+    DIRECTIONS = [DIR_LEFT, DIR_RIGHT]
 
     def point_obstructions_and_requirements(
         self, cell: Tuple[int], direction: int

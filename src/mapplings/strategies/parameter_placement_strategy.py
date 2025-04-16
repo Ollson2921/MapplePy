@@ -8,15 +8,7 @@
 
 from typing import Dict, Iterable, Iterator, Optional, Tuple
 from comb_spec_searcher import DisjointUnionStrategy, StrategyFactory
-from gridded_cayley_permutations.point_placements import (
-    Directions,
-    Right_bot,
-    Left,
-    Right,
-    Left_bot,
-    Left_top,
-    Right_top,
-)
+from gridded_cayley_permutations.point_placements import Directions
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
 from mapplings.mapped_tiling import MappedTiling, Parameter
@@ -59,9 +51,11 @@ class MTParameterPlacementStrategy(
         """Either the cells doesn't contain gcp so add it as obstruction
         or it contains an occurrence of it furthest in the direction given
         so add it as a requirement in every possible way."""
-        return (self.simplify(
-            self.algorithm().param_placement(self.index_of_pattern, self.direction)
-        ),)
+        return (
+            self.simplify(
+                self.algorithm().param_placement(self.index_of_pattern, self.direction)
+            ),
+        )
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         return comb_class.full_cleanup()

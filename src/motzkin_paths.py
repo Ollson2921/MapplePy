@@ -71,7 +71,8 @@ mappling = MappedTiling(
 
 from mapplings import MappedTiling, Parameter, MappedTileScopePack, MappedTileScope
 from cayley_permutations import CayleyPermutation
-from gridded_cayley_permutations import GriddedCayleyPerm, Tiling, RowColMap
+from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
+from gridded_cayley_permutations.row_col_map import RowColMap
 from comb_spec_searcher.rule_db import RuleDBForest
 
 mappling = mappling.reduce_empty_rows_and_cols_in_parameters()

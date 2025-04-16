@@ -1,5 +1,5 @@
 """Places a point requirement in a tiling in extreme directions.
-0 = rightmost 
+0 = rightmost
 1 = topmost, taking the rightmost if there are multiple
 2 = topmost, taking the leftmost if there are multiple
 3 = leftmost
@@ -14,12 +14,12 @@ from gridded_cayley_permutations.point_placements import (
     PointPlacement,
     PartialPointPlacements,
     Directions,
-    Right_bot,
-    Left,
-    Right,
-    Left_bot,
-    Left_top,
-    Right_top,
+    DIR_RIGHT_BOT,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_LEFT_BOT,
+    DIR_LEFT_TOP,
+    DIR_RIGHT_TOP,
 )
 from gridded_cayley_permutations import GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
@@ -109,12 +109,12 @@ class RequirementPlacementStrategy(DisjointUnionStrategy[Tiling, GriddedCayleyPe
 
 class InsertionEncodingPlacementFactory(StrategyFactory[Tiling]):
     def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
-        cells = comb_class.active_cells() - comb_class.point_cells()
+        cells = comb_class.active_cells - comb_class.point_cells()
         gcps = tuple(
             GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
         )
         indices = tuple(0 for _ in gcps)
-        direction = Right_bot
+        direction = DIR_RIGHT_BOT
         yield RequirementPlacementStrategy(gcps, indices, direction)
 
     @classmethod
@@ -150,7 +150,7 @@ class PointPlacementFactory(StrategyFactory[Tiling]):
 
 
 class PartialRequirementPlacementStrategy(RequirementPlacementStrategy):
-    DIRECTIONS = [Left, Right]
+    DIRECTIONS = [DIR_LEFT, DIR_RIGHT]
 
     def algorithm(self, tiling: Tiling) -> PointPlacement:
         return PartialPointPlacements(tiling)
@@ -169,7 +169,7 @@ class RowInsertionFactory(StrategyFactory[Tiling]):
                 gcps = GriddedCayleyPerm(CayleyPermutation([0]), [cell])
                 all_gcps.append(gcps)
             indices = tuple(0 for _ in all_gcps)
-            for direction in [Left_bot, Right_bot, Left_top, Right_top]:
+            for direction in [DIR_LEFT_BOT, DIR_RIGHT_BOT, DIR_LEFT_TOP, DIR_RIGHT_TOP]:
                 yield RequirementPlacementStrategy(all_gcps, indices, direction)
 
     @classmethod
@@ -195,7 +195,7 @@ class ColInsertionFactory(StrategyFactory[Tiling]):
                 gcps = GriddedCayleyPerm(CayleyPermutation([0]), [cell])
                 all_gcps.append(gcps)
             indices = tuple(0 for _ in all_gcps)
-            for direction in [Left, Right]:
+            for direction in [DIR_LEFT, DIR_RIGHT]:
                 yield RequirementPlacementStrategy(all_gcps, indices, direction)
 
     @classmethod

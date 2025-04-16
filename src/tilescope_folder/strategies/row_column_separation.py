@@ -356,7 +356,7 @@ class LessThanRowColSeparation:
     def row_col_order(self) -> List[Set[Cell]]:
         col_ineq, row_ineq = self.column_row_inequalities()
         col_order, row_order = RowColOrder(
-            self.tiling.active_cells(), col_ineq, row_ineq
+            self.tiling.active_cells, col_ineq, row_ineq
         ).max_column_row_order
         return col_order, row_order
 
@@ -406,7 +406,7 @@ class LessThanRowColSeparation:
 
     @property
     def new_active_cells(self) -> List[Cell]:
-        return [self.map_cell(cell) for cell in self.tiling.active_cells()]
+        return [self.map_cell(cell) for cell in self.tiling.active_cells]
 
     @property
     def new_dimensions(self) -> Tuple[int, int]:
@@ -545,7 +545,7 @@ class LessThanOrEqualRowColSeparation(LessThanRowColSeparation):
 
     @property
     def new_active_cells(self) -> Set[Cell]:
-        new_active_cells = [self.map_cell(cell) for cell in self.tiling.active_cells()]
+        new_active_cells = [self.map_cell(cell) for cell in self.tiling.active_cells]
         point_row_active_cells = []
         for row in self.point_rows:
             for cell in new_active_cells:

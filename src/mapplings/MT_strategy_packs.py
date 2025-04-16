@@ -30,7 +30,7 @@ class MappedTileScopePack(StrategyPack):
             initial_strats=[
                 # FactorStrategy(),
                 MTPointPlacementFactory(),
-                ILFactorStrategy(),
+                FactorStrategy(),
             ],  # Iterable[Strategy]
             inferral_strats=[
                 # MTLessThanRowColSeparationStrategy(),

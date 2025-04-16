@@ -10,12 +10,12 @@ from typing import Dict, Iterable, Iterator, Optional, Tuple
 from comb_spec_searcher import DisjointUnionStrategy, StrategyFactory
 from gridded_cayley_permutations.point_placements import (
     Directions,
-    Right_bot,
-    Left,
-    Right,
-    Left_bot,
-    Left_top,
-    Right_top,
+    DIR_RIGHT_BOT,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_LEFT_BOT,
+    DIR_LEFT_TOP,
+    DIR_RIGHT_TOP,
 )
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
@@ -64,7 +64,9 @@ class MTRequirementPlacementStrategy(
         new_mapplings = []
         for placed_point in placed_points:
             new_mapplings.append(self.simplify(placed_point))
-        return (self.simplify(comb_class.add_obstructions_to_tiling(self.gcps)),) + tuple(new_mapplings)
+        return (
+            self.simplify(comb_class.add_obstructions_to_tiling(self.gcps)),
+        ) + tuple(new_mapplings)
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         return comb_class.full_cleanup()
@@ -132,8 +134,12 @@ class MTPointPlacementFactory(StrategyFactory[MappedTiling]):
     ) -> Iterator[MTRequirementPlacementStrategy]:
         """Factory to place a point requirement in a mappling in extreme directions
         in each positive cell of the base tiling."""
-        for cell in comb_class.tiling.positive_cells() - comb_class.tiling.point_cells():
-            for direction in [4,]:
+        for cell in (
+            comb_class.tiling.positive_cells() - comb_class.tiling.point_cells()
+        ):
+            for direction in [
+                4,
+            ]:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
                 indices = (0,)
                 yield MTRequirementPlacementStrategy(gcps, indices, direction)
@@ -154,7 +160,7 @@ class MTPointPlacementFactory(StrategyFactory[MappedTiling]):
 
 
 class MTPartialRequirementPlacementStrategy(MTRequirementPlacementStrategy):
-    DIRECTIONS = [Left, Right]
+    DIRECTIONS = [DIR_LEFT, DIR_RIGHT]
 
     def algorithm(self, mappling: MappedTiling) -> MTPartialPointPlacements:
         return MTPartialPointPlacements(mappling)  # TODO: Implement this
@@ -177,7 +183,7 @@ class RowPlacementFactory(StrategyFactory[MappedTiling]):
                 gcps = GriddedCayleyPerm(CayleyPermutation([0]), [cell])
                 all_gcps.append(gcps)
             indices = tuple(0 for _ in all_gcps)
-            for direction in [Left_bot, Right_bot, Left_top, Right_top]:
+            for direction in [DIR_LEFT_BOT, DIR_RIGHT_BOT, DIR_LEFT_TOP, DIR_RIGHT_TOP]:
                 yield MTRequirementPlacementStrategy(all_gcps, indices, direction)
 
     @classmethod
@@ -205,7 +211,7 @@ class ColPlacementFactory(StrategyFactory[MappedTiling]):
                 gcps = GriddedCayleyPerm(CayleyPermutation([0]), [cell])
                 all_gcps.append(gcps)
             indices = tuple(0 for _ in all_gcps)
-            for direction in [Left, Right]:
+            for direction in [DIR_LEFT, DIR_RIGHT]:
                 yield MTRequirementPlacementStrategy(all_gcps, indices, direction)
 
     @classmethod
@@ -231,7 +237,9 @@ class MTRequirementInsertionStrategy(
     ) -> Tuple[MappedTiling, ...]:
         return (
             comb_class.add_obstructions_to_tiling(self.gcps).reap_all_contradictions(),
-            comb_class.add_requirements_to_tiling([self.gcps]).reap_all_contradictions(),
+            comb_class.add_requirements_to_tiling(
+                [self.gcps]
+            ).reap_all_contradictions(),
         )
 
     def extra_parameters(
@@ -289,7 +297,7 @@ class MTCellInsertionFactory(StrategyFactory[MappedTiling]):
     def __call__(
         self, comb_class: MappedTiling
     ) -> Iterator[MTRequirementInsertionStrategy]:
-        for cell in comb_class.tiling.active_cells():
+        for cell in comb_class.tiling.active_cells:
             gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
             strategy = MTRequirementInsertionStrategy(gcps, ignore_parent=False)
             yield strategy
