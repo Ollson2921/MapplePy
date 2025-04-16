@@ -35,13 +35,17 @@ class AbstractFactorStrategy:
         factors = algo.make_factors(factor_cells)
         if not factors:
             raise StrategyDoesNotApply
-        return tuple([self.simplify( factor) for factor in factors])
+        return tuple([self.simplify(factor) for factor in factors])
 
     def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         new_mappling = comb_class.tidy_containing_parameters()
         if not new_mappling.tiling:
             return new_mappling
-        return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
+        return (
+            new_mappling.insert_valid_avoiders()
+            .reap_all_contradictions()
+            .remove_empty_rows_and_columns()
+        )
 
     def extra_parameters(
         self,
@@ -126,32 +130,36 @@ class AbstractILFactorStrategy(Strategy[MappedTiling, GriddedCayleyPerm]):
             raise StrategyDoesNotApply
         return tuple([self.simplify(factor) for factor in factors])
 
-    def simplify(self, comb_class : MappedTiling) -> MappedTiling:
+    def simplify(self, comb_class: MappedTiling) -> MappedTiling:
         """TODO: which simplifications do we want here (if any??)"""
         new_mappling = comb_class.tidy_containing_parameters()
         if not new_mappling.tiling:
             return new_mappling
-        return new_mappling.insert_valid_avoiders().reap_all_contradictions().remove_empty_rows_and_columns()
-    
+        return (
+            new_mappling.insert_valid_avoiders()
+            .reap_all_contradictions()
+            .remove_empty_rows_and_columns()
+        )
+
     def can_be_equivalent(self):
         return True
-    
-    def constructor(self, comb_class, children = None):
+
+    def constructor(self, comb_class, children=None):
         raise NotImplementedError
-    
+
     def is_reversible(self, comb_class):
         return False
-    
+
     def is_two_way(self, comb_class):
         return False
-    
-    def reverse_constructor(self, idx, comb_class, children = None):
+
+    def reverse_constructor(self, idx, comb_class, children=None):
         raise NotImplementedError
-    
+
     def shifts(
         self,
         comb_class,
-        children = None,
+        children=None,
     ) -> Tuple[int, ...]:
         if children is None:
             children = self.decomposition_function(comb_class)
@@ -160,8 +168,7 @@ class AbstractILFactorStrategy(Strategy[MappedTiling, GriddedCayleyPerm]):
         min_points = tuple(c.minimum_size_of_object() for c in children)
         point_sum = sum(min_points)
         return tuple(point_sum - mpoint for mpoint in min_points)
-    
-    
+
     def extra_parameters(
         self,
         comb_class: MappedTiling,

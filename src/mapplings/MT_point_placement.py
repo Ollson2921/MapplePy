@@ -97,10 +97,11 @@ class MTRequirementPlacement:
         new_param_list = set()
         for parameter in param_list:
             n, m = parameter.ghost.dimensions
-            param_requirement_list, param_indices = (
-                self.map_requirement_list_to_parameter(
-                    requirement_list, indices, parameter
-                )
+            (
+                param_requirement_list,
+                param_indices,
+            ) = self.map_requirement_list_to_parameter(
+                requirement_list, indices, parameter
             )
             for param_cell in parameter.map.preimage_of_cell(cell):
                 new_ghost = PointPlacement(parameter.ghost).point_placement_in_cell(

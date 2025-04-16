@@ -33,8 +33,8 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
     @property
     def rootmt(self) -> MappedTiling:
         return self._rootmt
-    
-    def pack(self,comb_class):
+
+    def pack(self, comb_class):
         raise NotImplementedError
 
     def verified(self, comb_class: MappedTiling) -> bool:

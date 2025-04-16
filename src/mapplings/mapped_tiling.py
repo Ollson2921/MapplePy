@@ -299,7 +299,6 @@ class Parameter:
 
 
 class MappedTiling(CombinatorialClass):
-
     def __init__(
         self,
         tiling: Tiling,

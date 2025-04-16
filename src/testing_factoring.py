@@ -1,6 +1,13 @@
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
-from mapplings import Parameter, MappedTiling, MTFactor, ParameterPlacement, MappedTileScopePack, MappedTileScope
+from mapplings import (
+    Parameter,
+    MappedTiling,
+    MTFactor,
+    ParameterPlacement,
+    MappedTileScopePack,
+    MappedTileScope,
+)
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope_folder.strategies.factor import Factors
 from tilescope_folder import TileScope, TileScopePack
@@ -94,7 +101,7 @@ obstructions = [
     GriddedCayleyPerm(point, ((0, 2),)),
     GriddedCayleyPerm(point, ((2, 0),)),
     GriddedCayleyPerm(point, ((2, 2),)),
-    GriddedCayleyPerm(point, ((4, 4),))
+    GriddedCayleyPerm(point, ((4, 4),)),
 ]
 
 requirements = [
@@ -102,14 +109,14 @@ requirements = [
     [GriddedCayleyPerm(point, ((3, 3),))],
 ]
 
-T1 = Tiling.from_vincular(CayleyPermutation((0,1)),[]).add_obstructions(obstructions)
+T1 = Tiling.from_vincular(CayleyPermutation((0, 1)), []).add_obstructions(obstructions)
 temp = Tiling([GriddedCayleyPerm(cay, ((0, 0), (0, 0)))], [], (1, 1))
 
 
 P0 = Parameter(
     T1, RowColMap({0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0})
 )
-#P0 = P0.back_map_obs_and_reqs(temp)
+# P0 = P0.back_map_obs_and_reqs(temp)
 
 T1 = P0.ghost
 
@@ -236,7 +243,7 @@ IL_TEST = Tiling(
 # print(spec.get_genf())
 
 
-### Maunual 
+### Maunual
 # n = 7  # how far to check counts
 # show_counts = False
 # print("====================Initial Mappling====================")

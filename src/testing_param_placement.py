@@ -36,8 +36,18 @@ TT = Parameter(
 )
 
 
-PE0 = Parameter(Tiling([],[[GriddedCayleyPerm(CayleyPermutation((0,1)),[(0,2),(0,2)])]],(1,4)), RowColMap({0:0},{0:0,1:1,2:1,3:1}))
-PE1 = Parameter(Tiling([],[[GriddedCayleyPerm(CayleyPermutation((0,1)),[(0,2),(0,2)])]],(1,4)), RowColMap({0:0},{0:0,1:0,2:1,3:1}))
+PE0 = Parameter(
+    Tiling(
+        [], [[GriddedCayleyPerm(CayleyPermutation((0, 1)), [(0, 2), (0, 2)])]], (1, 4)
+    ),
+    RowColMap({0: 0}, {0: 0, 1: 1, 2: 1, 3: 1}),
+)
+PE1 = Parameter(
+    Tiling(
+        [], [[GriddedCayleyPerm(CayleyPermutation((0, 1)), [(0, 2), (0, 2)])]], (1, 4)
+    ),
+    RowColMap({0: 0}, {0: 0, 1: 0, 2: 1, 3: 1}),
+)
 
 for output in PE0.expand_together(PE1):
     for P in output:
@@ -70,9 +80,12 @@ def fully_place_parameter(mappling: MappedTiling, param: Parameter, direction):
             temp_map.col_map[points_to_place[i][0]],
             temp_map.row_map[points_to_place[i][1]],
         )
-        new_mappling = ParameterPlacement(
-            new_mappling, new_param, cell
-        ).param_placement(direction, i).reduce_empty_rows_and_cols_in_parameters().full_cleanup()
+        new_mappling = (
+            ParameterPlacement(new_mappling, new_param, cell)
+            .param_placement(direction, i)
+            .reduce_empty_rows_and_cols_in_parameters()
+            .full_cleanup()
+        )
         yield new_mappling
 
 

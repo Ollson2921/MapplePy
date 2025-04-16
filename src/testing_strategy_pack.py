@@ -29,8 +29,6 @@ parameter = parameter.back_map_obs_and_reqs(tiling)
 mt = MappedTiling(tiling, [parameter], [], [])
 
 
-
-
 ruledb = RuleDBForest()
 scope = MappedTileScope(
     mt, MappedTileScopePack.MTpoint_placement(mt), debug=True, ruledb=ruledb
