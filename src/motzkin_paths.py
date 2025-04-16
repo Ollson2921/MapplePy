@@ -80,7 +80,7 @@ ruledb = RuleDBForest()
 scope = MappedTileScope(
     mappling,
     MappedTileScopePack.MTpoint_placement(mappling),
-    debug=True,
+    debug=False,
     ruledb=ruledb,
 )
 spec = scope.auto_search(status_update=5)

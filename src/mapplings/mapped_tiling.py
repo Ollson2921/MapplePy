@@ -351,7 +351,7 @@ class MappedTiling(CombinatorialClass):
     def kill_to_empty_or_obstructed(self):
         '''Used to decide how to kill mapplings in full_cleanup'''
         if self.tiling.is_empty():
-            return MappedTiling.empty_mappling
+            return MappedTiling.empty_mappling()
         return MappedTiling(Tiling([GriddedCayleyPerm(CayleyPermutation((0,)), ((0,0),))]),[],[],[])
         
     def fuse_parameters(self):
