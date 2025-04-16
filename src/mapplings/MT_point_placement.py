@@ -74,21 +74,29 @@ class MTRequirementPlacement:
         )
 
     def req_placement_param_list(
-        self, param_lists, requirement_list, indices, direction, cell
-    ):
+        self,
+        param_lists: tuple[tuple[Parameter, ...], ...],
+        requirement_list: tuple[GriddedCayleyPerm, ...],
+        indices: tuple[int, ...],
+        direction: int,
+        cell: tuple[int, int],
+    ) -> tuple[Parameter, ...]:
         """Point placement in a list of lists of parameters."""
-        new_parameters = []
-        for param_list in param_lists:
-            new_parameters.append(
-                self.req_placement_in_list(
-                    param_list, requirement_list, indices, direction, cell
-                )
+        return tuple(
+            self.req_placement_in_list(
+                param_list, requirement_list, indices, direction, cell
             )
-        return new_parameters
+            for param_list in param_lists
+        )
 
     def req_placement_in_list(
-        self, param_list, requirement_list, indices, direction, cell
-    ):
+        self,
+        param_list: tuple[Parameter, ...],
+        requirement_list: tuple[GriddedCayleyPerm, ...],
+        indices: tuple[int, ...],
+        direction: int,
+        cell: tuple[int, int],
+    ) -> tuple[Parameter, ...]:
         """Point placement in a single list of parameters.
         For a given list of lists of parameters, maps each individual
         parameter to a a new list of parameters with the requirement list
@@ -107,16 +115,25 @@ class MTRequirementPlacement:
                 new_ghost = PointPlacement(parameter.ghost).point_placement_in_cell(
                     param_requirement_list, param_indices, direction, param_cell
                 )
-                if new_ghost.is_empty():
+                if (
+                    GriddedCayleyPerm(CayleyPermutation([]), [])
+                    in new_ghost.obstructions
+                ):
                     continue
+                print(new_ghost)
                 new_n, new_m = new_ghost.dimensions
                 new_map = parameter.map.expand_at_index(
                     new_n - n, new_m - m, param_cell[0], param_cell[1]
                 )
                 new_param_list.add(Parameter(new_ghost, new_map))
-        return list(new_param_list)
+        return tuple(sorted(new_param_list))
 
-    def map_requirement_list_to_parameter(self, requirement_list, indices, parameter):
+    def map_requirement_list_to_parameter(
+        self,
+        requirement_list: tuple[GriddedCayleyPerm, ...],
+        indices: tuple[int, ...],
+        parameter: Parameter,
+    ) -> tuple[tuple[GriddedCayleyPerm, ...], tuple[int, ...]]:
         """Maps each requirement in a requirement list to a new requirement based on
         parameter.map and creates new requirement list for the parameter. Also turns
         indices into a list length len(new_requirement_list), with one occurrence of each

@@ -275,7 +275,7 @@ class Parameter:
         return Parameter(self.ghost, self.map)
 
     def __repr__(self):
-        return str((repr(self.ghost), str(self.map)))
+        return self.__class__.__name__ + f"({repr(self.ghost)}, {repr(self.map)})"
 
     def __eq__(self, other) -> bool:
         return self.ghost == other.ghost and self.map == other.map
@@ -745,7 +745,7 @@ class MappedTiling(CombinatorialClass):
             self.enumeration_parameters + enumeration_parameters,
         )
 
-    def all_parameters(self):  # Good
+    def all_parameters(self) -> tuple["Parameter", ...]:  # Good
         """Returns a list of all parameters."""
         return (
             self.avoiding_parameters
@@ -829,13 +829,10 @@ class MappedTiling(CombinatorialClass):
         return self.tiling.is_empty() or self.are_contradictory_parameters()
 
     def __repr__(self):
-        return str(
-            (
-                repr(self.tiling),
-                [repr(p) for p in self.avoiding_parameters],
-                [[repr(p) for p in ps] for ps in self.containing_parameters],
-                [[repr(p) for p in ps] for ps in self.enumeration_parameters],
-            )
+        return (
+            self.__class__.__name__
+            + f"({repr(self.tiling)}, {repr(self.avoiding_parameters)}, "
+            + f"{repr(self.containing_parameters)}, {repr(self.enumeration_parameters)})"
         )
 
     def reduced_str(self):
