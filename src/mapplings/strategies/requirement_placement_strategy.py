@@ -137,16 +137,14 @@ class MTPointPlacementFactory(StrategyFactory[MappedTiling]):
         for cell in (
             comb_class.tiling.positive_cells() - comb_class.tiling.point_cells()
         ):
-            for direction in [
-                4,
-            ]:
+            for direction in Directions:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), [cell]),)
                 indices = (0,)
                 yield MTRequirementPlacementStrategy(gcps, indices, direction)
-                if direction in MTPartialRequirementPlacementStrategy.DIRECTIONS:
-                    yield MTPartialRequirementPlacementStrategy(
-                        gcps, indices, direction
-                    )
+                # if direction in MTPartialRequirementPlacementStrategy.DIRECTIONS:
+                #     yield MTPartialRequirementPlacementStrategy(
+                #         gcps, indices, direction
+                #     )
 
     @classmethod
     def from_dict(cls, d: dict) -> "MTPointPlacementFactory":

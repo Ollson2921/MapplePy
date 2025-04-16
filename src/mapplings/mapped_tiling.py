@@ -80,23 +80,22 @@ class Parameter:
             del new_row_map[index]
         return RowColMap(new_col_map, new_row_map).standardise_map()
 
-    def back_map_obs_and_reqs(self, tiling: Tiling, simplify=True):
+    def back_map_obs_and_reqs(self, tiling: Tiling, simplify=True) -> "Parameter":
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
         """
-        new_obs, new_reqs = list(
-            self.ghost.obstructions
-        ) + self.map.preimage_of_obstructions(tiling.obstructions), list(
-            self.ghost.requirements
-        ) + self.map.preimage_of_requirements(
+        new_obs = self.ghost.obstructions + self.map.preimage_of_obstructions(
+            tiling.obstructions
+        )
+        new_reqs = self.ghost.requirements + self.map.preimage_of_requirements(
             tiling.requirements
         )
         return Parameter(
             Tiling(new_obs, new_reqs, self.ghost.dimensions, simplify), self.map
         )
 
-    def back_map_point_obstructions(self, tiling: Tiling, simplify=True):
+    def back_map_point_obstructions(self, tiling: Tiling, simplify=True) -> "Parameter":
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
@@ -115,56 +114,64 @@ class Parameter:
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
-    def fuse_valid_rows_or_cols(self, direction):
-        """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
-        direction = 0 for cols, directions = 1 for rows"""
-        new_ghost = self.ghost
-        new_maps = (self.map.col_map, self.map.row_map)
-        i, j, extend = 0, 0, 1
-        while i + extend < self.ghost.dimensions[direction]:
-            if new_maps[direction][i] == new_maps[direction][i + extend]:
-                if new_ghost.is_fusable(direction, j):
-                    new_ghost = new_ghost.delete_rows_and_columns(
-                        *([j], [])[:: (-1) ** direction]
-                    )
-                    del new_maps[direction][i + extend]
-                    extend += 1
-                    continue
-            i += extend
-            j += 1
-            extend = 1
-        return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
-
     def reduce_by_fusion(self):
         """Fuses valid rows and columns"""
-        return self.fuse_valid_rows_or_cols(0).fuse_valid_rows_or_cols(1)
+        rows_to_delete = tuple(
+            row
+            for row in range(self.ghost.dimensions[1] - 1)
+            if (
+                self.map.row_map[row] == self.map.row_map[row + 1]
+                and self.ghost.can_fuse_row(row)
+            )
+        )
+        cols_to_delete = tuple(
+            col
+            for col in range(self.ghost.dimensions[0] - 1)
+            if (
+                self.map.col_map[col] == self.map.col_map[col + 1]
+                and self.ghost.can_fuse_col(col)
+            )
+        )
+        return self.delete_rows_and_columns(cols_to_delete, rows_to_delete)
 
-    def _reduce_empty_rows_or_cols(self, direction, preimages, currently_empty):
-        """Removes empty rows or columns if they share an image with another row or column.
-        direction 0 for cols, direction 1 for rows. Preimages is a dictionary with the tiling index pointing to a list of its preimages
+    def delete_rows_and_columns(
+        self, cols_to_delete: tuple[int, ...], rows_to_delete: tuple[int, ...]
+    ) -> "Parameter":
+        """Removes rows and columns from the parameter"""
+        new_map = self.reduce_row_col_map(cols_to_delete, rows_to_delete)
+        new_ghost = self.ghost.delete_rows_and_columns(cols_to_delete, rows_to_delete)
+        return Parameter(new_ghost, new_map)
+
+    def _reduce_empty_rows_or_cols(
+        self,
+        rows: bool,
+        preimages: dict[int, list[int, ...]],
+        currently_empty: set[int],
+    ) -> "Parameter":
+        """
+        Removes empty rows or columns if they share an image with another row or column.
+
+        Preimages is a dictionary with the tiling index pointing to a list of its preimages
         """
         new_maps = (self.map.col_map, self.map.row_map)
         to_remove = []
-        for i in preimages.keys():
-            new_indices_to_remove = []
-            if len(preimages[i]) == 1:
+        for row, preimage_row in preimages.items():
+            if len(preimage_row) == 1:
                 continue
-            keep_something = 1
-            for idx in preimages[i]:
-                try:
-                    currently_empty.remove(idx)
-                    new_indices_to_remove.append(idx)
-                except:
-                    keep_something = 0
-            to_remove += new_indices_to_remove[keep_something:]
-        for idx in to_remove:
-            del new_maps[direction][idx]
-        remove_in_direction = (to_remove, [])[:: (-1) ** direction]
-        new_ghost = self.ghost.delete_rows_and_columns(*remove_in_direction)
+            for idx in preimage_row:
+                if idx in currently_empty:
+                    to_remove.append(idx)
+                    new_maps[rows].pop(idx)
+        empty_rows, empty_cols = tuple(), tuple()
+        if rows:
+            empty_rows = tuple(to_remove)
+        else:
+            empty_cols = tuple(to_remove)
+        new_ghost = self.ghost.delete_rows_and_columns(empty_cols, empty_rows)
         return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
 
     def reduce_empty_rows_and_cols(self):
-        """ "Removes empty rows and columns in the parameter"""
+        """Removes empty rows and columns in the parameter"""
         col_preimages = {
             i: self.map.preimages_of_col(i) for i in set(self.map.col_map.values())
         }

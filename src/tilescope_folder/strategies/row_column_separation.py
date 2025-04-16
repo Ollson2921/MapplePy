@@ -386,23 +386,23 @@ class LessThanRowColSeparation:
 
     def point_row_obs_and_reqs(
         self,
-    ) -> Iterator[Tuple[List[GriddedCayleyPerm], List[List[GriddedCayleyPerm]]]]:
+    ) -> Iterator[
+        tuple[tuple[GriddedCayleyPerm, ...], tuple[tuple[GriddedCayleyPerm, ...], ...]]
+    ]:
         """
         Return the obstructions and requirements for the points in the rows.
         """
-        yield [], []
+        yield tuple(), tuple()
 
     @property
-    def new_obstructions(self) -> List[GriddedCayleyPerm]:
-        new_obstructions = []
-        for cell in product(
-            range(self.new_dimensions[0]), range(self.new_dimensions[1])
-        ):
-            if cell not in self.new_active_cells:
-                new_obstructions.append(
-                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
-                )
-        return new_obstructions
+    def new_obstructions(self) -> tuple[GriddedCayleyPerm, ...]:
+        return tuple(
+            GriddedCayleyPerm(CayleyPermutation([0]), [cell])
+            for cell in product(
+                range(self.new_dimensions[0]), range(self.new_dimensions[1])
+            )
+            if cell not in self.new_active_cells
+        )
 
     @property
     def new_active_cells(self) -> List[Cell]:
@@ -481,7 +481,9 @@ class LessThanOrEqualRowColSeparation(LessThanRowColSeparation):
 
     def point_row_obs_and_reqs(
         self,
-    ) -> Iterator[Tuple[List[GriddedCayleyPerm], List[List[GriddedCayleyPerm]]]]:
+    ) -> Iterator[
+        tuple[tuple[GriddedCayleyPerm, ...], tuple[tuple[GriddedCayleyPerm, ...], ...]]
+    ]:
         """
         Return the obstructions and requirements for the points in the rows.
         """
@@ -497,20 +499,18 @@ class LessThanOrEqualRowColSeparation(LessThanRowColSeparation):
                 indices_of_above.append(cell[0])
             for cell in self.active_cells_in_row(row - 1):
                 indices_of_below.append(cell[0])
-            row_point_gcps_above = []
-            row_point_gcps_below = []
-            for i in indices_of_above:
-                row_point_gcps_above.append(
-                    GriddedCayleyPerm(CayleyPermutation([0]), [(i, row)])
-                )
-            for i in indices_of_below:
-                row_point_gcps_below.append(
-                    GriddedCayleyPerm(CayleyPermutation([0]), [(i, row)])
-                )
+            row_point_gcps_above = tuple(
+                GriddedCayleyPerm(CayleyPermutation([0]), [(i, row)])
+                for i in indices_of_above
+            )
+            row_point_gcps_below = tuple(
+                GriddedCayleyPerm(CayleyPermutation([0]), [(i, row)])
+                for i in indices_of_below
+            )
             reqs.append(row_point_gcps_above)
             reqs.append(row_point_gcps_below)
             obs.extend(row_point_gcps_above + row_point_gcps_below)
-            row_reqs[row] = [row_point_gcps_above, row_point_gcps_below]
+            row_reqs[row] = (row_point_gcps_above, row_point_gcps_below)
             row_obs[row] = row_point_gcps_above + row_point_gcps_below
         for i in range(len(self.point_rows) + 1):
             for positive_rows in combinations(self.point_rows, i):
@@ -521,9 +521,9 @@ class LessThanOrEqualRowColSeparation(LessThanRowColSeparation):
                         reqs.extend(row_reqs[row])
                     else:
                         obs.extend(row_obs[row])
-                yield point_obs + obs, reqs
+                yield tuple(point_obs) + tuple(obs), tuple(reqs)
 
-    def point_obs(self):
+    def point_obs(self) -> tuple[GriddedCayleyPerm, ...]:
         point_obs = []
         for j in self.point_rows:
             cells = self.active_cells_in_row(j)
@@ -541,7 +541,7 @@ class LessThanOrEqualRowColSeparation(LessThanRowColSeparation):
                 point_obs.append(
                     GriddedCayleyPerm(CayleyPermutation([1, 0]), [cell, cell])
                 )
-        return point_obs
+        return tuple(point_obs)
 
     @property
     def new_active_cells(self) -> Set[Cell]:
