@@ -44,8 +44,8 @@ mappling = MappedTiling(
         (1, 1),
     ),
     avoiding_parameters,
-    [[]],
-    [[]],
+    [],
+    [],
 )
 
 # print(mappling)
@@ -80,7 +80,7 @@ ruledb = RuleDBForest()
 scope = MappedTileScope(
     mappling,
     MappedTileScopePack.MTpoint_placement(mappling),
-    debug=False,
+    debug=True,
     ruledb=ruledb,
 )
 spec = scope.auto_search(status_update=5)
