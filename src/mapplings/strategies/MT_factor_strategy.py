@@ -30,7 +30,7 @@ class AbstractFactorStrategy:
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        algo = MTFactor(comb_class.remove_redundant_parameters())
+        algo = MTFactor(comb_class)
         factor_cells = algo.find_factor_cells()
         factors = algo.make_factors(factor_cells)
         if not factors:
@@ -123,7 +123,7 @@ class AbstractILFactorStrategy(Strategy[MappedTiling, GriddedCayleyPerm]):
     def decomposition_function(
         self, comb_class: MappedTiling
     ) -> Tuple[MappedTiling, ...]:
-        algo = MTFactor(comb_class.remove_redundant_parameters())
+        algo = MTFactor(comb_class)
         factor_cells = algo.find_IL_factor_cells()
         factors = algo.make_factors(factor_cells)
         if not factors:

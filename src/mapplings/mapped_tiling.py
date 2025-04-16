@@ -402,7 +402,7 @@ class MappedTiling(CombinatorialClass):
     def kill_to_empty_or_obstructed(self):
         """Used to decide how to kill mapplings in full_cleanup"""
         if self.tiling.is_empty():
-            return MappedTiling(Tiling.empty_tiling, [], [], [])
+            return MappedTiling.empty_mappling()
         return MappedTiling(
             Tiling([GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),))]), [], [], []
         )
@@ -450,7 +450,9 @@ class MappedTiling(CombinatorialClass):
         for avoider in self.avoiding_parameters:
             placeable_req = new_mappling.avoider_can_be_placed(avoider)
             if placeable_req:
-                new_mappling = new_mappling.add_obstructions([placeable_req[0]])
+                new_mappling = new_mappling.add_obstructions_to_tiling(
+                    [placeable_req[0]]
+                )
             else:
                 new_avoiders.append(avoider)
         return MappedTiling(
@@ -492,6 +494,12 @@ class MappedTiling(CombinatorialClass):
         """Map all obs and reqs in the tiling to the parameters in the parameter list"""
         return [param.back_map_obs_and_reqs(tiling) for param in param_list]
 
+    def back_maps_point_obs_for_param_list(
+        self, tiling: Tiling, param_list: List[Parameter]
+    ):  # Good
+        """Map all obs and reqs in the tiling to the parameters in the parameter list"""
+        return [param.back_map_point_obstructions(tiling) for param in param_list]
+
     def tidy_containing_parameters(self):  # Good
         """For parameters with empty tilings, if it is the only
         one in a list then the mappling is empty, otherwise remove the empty
@@ -504,9 +512,7 @@ class MappedTiling(CombinatorialClass):
         new_containing_parameters = []
         new_tiling = self.tiling
         for param_list in self.containing_parameters:
-            param_list = self.back_maps_obs_and_reqs_for_param_list(
-                new_tiling, param_list
-            )
+            param_list = self.back_maps_point_obs_for_param_list(new_tiling, param_list)
             if len(param_list) == 0:
                 return MappedTiling(Tiling.empty_tiling(), [], [], [])
             if len(param_list) == 1:
@@ -543,7 +549,8 @@ class MappedTiling(CombinatorialClass):
             self.reap_contradictory_ghosts_from_list(c_list)
             for c_list in self.containing_parameters
         ]
-        new_containers = [c_list for c_list in new_containers if c_list]
+        if any(not bool(c_list) for c_list in new_containers):
+            return MappedTiling.empty_mappling()
         new_enumerators = [
             self.reap_contradictory_ghosts_from_list(e_list)
             for e_list in self.enumeration_parameters
@@ -691,8 +698,10 @@ class MappedTiling(CombinatorialClass):
         """Finds and removes empty rows and cols in the base tiling then removes the
         corresponding rows and columns in the parameters"""
         empty_cols, empty_rows = self.tiling.find_empty_rows_and_columns()
-        if not empty_cols and not empty_rows:
-            return self
+        if len(empty_cols) == self.tiling.dimensions[0]:
+            empty_cols.pop(0)
+        if len(empty_rows) == self.tiling.dimensions[1]:
+            empty_rows.pop(0)
         new_tiling = self.tiling.delete_rows_and_columns(empty_cols, empty_rows)
         new_avoiding_parameters = self.remove_empty_rows_and_cols_from_param_list(
             self.avoiding_parameters, empty_cols, empty_rows
@@ -751,6 +760,15 @@ class MappedTiling(CombinatorialClass):
             self.avoiding_parameters
             + list(chain.from_iterable(self.containing_parameters))
             + list(chain.from_iterable(self.enumeration_parameters))
+        )
+
+    @classmethod
+    def empty_mappling(cls) -> "MappedTiling":
+        return MappedTiling(
+            Tiling.empty_tiling(),
+            [],
+            [],
+            [],
         )
 
     def copy(self):
