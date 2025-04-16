@@ -120,7 +120,6 @@ class MTRequirementPlacement:
                     in new_ghost.obstructions
                 ):
                     continue
-                print(new_ghost)
                 new_n, new_m = new_ghost.dimensions
                 new_map = parameter.map.expand_at_index(
                     new_n - n, new_m - m, param_cell[0], param_cell[1]

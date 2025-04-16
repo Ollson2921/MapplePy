@@ -80,7 +80,7 @@ class Parameter:
             del new_row_map[index]
         return RowColMap(new_col_map, new_row_map).standardise_map()
 
-    def back_map_obs_and_reqs(self, tiling: Tiling, simplify=0):
+    def back_map_obs_and_reqs(self, tiling: Tiling, simplify=True):
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
@@ -96,7 +96,7 @@ class Parameter:
             Tiling(new_obs, new_reqs, self.ghost.dimensions, simplify), self.map
         )
 
-    def back_map_point_obstructions(self, tiling: Tiling, simplify=0):
+    def back_map_point_obstructions(self, tiling: Tiling, simplify=True):
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
@@ -201,7 +201,7 @@ class Parameter:
             }
             new_parameter = Parameter(
                 new_parameter.ghost, RowColMap(*tuple(maps))
-            ).back_map_obs_and_reqs(self.ghost, simplify=1)
+            ).back_map_obs_and_reqs(self.ghost, simplify=True)
         original_maps = [self.map.col_map, self.map.row_map]
         original_maps[direction] = {
             k: original_maps[direction][k - int(k > max_index)]
@@ -698,10 +698,12 @@ class MappedTiling(CombinatorialClass):
         """Finds and removes empty rows and cols in the base tiling then removes the
         corresponding rows and columns in the parameters"""
         empty_cols, empty_rows = self.tiling.find_empty_rows_and_columns()
+        if not empty_cols and not empty_rows:
+            return self
         if len(empty_cols) == self.tiling.dimensions[0]:
-            empty_cols.pop(0)
+            empty_cols = empty_cols[1:]
         if len(empty_rows) == self.tiling.dimensions[1]:
-            empty_rows.pop(0)
+            empty_rows = empty_rows[1:]
         new_tiling = self.tiling.delete_rows_and_columns(empty_cols, empty_rows)
         new_avoiding_parameters = self.remove_empty_rows_and_cols_from_param_list(
             self.avoiding_parameters, empty_cols, empty_rows

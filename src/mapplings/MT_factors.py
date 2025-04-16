@@ -98,7 +98,7 @@ class MTFactor:
             for j in range(len(non_trivial_contributions)):
                 check_param = new_factors[i].avoiding_parameters[j]
                 if check_param.ghost.active_cells:
-                    if not check_param.ghost.issubset(new_factors[i].tiling):
+                    if not check_param.ghost.is_subset(new_factors[i].tiling):
                         non_trivial_contributions[j] += 1
                         if non_trivial_contributions[j] > 1:
                             print("avoider issues")
