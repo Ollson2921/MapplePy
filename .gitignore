@@ -1,7 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-cayley_permutations/__pycache__/
-gridded_cayley_permutations/__pycache__/
+mapplings/__pycache__/
+playground/__pycache__/
 *.py[cod]
 *$py.class
 
