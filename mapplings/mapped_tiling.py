@@ -1,4 +1,6 @@
-from typing import Iterable, Tuple, List, DefaultDict
+"""Module with the mapped tiling class."""
+
+from typing import Iterable, Tuple, List, DefaultDict, Iterator
 from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
 
@@ -10,6 +12,9 @@ Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
 
 class MappedTiling(CombinatorialClass):
+    """A mapped tiling is a tiling with avoiding and containing parameters
+    which map to it by row and column maps."""
+
     def __init__(
         self,
         tiling: Tiling,
@@ -42,11 +47,10 @@ class MappedTiling(CombinatorialClass):
                 return i
             i += 1
 
-    def objects_of_size(self, n, **parameters) -> Iterable[GriddedCayleyPerm]:
+    def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
         """Return gridded Cayley permutations of size n in the tiling."""
         for val in self.get_objects(n).values():
-            for gcp in val:
-                yield gcp
+            yield from val
 
     def get_objects(self, n: int) -> Objects:
         """Return the objects of size n in the tiling."""
@@ -57,12 +61,13 @@ class MappedTiling(CombinatorialClass):
                 objects[param].append(gcp)
         return objects
 
-    def get_parameters(self, gcp: GriddedCayleyPerm) -> Tuple[int, ...]:
-        """Parameters are not what you think!!! This is specific to combinatorical class parameters"""
+    def get_parameters(self, obj: GriddedCayleyPerm) -> Tuple[int, ...]:
+        """Parameters are not what you think!!! This is specific to
+        combinatorical class parameters"""
         all_lists = []
         for param_list in self.enumeration_parameters:
             all_lists.append(
-                sum(1 for _ in param.preimage_of_gcp(gcp)) for param in param_list
+                sum(1 for _ in param.preimage_of_gcp(obj)) for param in param_list
             )
         return tuple(all_lists)
 
