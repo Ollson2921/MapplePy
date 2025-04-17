@@ -1,11 +1,10 @@
-from gridded_cayley_permutations import Tiling
-from gridded_cayley_permutations.row_col_map import RowColMap
+from CayleyPerms.gridded_cayley_permutations import Tiling
+from CayleyPerms.gridded_cayley_permutations.row_col_map import RowColMap
 
 
 class Parameter:
-    """A tiling (called a ghost) mapping to a base tiling."""
-
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
+        """we may need to keep track of which direction the row_col_map goes"""
         self.map = row_col_map
         self.ghost = ghost
 
