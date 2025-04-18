@@ -18,7 +18,8 @@ class Parameter:
             if self.ghost.gcp_in_tiling(gcp):
                 yield gcp
 
-    def from_dict(self, d: dict) -> "Parameter":
+    @classmethod
+    def from_dict(cls, d: dict) -> "Parameter":
         """Used for constructing MappedTilings from a dictionary."""
         raise NotImplementedError
 

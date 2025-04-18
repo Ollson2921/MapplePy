@@ -22,12 +22,61 @@ class MappedTiling(CombinatorialClass):
         containing_parameters: Iterable[Iterable[Parameter]],
         enumeration_parameters: Iterable[Iterable[Parameter]],
     ):
-        self.avoiding_parameters = avoiding_parameters
-        self.containing_parameters = containing_parameters
-        self.enumeration_parameters = enumeration_parameters
+        self.avoiding_parameters = tuple(sorted(avoiding_parameters))
+        self.containing_parameters = tuple(
+            sorted(tuple(sorted(params)) for params in containing_parameters)
+        )
+        self.enumeration_parameters = tuple(
+            sorted(tuple(sorted(params)) for params in enumeration_parameters)
+        )
         self.tiling = tiling
 
-    ## Combintatorial class stuff ##
+    # Containment and avoidance functions
+
+    def gcp_in_tiling(self, gcp: GriddedCayleyPerm) -> bool:
+        """Returns True if the gridded cayley permutation is in the tiling"""
+        return self.gcp_satisfies_containing_params(
+            gcp
+        ) and self.gcp_satisfies_avoiding_params(gcp)
+
+    def gcp_satisfies_avoiding_params(self, gcp: GriddedCayleyPerm) -> bool:
+        """Returns True if the gridded cayley permutation satisfies the avoiding parameters"""
+        return not any(
+            any(True for _ in param.preimage_of_gcp(gcp))
+            for param in self.avoiding_parameters
+        )
+
+    def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
+        """Returns True if the gridded cayley permutation satisfies the containing parameters"""
+        return all(
+            any(any(True for _ in param.preimage_of_gcp(gcp)) for param in params)
+            for params in self.containing_parameters
+        )
+
+    def has_contradictory_parameters(self) -> bool:
+        """
+        Returns True if there is a contradiction between the avoiding and
+        containing parameters - if a len 1 containing parameter list is the
+        same as an avoiding parameter.
+        """
+        if not self.avoiding_parameters:
+            return False
+        len_one_cont_params = [
+            contain_list
+            for contain_list in self.containing_parameters
+            if len(contain_list) == 1
+        ]
+        if not len_one_cont_params:
+            return False
+        if any(
+            contain_list[0] == avoiding_parameter
+            for contain_list in len_one_cont_params
+            for avoiding_parameter in self.avoiding_parameters
+        ):
+            return True
+        return False
+
+    # Combintatorial class stuff
 
     def has_parameters(self) -> bool:
         """Check if the tiling has avoiding or containing parameters
@@ -64,62 +113,34 @@ class MappedTiling(CombinatorialClass):
     def get_parameters(self, obj: GriddedCayleyPerm) -> Tuple[int, ...]:
         """Parameters are not what you think!!! This is specific to
         combinatorical class parameters"""
-        all_lists = []
-        for param_list in self.enumeration_parameters:
-            all_lists.append(
-                sum(1 for _ in param.preimage_of_gcp(obj)) for param in param_list
-            )
-        return tuple(all_lists)
-
-    def gcp_in_tiling(self, gcp: GriddedCayleyPerm) -> bool:
-        """Returns True if the gridded cayley permutation is in the tiling"""
-        return self.gcp_satisfies_containing_params(
-            gcp
-        ) and self.gcp_satisfies_avoiding_params(gcp)
-
-    def gcp_satisfies_avoiding_params(self, gcp: GriddedCayleyPerm) -> bool:
-        """Returns True if the gridded cayley permutation satisfies the avoiding parameters"""
-        return not any(
-            any(True for _ in param.preimage_of_gcp(gcp))
-            for param in self.avoiding_parameters
+        return tuple(
+            sum(1 for param in param_list for _ in param.preimage_of_gcp(obj))
+            for param_list in self.enumeration_parameters
         )
-
-    def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
-        """Returns True if the gridded cayley permutation satisfies the containing parameters"""
-        return all(
-            any(any(True for _ in param.preimage_of_gcp(gcp)) for param in params)
-            for params in self.containing_parameters
-        )
-
-    def are_contradictory_parameters(self) -> bool:
-        """Returns True if there is a contradiction between the avoiding and
-        containing parameters - if a len 1 containing parameter list is the
-        same as an avoiding parameter.
-        TODO: add more checks for contradictory parameters."""
-        if not self.avoiding_parameters:
-            return False
-        len_one_cont_params = [
-            contain_list
-            for contain_list in self.containing_parameters
-            if len(contain_list) == 1
-        ]
-        if not len_one_cont_params:
-            return False
-        if any(
-            contain_list[0] == avoiding_parameter
-            for contain_list in len_one_cont_params
-            for avoiding_parameter in self.avoiding_parameters
-        ):
-            return True
-        return False
 
     def is_empty(self) -> bool:
-        """Assume this is run after all cleanup functions have been applied.
+        """
+        Assume this is run after all cleanup functions have been applied.
 
         Returns True if the tiling is empty or there is a contradiction between
         containing and avoiding parameters.
-        TODO: Are there any other times when a mapped tiling is empty?"""
-        return self.tiling.is_empty() or self.are_contradictory_parameters()
+        """
+        return self.tiling.is_empty() or self.has_contradictory_parameters()
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MappedTiling":
+        """Construct a MappedTiling from a dictionary."""
+        return MappedTiling(
+            Tiling.from_dict(d["tiling"]),
+            [Parameter.from_dict(p) for p in d["avoiding_parameters"]],
+            [[Parameter.from_dict(p) for p in ps] for ps in d["containing_parameters"]],
+            [
+                [Parameter.from_dict(p) for p in ps]
+                for ps in d["enumeration_parameters"]
+            ],
+        )
+
+    # dunder methods
 
     def __eq__(self, other) -> bool:
         """Check if two MappedTilings are equal."""
@@ -148,18 +169,6 @@ class MappedTiling(CombinatorialClass):
                     )
                 ),
             )
-        )
-
-    def from_dict(self, d: dict) -> "MappedTiling":
-        """Construct a MappedTiling from a dictionary."""
-        return MappedTiling(
-            Tiling.from_dict(d["tiling"]),
-            [Parameter.from_dict(p) for p in d["avoiding_parameters"]],
-            [[Parameter.from_dict(p) for p in ps] for ps in d["containing_parameters"]],
-            [
-                [Parameter.from_dict(p) for p in ps]
-                for ps in d["enumeration_parameters"]
-            ],
         )
 
     def __repr__(self) -> str:
