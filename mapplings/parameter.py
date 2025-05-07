@@ -10,7 +10,22 @@ class Parameter:
 
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
+        self.row_map = row_col_map.row_map
+        self.col_map = row_col_map.col_map
         self.ghost = ghost
+        self.obstructions = ghost.obstructions
+        self.requirements = ghost.requirements
+        self.dimensions = ghost.dimensions
+        self.cleaner = ParamCleaner(self)
+
+    def image_region(self):
+        pass
+
+    def clean_desired(self):
+        return self.cleaner.clean_desired()
+
+    def full_cleanup(self):
+        return self.cleaner.full_cleanup()
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
@@ -40,3 +55,17 @@ class Parameter:
 
     def __str__(self) -> str:
         return str(self.map) + "\n" + str(self.ghost)
+
+
+class ParamCleaner:
+    def __init__(self, param: Parameter):
+        self.param = param
+        self.cleaning_bool_name = False  # this is what a to do list item will look like
+
+    def clean_desired(self) -> Parameter:
+        """Applies cleaning functions for each true variable"""
+        return self.param
+
+    def full_cleanup(self) -> Parameter:
+        """Applies all cleanup functions"""
+        return self.param

@@ -6,7 +6,7 @@ from comb_spec_searcher import CombinatorialClass
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
-from .parameter import Parameter
+from .parameter import Parameter, ParamCleaner
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
@@ -30,6 +30,10 @@ class MappedTiling(CombinatorialClass):
             sorted(tuple(sorted(params)) for params in enumeration_parameters)
         )
         self.tiling = tiling
+        self.obstructions = tiling.obstructions
+        self.requirements = tiling.requirements
+        self.dimensions = tiling.dimensions
+        self.cleaner = Cleaner(self)
 
     # Containment and avoidance functions
 
@@ -140,6 +144,14 @@ class MappedTiling(CombinatorialClass):
             ],
         )
 
+    # other stuff
+
+    def clean_desired(self) -> "MappedTiling":
+        return self.cleaner.clean_desired()
+
+    def full_cleanup(self) -> "MappedTiling":
+        return self.cleaner.full_cleanup()
+
     # dunder methods
 
     def __eq__(self, other) -> bool:
@@ -195,3 +207,16 @@ class MappedTiling(CombinatorialClass):
                 ["\n".join([str(p) for p in ps]) for ps in self.enumeration_parameters]
             )
         )
+
+
+class Cleaner:
+    def __init__(self, mappling: MappedTiling):
+        self.mappling = mappling
+
+    def clean_desired(self) -> Parameter:
+        """Applies cleaning functions for each true variable."""
+        return self.mappling
+
+    def full_cleanup(self) -> Parameter:
+        """Applies all cleanup functions."""
+        return self.mappling
