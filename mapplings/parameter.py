@@ -1,8 +1,12 @@
 """Module with the parameter class."""
 
-from typing import Iterator
+from typing import Iterator, Tuple, Set
+from itertools import product
+
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.row_col_map import RowColMap
+from row_col_map import RowColMap
+
+Cell = Tuple[int, int]
 
 
 class Parameter:
@@ -18,13 +22,20 @@ class Parameter:
         self.dimensions = ghost.dimensions
         self.cleaner = ParamCleaner(self)
 
-    def image_region(self):
-        pass
+    def image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
+        """Gives the indices for the rows and cols to which the parameter maps"""
+        return set(self.col_map.values()), set(self.row_map.values())
 
-    def clean_desired(self):
+    def image_cells(self) -> Set[Cell]:
+        """Gives the cells to which the parameter maps"""
+        return set(product(*self.image_rows_and_cols()))
+
+    def clean_desired(self) -> "Parameter":
+        """Cleans the parameter according to specified cleaning bools"""
         return self.cleaner.clean_desired()
 
-    def full_cleanup(self):
+    def full_cleanup(self) -> "Parameter":
+        """Applies all cleaning functions to the parameter"""
         return self.cleaner.full_cleanup()
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
@@ -32,6 +43,15 @@ class Parameter:
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
             if self.ghost.gcp_in_tiling(gcp):
                 yield gcp
+
+    def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
+        sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
+        for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
+            if self.ghost.gcp_in_tiling(sub_gridding):
+                return True
+        return False
+
+    # dunder methods
 
     @classmethod
     def from_dict(cls, d: dict) -> "Parameter":
@@ -63,7 +83,7 @@ class ParamCleaner:
         self.cleaning_bool_name = False  # this is what a to do list item will look like
 
     def clean_desired(self) -> Parameter:
-        """Applies cleaning functions for each true variable"""
+        """Applies cleaning functions for each true cleaning bool"""
         return self.param
 
     def full_cleanup(self) -> Parameter:

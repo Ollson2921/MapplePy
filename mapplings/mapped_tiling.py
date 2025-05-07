@@ -5,8 +5,8 @@ from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-
-from .parameter import Parameter, ParamCleaner
+from parameter import Parameter, ParamCleaner
+from parameter_list import ParameterList
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
@@ -18,17 +18,13 @@ class MappedTiling(CombinatorialClass):
     def __init__(
         self,
         tiling: Tiling,
-        avoiding_parameters: Iterable[Parameter],
-        containing_parameters: Iterable[Iterable[Parameter]],
-        enumeration_parameters: Iterable[Iterable[Parameter]],
+        avoiding_parameters: ParameterList,
+        containing_parameters: Iterable[ParameterList],
+        enumerating_parameters: Iterable[ParameterList],
     ):
-        self.avoiding_parameters = tuple(sorted(avoiding_parameters))
-        self.containing_parameters = tuple(
-            sorted(tuple(sorted(params)) for params in containing_parameters)
-        )
-        self.enumeration_parameters = tuple(
-            sorted(tuple(sorted(params)) for params in enumeration_parameters)
-        )
+        self.avoiding_parameters = avoiding_parameters
+        self.containing_parameters = tuple(sorted(containing_parameters))
+        self.enumerating_parameters = tuple(sorted(enumerating_parameters))
         self.tiling = tiling
         self.obstructions = tiling.obstructions
         self.requirements = tiling.requirements
@@ -46,15 +42,16 @@ class MappedTiling(CombinatorialClass):
     def gcp_satisfies_avoiding_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the avoiding parameters"""
         return not any(
-            any(True for _ in param.preimage_of_gcp(gcp))
-            for param in self.avoiding_parameters
+            self.avoiding_parameters.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
         )
 
     def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the containing parameters"""
         return all(
-            any(any(True for _ in param.preimage_of_gcp(gcp)) for param in params)
-            for params in self.containing_parameters
+            any(
+                c_list.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
+                for c_list in self.containing_parameters
+            )
         )
 
     def has_contradictory_parameters(self) -> bool:
@@ -84,7 +81,7 @@ class MappedTiling(CombinatorialClass):
 
     def has_parameters(self) -> bool:
         """Check if the tiling has avoiding or containing parameters
-        (doesn't check for enumeration parameters)."""
+        (doesn't check for enumerating parameters)."""
         return bool(self.avoiding_parameters or self.containing_parameters)
 
     def is_atom(self) -> bool:
@@ -119,7 +116,7 @@ class MappedTiling(CombinatorialClass):
         combinatorical class parameters"""
         return tuple(
             sum(1 for param in param_list for _ in param.preimage_of_gcp(obj))
-            for param_list in self.enumeration_parameters
+            for param_list in self.enumerating_parameters
         )
 
     def is_empty(self) -> bool:
@@ -140,7 +137,7 @@ class MappedTiling(CombinatorialClass):
             [[Parameter.from_dict(p) for p in ps] for ps in d["containing_parameters"]],
             [
                 [Parameter.from_dict(p) for p in ps]
-                for ps in d["enumeration_parameters"]
+                for ps in d["enumerating_parameters"]
             ],
         )
 
@@ -158,12 +155,9 @@ class MappedTiling(CombinatorialClass):
         """Check if two MappedTilings are equal."""
         return (
             self.tiling == other.tiling
-            and sorted(tuple(self.avoiding_parameters))
-            == sorted(tuple(other.avoiding_parameters))
-            and sorted(tuple(self.containing_parameters))
-            == sorted(tuple(other.containing_parameters))
-            and sorted(tuple(self.enumeration_parameters))
-            == sorted(tuple(other.enumeration_parameters))
+            and self.avoiding_parameters == other.avoiding_parameters
+            and self.containing_parameters == other.containing_parameters
+            and self.enumerating_parameters == other.enumerating_parameters
         )
 
     def __hash__(self) -> int:
@@ -171,15 +165,9 @@ class MappedTiling(CombinatorialClass):
         return hash(
             (
                 self.tiling,
-                tuple(sorted(self.avoiding_parameters)),
-                tuple(
-                    sorted(tuple(sorted(clist)) for clist in self.containing_parameters)
-                ),
-                tuple(
-                    sorted(
-                        tuple(sorted(elist)) for elist in self.enumeration_parameters
-                    )
-                ),
+                self.avoiding_parameters,
+                self.containing_parameters,
+                self.enumerating_parameters,
             )
         )
 
@@ -188,7 +176,7 @@ class MappedTiling(CombinatorialClass):
         return (
             self.__class__.__name__
             + f"({repr(self.tiling)}, {repr(self.avoiding_parameters)}, "
-            + f"{repr(self.containing_parameters)}, {repr(self.enumeration_parameters)})"
+            + f"{repr(self.containing_parameters)}, {repr(self.enumerating_parameters)})"
         )
 
     def __str__(self) -> str:
@@ -202,9 +190,9 @@ class MappedTiling(CombinatorialClass):
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
-            + "\nEnumeration parameters:\n"
-            + "\nNew enumeration parameters list\n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.enumeration_parameters]
+            + "\nenumerating parameters:\n"
+            + "\nNew enumerating parameters list\n".join(
+                ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
             )
         )
 
