@@ -8,6 +8,8 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from parameter import Parameter, ParamCleaner
 from parameter_list import ParameterList
 
+from cleaning_keys import *
+
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
 
@@ -198,13 +200,24 @@ class MappedTiling(CombinatorialClass):
 
 
 class Cleaner:
-    def __init__(self, mappling: MappedTiling):
-        self.mappling = mappling
-
-    def clean_desired(self) -> Parameter:
-        """Applies cleaning functions for each true variable."""
-        return self.mappling
-
-    def full_cleanup(self) -> Parameter:
+    def __init__(self, to_do_list : Iterable[int]):
+        self.to_do_list = to_do_list
+        
+    def clean_by_list(self, mappling : MappedTiling, cleaning_list : Iterable[int]) -> MappedTiling:
+        """Applies all functions indicated by keys in cleaning_list"""
+        cleaning_list = tuple(sorted(cleaning_list))
+        new_mappling = mappling
+        for i in cleaning_list:
+            new_mappling = mappling_function_map[i](new_mappling)
+        new_mappling.cleaner=Cleaner(item for item in self.to_do_list if item not in cleaning_list)
+        return new_mappling
+    
+    @staticmethod
+    def full_cleanup(mappling : MappedTiling) -> Parameter:
         """Applies all cleanup functions."""
-        return self.mappling
+        return Cleaner.clean_by_list(tuple(mappling_function_map.keys()))
+    
+    @staticmethod
+    def method_name0(mappling:MappedTiling) -> MappedTiling:
+        """An example cleaning function"""
+        return mappling
