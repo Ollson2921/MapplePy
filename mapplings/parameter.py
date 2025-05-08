@@ -1,10 +1,11 @@
 """Module with the parameter class."""
 
+from row_col_map import RowColMap
+
 from typing import Iterator, Tuple, Set
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from row_col_map import RowColMap
 
 Cell = Tuple[int, int]
 
@@ -80,12 +81,28 @@ class Parameter:
 class ParamCleaner:
     def __init__(self, param: Parameter):
         self.param = param
-        self.cleaning_bool_name = False  # this is what a to do list item will look like
+        self.cleaning_bool0 = False  # this is what a to do list item will look like
+        self.cleaning_bool1 = False
 
     def clean_desired(self) -> Parameter:
         """Applies cleaning functions for each true cleaning bool"""
-        return self.param
+        new_param = self.param
+        if self.cleaning_bool0:
+            new_param = self.cleanup_method0()
+        if self.cleaning_bool1:
+            new_param = self.cleanup_method1()
+        '''...'''
+        return new_param
 
     def full_cleanup(self) -> Parameter:
         """Applies all cleanup functions"""
         return self.param
+    
+    def cleanup_method0(self) -> Parameter:
+        """An example cleanup method"""
+        return self.param
+    
+    def cleanup_method1(self) -> Parameter:
+        """An example cleanup method"""
+        return self.param
+    
