@@ -4,7 +4,7 @@ from typing import Iterator, Tuple, Set
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from row_col_map import RowColMap
+from .row_col_map import RowColMap
 
 Cell = Tuple[int, int]
 

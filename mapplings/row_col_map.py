@@ -9,7 +9,8 @@ from gridded_cayley_permutations.row_col_map import (
     GriddedCayleyPerm,
 )
 
-from typing import Iterable, Iterator, Tuple
+from typing import Iterator, Tuple
+from itertools import product
 
 
 OBSTRUCTIONS = Tuple[GriddedCayleyPerm, ...]
@@ -32,25 +33,15 @@ class RowColMap(RCMap):
     ) -> Iterator[GriddedCayleyPerm]:
         """
         Return the preimages of a gridded Cayley permutation with respect to the map.
-        TODO: Not all gcps will have a preimage, check that here?
-        """
-        super().preimage_of_gridded_cperm(gcp)
 
-    def restriction(
-        self, col_values: Iterable[int], row_values: Iterable[int]
-    ) -> "RowColMap":
+        TODO: Is this what we want it to do?
         """
-        The restriction of the row col map to only the col_values
-        and the row_values of the preimage.
-        TODO: I don't think I understand what this does or where it is used
-        but it looks good?
-        """
-        new_col_map, new_row_map = {}, {}
-        for index in col_values:
-            new_col_map[index] = self.col_map[index]
-        for index in row_values:
-            new_row_map[index] = self.row_map[index]
-        return RowColMap(new_col_map, new_row_map)
+        for cols, rows in product(
+            self._product_of_cols(gcp), self._product_of_rows(gcp)
+        ):
+            new_positions = tuple(zip(cols, rows))
+            print(new_positions)
+            yield GriddedCayleyPerm(gcp.pattern, new_positions)
 
     def standardise_map(self) -> "RowColMap":
         """

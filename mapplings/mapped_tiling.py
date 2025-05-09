@@ -5,8 +5,8 @@ from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from parameter import Parameter, ParamCleaner
-from parameter_list import ParameterList
+from .parameter import Parameter, ParamCleaner
+from .parameter_list import ParameterList
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
@@ -190,7 +190,7 @@ class MappedTiling(CombinatorialClass):
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
-            + "\nenumerating parameters:\n"
+            + "\nEnumerating parameters:\n"
             + "\nNew enumerating parameters list\n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
             )
