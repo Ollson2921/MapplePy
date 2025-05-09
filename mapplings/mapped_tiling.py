@@ -1,4 +1,5 @@
 """Module with the mapped tiling class."""
+
 from parameter import Parameter, ParamCleaner
 from parameter_list import ParameterList
 from cleaning_keys import *
@@ -199,47 +200,53 @@ class MappedTiling(CombinatorialClass):
 
 
 class Cleaner:
-    def __init__(self, todo_list : Iterable[int] = tuple()):
+    def __init__(self, todo_list: Iterable[int] = set()):
         self.todo_list = set(todo_list)
-        
-    def __call__(self, mappling : MappedTiling) -> MappedTiling:
+
+    def __call__(self, mappling: MappedTiling) -> MappedTiling:
         """Cleans the input mappling according to the cleaner's todo_list"""
         return Cleaner.list_cleanup(mappling, self.todo_list)
-    
-    def __add__(self, other : Iterable[int]):
+
+    def __add__(self, other: Iterable[int]):
         return Cleaner(self.todo_list | set(other))
-        
+
     @staticmethod
-    def list_cleanup(mappling : MappedTiling, cleaning_list : Iterable[int]) -> MappedTiling:
+    def list_cleanup(
+        mappling: MappedTiling, cleaning_list: Iterable[int]
+    ) -> MappedTiling:
         """Applies all functions indicated by keys in cleaning_list"""
         cleaning_list = tuple(sorted(cleaning_list))
         new_mappling = mappling
         for i in cleaning_list:
             new_mappling = cleaning_function_map[i](new_mappling)
         return new_mappling
-    
-    def tracked_cleanup(self, mappling : MappedTiling, cleaning_list : Iterable[int])-> MappedTiling:
+
+    def tracked_cleanup(
+        self, mappling: MappedTiling, cleaning_list: Iterable[int]
+    ) -> MappedTiling:
         """Cleans mappling according to the cleaning list, and removes any completed cleaning functions from the cleaner's todo_list"""
         new_mappling = Cleaner.list_cleanup(mappling, cleaning_list)
         new_mappling.cleaner = Cleaner(self.todo_list - set(cleaning_list))
         return new_mappling
-    
+
     @staticmethod
-    def full_cleanup(mappling : MappedTiling) -> MappedTiling:
+    def full_cleanup(mappling: MappedTiling) -> MappedTiling:
         """Applies all cleanup functions."""
-        return Cleaner().list_cleanup(mappling, tuple(cleaning_function_map.keys()))
-    
+        return Cleaner.list_cleanup(mappling, tuple(cleaning_function_map.keys()))
+
     @staticmethod
-    def method_name0(mappling:MappedTiling) -> MappedTiling:
-        """An example cleaning function"""
-        return mappling
-    
-    @staticmethod
-    def method_name1(mappling:MappedTiling) -> MappedTiling:
+    def method_name0(mappling: MappedTiling) -> MappedTiling:
         """An example cleaning function"""
         return mappling
 
+    @staticmethod
+    def method_name1(mappling: MappedTiling) -> MappedTiling:
+        """An example cleaning function"""
+        return mappling
 
 
-#this uses the keys from cleaning_keys to assign an order to the cleaning functions
-cleaning_function_map = {method_nickname0: Cleaner.method_name0, method_nickname1: Cleaner.method_name1}
+# this uses the keys from cleaning_keys to assign an order to the cleaning functions
+cleaning_function_map = {
+    mc_method_nickname0: Cleaner.method_name0,
+    mc_method_nickname1: Cleaner.method_name1,
+}

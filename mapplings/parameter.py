@@ -1,8 +1,9 @@
 """Module with the parameter class."""
 
 from row_col_map import RowColMap
+from cleaning_keys import *
 
-from typing import Iterator, Tuple, Set
+from typing import Iterator, Tuple, Set, Iterable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -21,7 +22,7 @@ class Parameter:
         self.obstructions = ghost.obstructions
         self.requirements = ghost.requirements
         self.dimensions = ghost.dimensions
-        self.cleaner = ParamCleaner(self)
+        self.cleaner = ParamCleaner()
 
     def image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
         """Gives the indices for the rows and cols to which the parameter maps"""
@@ -31,14 +32,6 @@ class Parameter:
         """Gives the cells to which the parameter maps"""
         return set(product(*self.image_rows_and_cols()))
 
-    def clean_desired(self) -> "Parameter":
-        """Cleans the parameter according to specified cleaning bools"""
-        return self.cleaner.clean_desired()
-
-    def full_cleanup(self) -> "Parameter":
-        """Applies all cleaning functions to the parameter"""
-        return self.cleaner.full_cleanup()
-
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
@@ -46,17 +39,26 @@ class Parameter:
                 yield gcp
 
     def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
+        """Determines if the sub-gridding of the gcp that lives in the image region has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.ghost.gcp_in_tiling(sub_gridding):
                 return True
         return False
 
+    def clean_desired(self) -> "Parameter":
+        """Cleans the parameter according to the todo list"""
+        return self.cleaner(self)
+
+    def full_cleanup(self) -> "Parameter":
+        """Applies all cleaning functions to the parameter"""
+        return ParamCleaner.full_cleanup(self)
+
     # dunder methods
 
     @classmethod
     def from_dict(cls, d: dict) -> "Parameter":
-        """Used for constructing MappedTilings from a dictionary."""
+        """Used for constructing Parameters from a dictionary."""
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -79,30 +81,52 @@ class Parameter:
 
 
 class ParamCleaner:
-    def __init__(self, param: Parameter):
-        self.param = param
-        self.cleaning_bool0 = False  # this is what a to do list item will look like
-        self.cleaning_bool1 = False
+    def __init__(self, todo_list: Iterable[int] = set()):
+        self.todo_list = set(todo_list)
 
-    def clean_desired(self) -> Parameter:
-        """Applies cleaning functions for each true cleaning bool"""
-        new_param = self.param
-        if self.cleaning_bool0:
-            new_param = self.cleanup_method0()
-        if self.cleaning_bool1:
-            new_param = self.cleanup_method1()
-        '''...'''
+    def __call__(self, param: Parameter) -> Parameter:
+        """Cleans the input param according to the cleaner's todo_list"""
+        return ParamCleaner.list_cleanup(param, self.todo_list)
+
+    def __add__(self, other: Iterable[int]):
+        return ParamCleaner(self.todo_list | set(other))
+
+    @staticmethod
+    def list_cleanup(param: Parameter, cleaning_list: Iterable[int]) -> Parameter:
+        """Applies all functions indicated by keys in cleaning_list"""
+        cleaning_list = tuple(sorted(cleaning_list))
+        new_param = param
+        for i in cleaning_list:
+            new_param = param_cleaning_function_map[i](new_param)
         return new_param
 
-    def full_cleanup(self) -> Parameter:
-        """Applies all cleanup functions"""
-        return self.param
-    
-    def cleanup_method0(self) -> Parameter:
-        """An example cleanup method"""
-        return self.param
-    
-    def cleanup_method1(self) -> Parameter:
-        """An example cleanup method"""
-        return self.param
-    
+    def tracked_cleanup(
+        self, param: Parameter, cleaning_list: Iterable[int]
+    ) -> Parameter:
+        """Cleans param according to the cleaning list, and removes any completed cleaning functions from the cleaner's todo_list"""
+        new_param = ParamCleaner.list_cleanup(param, cleaning_list)
+        new_param.cleaner = ParamCleaner(self.todo_list - set(cleaning_list))
+        return new_param
+
+    @staticmethod
+    def full_cleanup(param: Parameter) -> Parameter:
+        """Applies all cleanup functions."""
+        return ParamCleaner.list_cleanup(
+            param, tuple(param_cleaning_function_map.keys())
+        )
+
+    @staticmethod
+    def method_name0(param: Parameter) -> Parameter:
+        """An example cleaning function"""
+        return param
+
+    @staticmethod
+    def method_name1(param: Parameter) -> Parameter:
+        """An example cleaning function"""
+        return param
+
+
+param_cleaning_function_map = {
+    pc_method_nickname0: ParamCleaner.method_name0,
+    pc_method_nickname1: ParamCleaner.method_name1,
+}
