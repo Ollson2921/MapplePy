@@ -123,17 +123,19 @@ class ListCleaner:
         )
 
     @staticmethod
-    def method_name0(param_list: ParameterList) -> ParameterList:
-        """An example cleaning function"""
-        return param_list
+    def remove_empty_ghosts(param_list: ParameterList) -> ParameterList:
+        """Remove any parameters with empty tilings."""
+        return ParameterList(
+            (param for param in param_list if not param.ghost.is_empty())
+        )
 
     @staticmethod
-    def method_name1(param_list: ParameterList) -> ParameterList:
-        """An example cleaning function"""
-        return param_list
+    def clean_parameters(param_list: ParameterList) -> ParameterList:
+        """Runs each parameter's cleaner."""
+        return ParameterList(param_list.apply_to_all(Parameter.clean_desired))
 
 
 list_cleaning_function_map = {
-    lc_method_nickname0: ListCleaner.method_name0,
-    lc_method_nickname1: ListCleaner.method_name1,
+    lc_remove_empty: ListCleaner.remove_empty_ghosts,
+    lc_clean_params: ListCleaner.clean_parameters,
 }

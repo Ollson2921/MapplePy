@@ -4,10 +4,11 @@ from parameter import Parameter, ParamCleaner
 from parameter_list import ParameterList
 from cleaning_keys import *
 
-from typing import Iterable, Tuple, List, DefaultDict, Iterator
+from typing import Iterable, Tuple, List, DefaultDict, Iterator, Callable
 from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
 
+from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
@@ -145,6 +146,25 @@ class MappedTiling(CombinatorialClass):
 
     # other stuff
 
+    def apply_to_all_parameters(
+        self, func: Callable, additional_arguments: Tuple = tuple()
+    ):
+        """Applies func to all parameters with additional arguments.
+        Parameter must be the first argument of the function"""
+        param_method = (func, additional_arguments)
+        new_avoiders = ParameterList(
+            self.avoiding_parameters.apply_to_all(*param_method)
+        )
+        new_containers = (
+            ParameterList(c_list.apply_to_all(*param_method))
+            for c_list in self.containing_parameters
+        )
+        new_enumerators = (
+            ParameterList(e_list.apply_to_all(*param_method))
+            for e_list in self.enumerating_parameters
+        )
+        return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
+
     def clean_desired(self) -> "MappedTiling":
         return self.cleaner(self)
 
@@ -234,19 +254,91 @@ class Cleaner:
         """Applies all cleanup functions."""
         return Cleaner.list_cleanup(mappling, tuple(cleaning_function_map.keys()))
 
-    @staticmethod
-    def method_name0(mappling: MappedTiling) -> MappedTiling:
-        """An example cleaning function"""
-        return mappling
+    # Final Methods
 
     @staticmethod
-    def method_name1(mappling: MappedTiling) -> MappedTiling:
-        """An example cleaning function"""
-        return mappling
+    def try_to_kill(mappling: MappedTiling) -> MappedTiling:
+        """Used to decide how to kill mapplings in full_cleanup"""
+        raise NotImplementedError
+
+    @staticmethod
+    def tidy_containers(mappling: MappedTiling) -> MappedTiling:
+        """For parameters with empty tilings, if it is the only
+        one in a list then the mappling is empty, otherwise remove the empty
+        parameter.
+        If only one parameter in a list and it maps to base tiling by the identity map
+        then map obs and reqs down and remove the parameter list.
+        Note: As we always assume a parameter maps to the whole tiling, we defined a row
+        col map as being trivial iff the dimensions of the tiling and ghost are the same.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def insert_valid_avoiders(mappling: MappedTiling) -> MappedTiling:
+        """Adds requirements from every avoider that is near-trivial and removes that avoider"""
+        raise NotImplementedError
+
+    @staticmethod
+    def backmap_points(mappling: MappedTiling) -> MappedTiling:
+        """Backmaps point obstructions to all parameters"""
+        point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
+        return mappling.apply_to_all_parameters(
+            Parameter.backmap_obstrucctions, (point_obstructions,)
+        )
+
+    @staticmethod
+    def reap_all_contradictions(mappling: MappedTiling) -> MappedTiling:
+        """Removes any contradictory parameters"""
+        raise NotImplementedError
+
+    @staticmethod
+    def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
+        """Removes empty rows and cols in the base tiling and removes preimage rows and cols from the parameters"""
+        empty_cols, empty_rows = mappling.tiling.find_empty_rows_and_columns()
+        if (
+            len(empty_cols) == mappling.dimensions[0]
+            or len(empty_rows) == mappling.dimensions[1]
+        ):
+            return MappedTiling(
+                Tiling(
+                    [GriddedCayleyPerm(CayleyPermutation((0,)), [(0, 0)])], [], (1, 1)
+                )
+            )
+        mappling.tiling = mappling.tiling.delete_rows_and_columns(
+            empty_cols, empty_rows
+        )
+        return mappling.apply_to_all_parameters(
+            Parameter.delete_preimage_of_rows_and_columns, (empty_cols, empty_rows)
+        )
+
+    @staticmethod
+    def clean_parameter_lists(mappling: MappedTiling) -> MappedTiling:
+        new_avoiders = mappling.avoiding_parameters.cleaner(
+            mappling.avoiding_parameters
+        )
+        new_containers = (
+            c_list.cleaner(c_list) for c_list in mappling.containing_parameters
+        )
+        new_enumerators = (
+            e_list.cleaner(e_list) for e_list in mappling.enumerating_parameters
+        )
+        return MappedTiling(
+            mappling.tiling, new_avoiders, new_containers, new_enumerators
+        )
+
+    @staticmethod
+    def reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
+        """Removes any parameter implied by another"""
+        raise NotImplementedError
 
 
 # this uses the keys from cleaning_keys to assign an order to the cleaning functions
 cleaning_function_map = {
-    mc_method_nickname0: Cleaner.method_name0,
-    mc_method_nickname1: Cleaner.method_name1,
+    mc_try_to_kill: Cleaner.try_to_kill,
+    mc_tidy_containers: Cleaner.tidy_containers,
+    mc_insert_avoiders: Cleaner.insert_valid_avoiders,
+    mc_backmap: Cleaner.backmap_points,
+    mc_reap_contradictions: Cleaner.reap_all_contradictions,
+    mc_remove_empty: Cleaner.remove_empty_rows_and_cols,
+    mc_clean_params: Cleaner.clean_parameter_lists,
 }
