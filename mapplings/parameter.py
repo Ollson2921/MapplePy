@@ -7,6 +7,7 @@ from typing import Iterator, Tuple, Set, Iterable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from cayley_permutations import CayleyPermutation
 
 Cell = Tuple[int, int]
 
@@ -235,7 +236,70 @@ class ParamCleaner:
     @staticmethod
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
+        points = param.ghost.point_cells()
+        new_param = param
+        for cell in points:
+            new_param = ParamCleaner.unplace_point(new_param, cell)
+        return new_param
+
+    # Internal Methods
+
+    @staticmethod
+    def unplace_point(param: Parameter, cell: Cell) -> Parameter:
+        preimage_map = param.map.preimage_map()
+        if (
+            not cell[0] - 1 in preimage_map[param.col_map[cell[0]]]
+            or cell[0] + 1 in preimage_map[0][param.col_map[cell[0]]]
+        ):
+            return param
+        if (
+            not cell[1] - 1 in preimage_map[param.row_map[cell[1]]]
+            or cell[1] + 1 in preimage_map[1][param.row_map[cell[1]]]
+        ):
+            return param
+        if (
+            0 in cell
+            or param.dimensions[0] == cell[0]
+            or param.dimensions[1] == cell[1]
+        ):
+            return param
+        intersecting_list = ParamCleaner.find_unplaced_req_list(param, cell)
+        if not intersecting_list:
+            return param
+        new_reqs = tuple(
+            req_list for req_list in param.requirements if req_list != intersecting_list
+        )
+        new_ghost = Tiling(param.obstructions, new_reqs, param.dimensions)
+        new_ghost = new_ghost.delete_columns((cell[0],))
+        if not new_ghost.is_fusable(0, cell[0]):
+            return param
+        new_ghost = new_ghost.delete_rows((cell[1],))
+        if not new_ghost.is_fusable(1, cell[1]):
+            return param
         raise NotImplementedError
+
+    @staticmethod
+    def find_unplaced_req_list(
+        param: Parameter, cell: Cell
+    ) -> Iterable[GriddedCayleyPerm]:
+        check_cells = set(
+            product((cell[0] - 1, cell[0] + 1), (cell[1] - 1, cell[1], cell[1] + 1))
+        )
+        list_found = False
+        for req_list in param.requirements:
+            reqs_intersect = (
+                bool(set(req.positions).intersection(check_cells)) for req in req_list
+            )
+            if any(reqs_intersect):
+                if all(reqs_intersect):
+                    if not list_found:
+                        list_found = req_list
+                        continue
+                    return tuple()
+                return tuple()
+        if not list_found:
+            return (GriddedCayleyPerm(CayleyPermutation((0,)), (cell,)),)
+        return list_found
 
 
 param_cleaning_function_map = {
