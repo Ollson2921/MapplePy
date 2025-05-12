@@ -1,7 +1,6 @@
 """Module with the parameter class."""
 
-from typing import Iterator, Tuple, Set
-from itertools import product
+from typing import Iterator, Tuple
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from .row_col_map import RowColMap
@@ -12,6 +11,7 @@ Cell = Tuple[int, int]
 class Parameter:
     """A tiling (called a ghost) mapping to a base tiling."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
         self.row_map = row_col_map.row_map
@@ -37,9 +37,10 @@ class Parameter:
                 yield gcp
 
     def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
-        sub_gridding = gcp.sub_gridded_cayley_perm(self.map.image_cells())
+        """Returns True if the gridded cayley permutation has a preimage in the parameter"""
+        sub_gridding = gcp.sub_gridded_cayley_perm(self.map.image_cells)
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
-            if self.ghost.gcp_in_tiling(sub_gridding):
+            if self.ghost.gcp_in_tiling(preimage):
                 return True
         return False
 
@@ -70,6 +71,8 @@ class Parameter:
 
 
 class ParamCleaner:
+    """Class for cleaning parameters"""
+
     def __init__(self, param: Parameter):
         self.param = param
         self.cleaning_bool_name = False  # this is what a to do list item will look like

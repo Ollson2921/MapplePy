@@ -4,14 +4,14 @@ so that not everything is mapped onto.
 This is used for parameters mapping onto a part of the base tiling
 rather than the whole tiling."""
 
+from typing import Iterator, Tuple
+from itertools import product
+from functools import cached_property
+
 from gridded_cayley_permutations.row_col_map import (
     RowColMap as RCMap,
     GriddedCayleyPerm,
 )
-
-from typing import Iterator, Tuple
-from itertools import product
-from functools import cached_property
 
 
 OBSTRUCTIONS = Tuple[GriddedCayleyPerm, ...]
@@ -26,9 +26,6 @@ class RowColMap(RCMap):
 
     Not every value has a preimage.
     """
-
-    def __init__(self, col_map, row_map):
-        super().__init__(col_map, row_map)
 
     def image_rows_and_cols(self) -> Tuple[set[int], set[int]]:
         """Gives the indices for the rows and cols on the base tiling
@@ -56,7 +53,7 @@ class RowColMap(RCMap):
             new_positions = tuple(zip(cols, rows))
             if any(cell not in self.cells_in_parameter() for cell in new_positions):
                 raise ValueError(
-                    f"The gridded Cayley permutation {gcp} does not have a preimage in the parameter."
+                    f"The gridded Cayley perm {gcp} does not have a preimage in the parameter."
                 )
             yield GriddedCayleyPerm(gcp.pattern, new_positions)
 

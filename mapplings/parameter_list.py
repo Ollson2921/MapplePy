@@ -2,11 +2,7 @@
 
 from typing import Iterator, Iterable, Tuple, Set, Callable
 from itertools import product
-
-from cayley_permutations import CayleyPermutation
-from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.row_col_map import RowColMap
-from .parameter import Parameter, ParamCleaner
+from .parameter import Parameter
 
 Cell = Tuple[int, int]
 
@@ -18,6 +14,7 @@ class ParameterList:
         self.parameters = tuple(sorted(parameters))
 
     def append(self, param: Parameter):
+        """Appends a parameter to the list and returns a new ParameterList"""
         return ParameterList(self.parameters + (param,))
 
     def apply_to_all(
@@ -29,9 +26,10 @@ class ParameterList:
 
     def combined_image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
         """Gives all base tiling rows and cols to which a parameter in the list maps"""
-        col_images, row_images = set(), set()
+        col_images: set[int] = set()
+        row_images: set[int] = set()
         for param in self:
-            param_images = param.image_rows_and_cols()
+            param_images = param.map.image_rows_and_cols()
             col_images = col_images.union(param_images[0])
             row_images = row_images.union(param_images[1])
         return col_images, row_images
@@ -52,8 +50,8 @@ class ParameterList:
     def __len__(self) -> int:
         return len(self.parameters)
 
-    def __eq__(self, other: "ParameterList") -> bool:
-        return self.parameters == other.parameters
+    # def __eq__(self, other: "ParameterList") -> bool:
+    #     return self.parameters == other.parameters
 
     def __lt__(self, other: "ParameterList") -> bool:
         return self.parameters < other.parameters

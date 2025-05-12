@@ -5,7 +5,7 @@ from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from .parameter import Parameter, ParamCleaner
+from .parameter import Parameter
 from .parameter_list import ParameterList
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
@@ -15,6 +15,7 @@ class MappedTiling(CombinatorialClass):
     """A mapped tiling is a tiling with avoiding and containing parameters
     which map to it by row and column maps."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         tiling: Tiling,
@@ -47,11 +48,9 @@ class MappedTiling(CombinatorialClass):
 
     def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the containing parameters"""
-        return all(
-            any(
-                c_list.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
-                for c_list in self.containing_parameters
-            )
+        return any(
+            c_list.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
+            for c_list in self.containing_parameters
         )
 
     def has_contradictory_parameters(self) -> bool:
@@ -133,10 +132,13 @@ class MappedTiling(CombinatorialClass):
         """Construct a MappedTiling from a dictionary."""
         return MappedTiling(
             Tiling.from_dict(d["tiling"]),
-            [Parameter.from_dict(p) for p in d["avoiding_parameters"]],
-            [[Parameter.from_dict(p) for p in ps] for ps in d["containing_parameters"]],
+            ParameterList([Parameter.from_dict(p) for p in d["avoiding_parameters"]]),
             [
-                [Parameter.from_dict(p) for p in ps]
+                ParameterList([Parameter.from_dict(p) for p in ps])
+                for ps in d["containing_parameters"]
+            ],
+            [
+                ParameterList([Parameter.from_dict(p) for p in ps])
                 for ps in d["enumerating_parameters"]
             ],
         )
@@ -144,9 +146,11 @@ class MappedTiling(CombinatorialClass):
     # other stuff
 
     def clean_desired(self) -> "MappedTiling":
+        """Applies some of the cleaning functions."""
         return self.cleaner.clean_desired()
 
     def full_cleanup(self) -> "MappedTiling":
+        """Applies all cleanup functions to the mapped tiling."""
         return self.cleaner.full_cleanup()
 
     # dunder methods
@@ -198,13 +202,15 @@ class MappedTiling(CombinatorialClass):
 
 
 class Cleaner:
+    """A class for cleaning the mapped tiling."""
+
     def __init__(self, mappling: MappedTiling):
         self.mappling = mappling
 
-    def clean_desired(self) -> Parameter:
+    def clean_desired(self) -> MappedTiling:
         """Applies cleaning functions for each true variable."""
         return self.mappling
 
-    def full_cleanup(self) -> Parameter:
+    def full_cleanup(self) -> MappedTiling:
         """Applies all cleanup functions."""
         return self.mappling
