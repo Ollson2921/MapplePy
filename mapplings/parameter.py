@@ -3,7 +3,7 @@
 from .row_col_map import RowColMap
 from .cleaning_keys import *
 
-from typing import Iterator, Tuple, Set, Iterable
+from typing import Iterator, Tuple, Set, Iterable, 
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm

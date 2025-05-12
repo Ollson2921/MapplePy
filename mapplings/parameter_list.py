@@ -1,10 +1,19 @@
 """Module with the parameter list class."""
 
-from typing import Iterator, Iterable, Tuple, Set, Callable, TypeVar
+from typing import (
+    Iterator,
+    Iterable,
+    Tuple,
+    Set,
+    Callable,
+    TypeVar,
+    TypeVarTuple,
+    Union,
+)
 from itertools import product, chain
 
 from .parameter import Parameter, ParamCleaner
-from .cleaning_keys import *
+import cleaning_keys as ck
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -14,6 +23,7 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 Cell = Tuple[int, int]
 
 FuncType = TypeVar("FuncType")
+ArgsType = TypeVarTuple("ArgsType")
 
 
 class ParameterList:
@@ -27,7 +37,9 @@ class ParameterList:
         return ParameterList(self.parameters + (param,))
 
     def apply_to_all(
-        self, func: Callable[..., FuncType], additional_arguments: Tuple = tuple()
+        self,
+        func: Callable[[Parameter, *ArgsType], FuncType],
+        additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
     ) -> Iterator[FuncType]:
         """Applies func to all parameters in the list and yields the output"""
         temp_func = lambda param: func(*((param,) + additional_arguments))

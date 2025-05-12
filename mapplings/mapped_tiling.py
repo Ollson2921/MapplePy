@@ -12,8 +12,8 @@ from typing import (
     Iterator,
     Callable,
     TypeVar,
-    Optional,
-    Any,
+    TypeVarTuple,
+    Union,
 )
 from collections import defaultdict
 from itertools import chain
@@ -26,6 +26,7 @@ Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 Cell = Tuple[int, int]
 
 FuncType = TypeVar("FuncType")
+ArgsType = TypeVarTuple("ArgsType")
 
 
 class MappedTiling(CombinatorialClass):
@@ -163,8 +164,8 @@ class MappedTiling(CombinatorialClass):
 
     def apply_to_all_parameters(
         self,
-        func: Callable[..., Parameter],
-        additional_arguments: Tuple = tuple(),
+        func: Callable[[Parameter, *ArgsType], Parameter],
+        additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
     ) -> "MappedTiling":
         """Applies func to all parameters with additional arguments.
         Parameter must be the first argument of the function"""
