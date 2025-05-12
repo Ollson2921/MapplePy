@@ -1,9 +1,9 @@
 """Module with the parameter class."""
 
 from .row_col_map import RowColMap
-from .cleaning_keys import *
+import cleaning_keys as ck
 
-from typing import Iterator, Tuple, Set, Iterable, 
+from typing import Iterator, Tuple, Set, Iterable, Callable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -195,6 +195,11 @@ class Parameter:
         return str(self.map) + "\n" + str(self.ghost)
 
 
+# This is the mao used in the cleaner functions and the decorator used to build the map
+param_cleaning_function_map = dict[int, Callable[[Parameter], Parameter]]()
+param_register = ck.make_register(param_cleaning_function_map)
+
+
 class ParamCleaner:
     def __init__(self, todo_list: Iterable[int] = set()):
         self.todo_list = set(todo_list)
@@ -235,7 +240,7 @@ class ParamCleaner:
         )
 
     # Final Methods
-
+    @param_register(ck.pc_fusion)
     @staticmethod
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
@@ -243,6 +248,7 @@ class ParamCleaner:
             ParamCleaner.fuse_valid_rows_or_cols(param, 0), 1
         )
 
+    @param_register(ck.pc_reduce_empty)
     @staticmethod
     def reduce_empty_rows_and_cols(param: Parameter) -> Parameter:
         """Removes empty rows and columns in the parameter"""
@@ -252,20 +258,22 @@ class ParamCleaner:
         for key in col_preimages.keys():
             intersection = set(col_preimages[key]) & cols_to_remove
             if len(intersection) == len(col_preimages[key]):
-                intersection.remove(col_preimages[key[0]])
+                intersection.remove(col_preimages[key][0])
                 cols_to_remove = cols_to_remove - intersection
         for key in row_preimages.keys():
             intersection = set(row_preimages[key]) & rows_to_remove
             if len(intersection) == len(row_preimages[key]):
-                intersection.remove(row_preimages[key[0]])
+                intersection.remove(row_preimages[key][0])
                 rows_to_remove = rows_to_remove - intersection
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
+    @param_register(ck.pc_remove_blank)
     @staticmethod
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
         raise NotImplementedError
 
+    @param_register(ck.pc_unplace_points)
     @staticmethod
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
@@ -360,11 +368,3 @@ class ParamCleaner:
         if not list_found:
             return (GriddedCayleyPerm(CayleyPermutation((0,)), (cell,)),)
         return list_found
-
-
-param_cleaning_function_map = {
-    pc_fusion: ParamCleaner.reduce_by_fusion,
-    pc_reduce_empty: ParamCleaner.reduce_empty_rows_and_cols,
-    pc_remove_blank: ParamCleaner.remove_blank_rows_and_cols,
-    pc_unplace_points: ParamCleaner.unplace_points,
-}

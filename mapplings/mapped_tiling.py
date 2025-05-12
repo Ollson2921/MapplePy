@@ -2,7 +2,7 @@
 
 from .parameter import Parameter, ParamCleaner
 from .parameter_list import ParameterList
-from .cleaning_keys import *
+import cleaning_keys as ck
 
 from typing import (
     Iterable,
@@ -237,6 +237,11 @@ class MappedTiling(CombinatorialClass):
         )
 
 
+# This is the mao used in the cleaner functions and the decorator used to build the map
+cleaning_function_map = dict[int, Callable[[MappedTiling], MappedTiling]]()
+mt_register = ck.make_register(cleaning_function_map)
+
+
 class Cleaner:
     def __init__(self, todo_list: Iterable[int] = set()):
         self.todo_list = set(todo_list)
@@ -278,19 +283,20 @@ class Cleaner:
             Parameter.add_to_cleaner,
             (
                 {
-                    pc_full,
+                    ck.pc_full,
                 },
             ),
         )
         return Cleaner.list_cleanup(mappling, tuple(cleaning_function_map.keys()))
 
     # Final Methods
-
+    @mt_register(ck.mc_try_to_kill)
     @staticmethod
     def try_to_kill(mappling: MappedTiling) -> MappedTiling:
         """Used to decide how to kill mapplings in full_cleanup"""
         raise NotImplementedError
 
+    @mt_register(ck.mc_tidy_containers)
     @staticmethod
     def tidy_containers(mappling: MappedTiling) -> MappedTiling:
         """For parameters with empty tilings, if it is the only
@@ -303,6 +309,7 @@ class Cleaner:
         """
         raise NotImplementedError
 
+    @mt_register(ck.mc_factor_containers)
     @staticmethod
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
@@ -321,11 +328,13 @@ class Cleaner:
             mappling.enumerating_parameters,
         )
 
+    @mt_register(ck.mc_insert_avoiders)
     @staticmethod
     def insert_valid_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         raise NotImplementedError
 
+    @mt_register(ck.mc_backmap)
     @staticmethod
     def backmap_points(mappling: MappedTiling) -> MappedTiling:
         """Backmaps point obstructions to all parameters"""
@@ -334,11 +343,13 @@ class Cleaner:
             Parameter.backmap_obstructions, (point_obstructions,)
         )
 
+    @mt_register(ck.mc_reap_contradictions)
     @staticmethod
     def reap_all_contradictions(mappling: MappedTiling) -> MappedTiling:
         """Removes any contradictory parameters"""
         raise NotImplementedError
 
+    @mt_register(ck.mc_remove_empty)
     @staticmethod
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes preimage rows and cols from the parameters"""
@@ -362,21 +373,7 @@ class Cleaner:
             Parameter.delete_preimage_of_rows_and_columns, (empty_cols, empty_rows)
         )
 
-    @staticmethod
-    def clean_parameter_lists(mappling: MappedTiling) -> MappedTiling:
-        new_avoiders = mappling.avoiding_parameters.cleaner(
-            mappling.avoiding_parameters
-        )
-        new_containers = (
-            c_list.cleaner(c_list) for c_list in mappling.containing_parameters
-        )
-        new_enumerators = (
-            e_list.cleaner(e_list) for e_list in mappling.enumerating_parameters
-        )
-        return MappedTiling(
-            mappling.tiling, new_avoiders, new_containers, new_enumerators
-        )
-
+    @mt_register(ck.mc_redundancy_check)
     @staticmethod
     def reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another"""
@@ -407,15 +404,3 @@ class Cleaner:
     @staticmethod
     def new_method(param: Parameter):
         pass
-
-
-# this uses the keys from cleaning_keys to assign an order to the cleaning functions
-cleaning_function_map = {
-    mc_try_to_kill: Cleaner.try_to_kill,
-    mc_tidy_containers: Cleaner.tidy_containers,
-    mc_insert_avoiders: Cleaner.insert_valid_avoiders,
-    mc_backmap: Cleaner.backmap_points,
-    mc_reap_contradictions: Cleaner.reap_all_contradictions,
-    mc_remove_empty: Cleaner.remove_empty_rows_and_cols,
-    mc_clean_params: Cleaner.clean_parameter_lists,
-}
