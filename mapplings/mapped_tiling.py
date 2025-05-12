@@ -4,14 +4,27 @@ from parameter import Parameter, ParamCleaner
 from parameter_list import ParameterList
 from cleaning_keys import *
 
-from typing import Iterable, Tuple, List, DefaultDict, Iterator, Callable
+from typing import (
+    Iterable,
+    Tuple,
+    List,
+    DefaultDict,
+    Iterator,
+    Callable,
+    TypeVar,
+    Optional,
+)
 from collections import defaultdict
+from itertools import chain
 from comb_spec_searcher import CombinatorialClass
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
+Cell = Tuple[int, int]
+
+FuncType = TypeVar("FuncType")
 
 
 class MappedTiling(CombinatorialClass):
@@ -51,10 +64,8 @@ class MappedTiling(CombinatorialClass):
     def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the containing parameters"""
         return all(
-            any(
-                c_list.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
-                for c_list in self.containing_parameters
-            )
+            any(c_list.apply_to_all(Parameter.gcp_has_preimage, (gcp,)))
+            for c_list in self.containing_parameters
         )
 
     def has_contradictory_parameters(self) -> bool:
@@ -136,10 +147,10 @@ class MappedTiling(CombinatorialClass):
         """Construct a MappedTiling from a dictionary."""
         return MappedTiling(
             Tiling.from_dict(d["tiling"]),
-            [Parameter.from_dict(p) for p in d["avoiding_parameters"]],
-            [[Parameter.from_dict(p) for p in ps] for ps in d["containing_parameters"]],
+            ParameterList(Parameter.from_dict(p) for p in d["avoiding_parameters"]),
+            [ParameterList(Parameter.from_dict(p) for p in ps) for ps in d["containing_parameters"]],
             [
-                [Parameter.from_dict(p) for p in ps]
+                ParameterList(Parameter.from_dict(p) for p in ps)
                 for ps in d["enumerating_parameters"]
             ],
         )
@@ -147,8 +158,10 @@ class MappedTiling(CombinatorialClass):
     # other stuff
 
     def apply_to_all_parameters(
-        self, func: Callable, additional_arguments: Tuple = tuple()
-    ):
+        self,
+        func: Callable[..., Parameter],
+        additional_arguments: Tuple = tuple(),
+    ) -> "MappedTiling":
         """Applies func to all parameters with additional arguments.
         Parameter must be the first argument of the function"""
         param_method = (func, additional_arguments)
@@ -235,6 +248,8 @@ class Cleaner:
         mappling: MappedTiling, cleaning_list: Iterable[int]
     ) -> MappedTiling:
         """Applies all functions indicated by keys in cleaning_list"""
+        if -1 in cleaning_list:
+            cleaning_list = cleaning_function_map.keys()
         cleaning_list = tuple(sorted(cleaning_list))
         new_mappling = mappling
         for i in cleaning_list:
@@ -245,6 +260,8 @@ class Cleaner:
         self, mappling: MappedTiling, cleaning_list: Iterable[int]
     ) -> MappedTiling:
         """Cleans mappling according to the cleaning list, and removes any completed cleaning functions from the cleaner's todo_list"""
+        if -1 in cleaning_list:
+            cleaning_list = cleaning_function_map.keys()
         new_mappling = Cleaner.list_cleanup(mappling, cleaning_list)
         new_mappling.cleaner = Cleaner(self.todo_list - set(cleaning_list))
         return new_mappling
@@ -252,6 +269,14 @@ class Cleaner:
     @staticmethod
     def full_cleanup(mappling: MappedTiling) -> MappedTiling:
         """Applies all cleanup functions."""
+        mappling.apply_to_all_parameters(
+            Parameter.add_to_cleaner,
+            (
+                {
+                    pc_full,
+                },
+            ),
+        )
         return Cleaner.list_cleanup(mappling, tuple(cleaning_function_map.keys()))
 
     # Final Methods
@@ -272,6 +297,24 @@ class Cleaner:
         col map as being trivial iff the dimensions of the tiling and ghost are the same.
         """
         raise NotImplementedError
+
+    @staticmethod
+    def factor_containters(mappling: MappedTiling) -> MappedTiling:
+        """Factors out the intersection factors of a containing parameter list"""
+        new_containers = list(
+            chain(
+                *(
+                    Cleaner.find_intersection(c_list)
+                    for c_list in mappling.containing_parameters
+                )
+            )
+        )
+        return MappedTiling(
+            mappling.tiling,
+            mappling.avoiding_parameters,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
 
     @staticmethod
     def insert_valid_avoiders(mappling: MappedTiling) -> MappedTiling:
@@ -302,7 +345,10 @@ class Cleaner:
             return MappedTiling(
                 Tiling(
                     [GriddedCayleyPerm(CayleyPermutation((0,)), [(0, 0)])], [], (1, 1)
-                )
+                ),
+                [],
+                [],
+                [],
             )
         mappling.tiling = mappling.tiling.delete_rows_and_columns(
             empty_cols, empty_rows
@@ -330,6 +376,28 @@ class Cleaner:
     def reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another"""
         raise NotImplementedError
+
+    # Internal Methods
+
+    @staticmethod
+    def find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
+        """Returns the intersection of the factors of the container list"""
+        if len(container_list) == 1:
+            return [ParameterList([factor]) for factor in container_list[0].factor()]
+        all_factors = tuple(map(set, container_list.apply_to_all(Parameter.factor)))
+        intersection = all_factors[0]
+        for factors in all_factors:
+            intersection = intersection & factors
+            if not intersection:
+                return [
+                    container_list,
+                ]
+        image_cells = set(chain(*(factor.image_cells() for factor in intersection)))
+        new_param_list = ParameterList([])
+        for param in container_list:
+            keep_cells = param.map.preimage_of_cells(param.image_cells() - image_cells)
+            new_param_list.append(param.sub_parameter(keep_cells))
+        return [new_param_list] + [ParameterList([factor]) for factor in intersection]
 
 
 # this uses the keys from cleaning_keys to assign an order to the cleaning functions

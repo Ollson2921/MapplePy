@@ -7,6 +7,7 @@ from typing import Iterator, Tuple, Set, Iterable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from gridded_cayley_permutations.factors import Factors
 from cayley_permutations import CayleyPermutation
 
 Cell = Tuple[int, int]
@@ -75,11 +76,17 @@ class Parameter:
         )
 
     def delete_rows_and_columns(
-        self, cols_to_delete: tuple[int, ...], rows_to_delete: tuple[int, ...]
+        self, cols_to_delete: Iterable[int], rows_to_delete: Iterable[int]
     ) -> "Parameter":
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys while preserving values."""
-        new_ghost = self.ghost.delete_rows_and_columns(cols_to_delete, rows_to_delete)
+        '''vvv This bit is only neede while deleting rows and cols is broken vvv'''
+        keep_cols = (i for i in range(self.dimensions[0]) if i not in cols_to_delete)
+        keep_rows = (i for i in range(self.dimensions[1]) if i not in rows_to_delete)
+        '''^^^ This bit is only neede while deleting rows and cols is broken ^^^'''
+        new_ghost = self.ghost.sub_tiling(
+            product(keep_cols, keep_rows)
+        ).delete_rows_and_columns(cols_to_delete, rows_to_delete)
         image_cols = sorted(
             (
                 self.col_map[key]
@@ -109,7 +116,37 @@ class Parameter:
         preimage_rows = self.map.preimages_of_cols(image_rows_to_delete)
         temp_param = self.delete_rows_and_columns(preimage_cols, preimage_rows)
         new_map = temp_param.map.standardise_map()
-        return ParamCleaner(temp_param.ghost, new_map)
+        return Parameter(temp_param.ghost, new_map)
+
+    def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
+        """Reutrns the parameter containig only the specified cells"""
+        cols, rows = zip(*cells)
+        cols_to_delete = {i for i in range(self.dimensions[0]) if i not in cols}
+        rows_to_delete = {i for i in range(self.dimensions[1]) if i not in rows}
+        print(cols_to_delete)
+        print(rows_to_delete)
+        return self.delete_rows_and_columns(cols_to_delete, rows_to_delete)
+
+    def factor(self) -> Iterator["Parameter"]:
+        """Factors the ghost and combines factors with overlapping images."""
+        factor_cells = Factors(self.ghost).find_factors_as_cells()
+        find_images = lambda pair: self.map.images_of_rows_and_cols(*pair)
+        factor_image_rows_and_cols = list(
+            (find_images(zip(*factor)) for factor in factor_cells)
+        )
+        for index1, pair1 in enumerate(factor_image_rows_and_cols):
+            for index2, pair2 in enumerate(factor_image_rows_and_cols):
+                if pair1[0] & pair2[0] and pair1[1] & pair2[1]:
+                    new_images = (pair1[0] | pair2[0], pair1[1] | pair2[1])
+                    factor_image_rows_and_cols[index1] = new_images
+                    factor_image_rows_and_cols[index2] = new_images
+        make_factor = lambda pair: product(*self.map.preimages_of_rows_and_cols(*pair))
+        factors = {
+            tuple(make_factor(factor_image))
+            for factor_image in factor_image_rows_and_cols
+        }
+        for factor in factors:
+            yield self.sub_parameter(factor)
 
     def is_contradictory(self, tiling: Tiling) -> bool:
         """Returns True if the parameter is contradictory.
@@ -117,6 +154,12 @@ class Parameter:
         containing an obstruction in the tiling
         """
         raise NotImplementedError
+
+    def add_to_cleaner(self, cleaner_items: Iterable[int]) -> "Parameter":
+        """Adds the cleaner items to the Parameter's Cleaner's todo list."""
+        new_param = self
+        new_param.cleaner = self.cleaner + cleaner_items
+        return new_param
 
     def clean_desired(self) -> "Parameter":
         """Cleans the parameter according to the todo list"""
@@ -160,12 +203,14 @@ class ParamCleaner:
         """Cleans the input param according to the cleaner's todo_list"""
         return ParamCleaner.list_cleanup(param, self.todo_list)
 
-    def __add__(self, other: Iterable[int]):
+    def __add__(self, other: Iterable[int]) -> "ParamCleaner":
         return ParamCleaner(self.todo_list | set(other))
 
     @staticmethod
     def list_cleanup(param: Parameter, cleaning_list: Iterable[int]) -> Parameter:
         """Applies all functions indicated by keys in cleaning_list"""
+        if -1 in cleaning_list:
+            cleaning_list = param_cleaning_function_map.keys()
         cleaning_list = tuple(sorted(cleaning_list))
         new_param = param
         for i in cleaning_list:
@@ -176,6 +221,8 @@ class ParamCleaner:
         self, param: Parameter, cleaning_list: Iterable[int]
     ) -> Parameter:
         """Cleans param according to the cleaning list, and removes any completed cleaning functions from the cleaner's todo_list"""
+        if -1 in cleaning_list:
+            cleaning_list = param_cleaning_function_map.keys()
         new_param = ParamCleaner.list_cleanup(param, cleaning_list)
         new_param.cleaner = ParamCleaner(self.todo_list - set(cleaning_list))
         return new_param
@@ -192,23 +239,9 @@ class ParamCleaner:
     @staticmethod
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
-        rows_to_delete = tuple(
-            row
-            for row in range(param.dimensions[1] - 1)
-            if (
-                param.row_map[row] == param.row_map[row + 1]
-                and param.ghost.can_fuse_row(row)
-            )
+        return ParamCleaner.fuse_valid_rows_or_cols(
+            ParamCleaner.fuse_valid_rows_or_cols(param, 0), 1
         )
-        cols_to_delete = tuple(
-            col
-            for col in range(param.dimensions[0] - 1)
-            if (
-                param.col_map[col] == param.col_map[col + 1]
-                and param.ghost.can_fuse_col(col)
-            )
-        )
-        return param.delete_rows_and_columns(cols_to_delete, rows_to_delete)
 
     @staticmethod
     def reduce_empty_rows_and_cols(param: Parameter) -> Parameter:
@@ -243,6 +276,33 @@ class ParamCleaner:
         return new_param
 
     # Internal Methods
+
+    @staticmethod
+    def fuse_valid_rows_or_cols(param: Parameter, direction: int) -> Parameter:
+        """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
+        direction = 0 for cols, directions = 1 for rows"""
+        new_ghost = param.ghost
+        new_maps = [param.col_map, param.row_map]
+        old_idx, new_idx, extend = 0, 0, 1
+        while old_idx + extend < param.dimensions[direction]:
+            if new_maps[direction][old_idx] == new_maps[direction][old_idx + extend]:
+                if new_ghost.is_fusable(direction, new_idx):
+                    if direction == 0:
+                        new_ghost = new_ghost.delete_columns([new_idx])
+                    else:
+                        new_ghost = new_ghost.delete_rows([new_idx])
+                    del new_maps[direction][old_idx + extend]
+                    extend += 1
+                    continue
+            old_idx += extend
+            new_idx += 1
+            extend = 1
+        new_direction_map = {
+            idx: new_maps[direction][value]
+            for idx, value in enumerate(new_maps[direction].keys())
+        }
+        new_maps[direction] = new_direction_map
+        return Parameter(new_ghost, RowColMap(*new_maps))
 
     @staticmethod
     def unplace_point(param: Parameter, cell: Cell) -> Parameter:
@@ -285,7 +345,7 @@ class ParamCleaner:
         check_cells = set(
             product((cell[0] - 1, cell[0] + 1), (cell[1] - 1, cell[1], cell[1] + 1))
         )
-        list_found = False
+        list_found = tuple()
         for req_list in param.requirements:
             reqs_intersect = (
                 bool(set(req.positions).intersection(check_cells)) for req in req_list

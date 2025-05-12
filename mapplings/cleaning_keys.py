@@ -12,6 +12,7 @@ mc_reap_contradictions = 3
 mc_remove_empty = 5
 mc_clean_params = 6
 mc_redundancy_check = 7
+mc_full = -1 #Flags a full cleanup
 
 # Parameter Cleaner keys
 # Prefix with pc_
@@ -19,6 +20,7 @@ pc_fusion = 3
 pc_reduce_empty = 1
 pc_remove_blank = 0
 pc_unplace_points = 2
+pc_full = -1 #Flags a full cleanup
 
 
 # List Cleaner Keys
