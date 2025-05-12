@@ -326,7 +326,7 @@ class Cleaner:
         """Backmaps point obstructions to all parameters"""
         point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
         return mappling.apply_to_all_parameters(
-            Parameter.backmap_obstrucctions, (point_obstructions,)
+            Parameter.backmap_obstructions, (point_obstructions,)
         )
 
     @staticmethod

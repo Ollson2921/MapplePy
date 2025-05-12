@@ -48,7 +48,7 @@ class Parameter:
                 return True
         return False
 
-    def backmap_obstrucctions(
+    def backmap_obstructions(
         self, obstructions=Iterable[GriddedCayleyPerm]
     ) -> "Parameter":
         """Places the obstructions on the tiling"""
