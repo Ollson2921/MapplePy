@@ -11,6 +11,6 @@ setup(
     ],
     install_requires=[
         "comb_spec_searcher",
-        "cayley_perms @ git+https://github.com/Ollson2921/CayleyPerms@mapplings",
+        "cayley_perms @ git+https://github.com/Ollson2921/CayleyPerms",
     ],  # external packages as dependencies
 )

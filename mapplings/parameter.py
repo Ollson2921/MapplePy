@@ -22,14 +22,6 @@ class Parameter:
         self.dimensions = ghost.dimensions
         self.cleaner = ParamCleaner(self)
 
-    def image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
-        """Gives the indices for the rows and cols to which the parameter maps"""
-        return set(self.col_map.values()), set(self.row_map.values())
-
-    def image_cells(self) -> Set[Cell]:
-        """Gives the cells to which the parameter maps"""
-        return set(product(*self.image_rows_and_cols()))
-
     def clean_desired(self) -> "Parameter":
         """Cleans the parameter according to specified cleaning bools"""
         return self.cleaner.clean_desired()
@@ -45,7 +37,7 @@ class Parameter:
                 yield gcp
 
     def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
-        sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
+        sub_gridding = gcp.sub_gridded_cayley_perm(self.map.image_cells())
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.ghost.gcp_in_tiling(sub_gridding):
                 return True
