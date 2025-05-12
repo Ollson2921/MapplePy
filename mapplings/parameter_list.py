@@ -1,10 +1,19 @@
 """Module with the parameter list class."""
 
-from typing import Iterator, Iterable, Tuple, Set, Callable
-from itertools import product
+from typing import (
+    Iterator,
+    Iterable,
+    Tuple,
+    Set,
+    Callable,
+    TypeVar,
+    TypeVarTuple,
+    Union,
+)
+from itertools import product, chain
 
-from parameter import Parameter, ParamCleaner
-from cleaning_keys import *
+from .parameter import Parameter, ParamCleaner
+import cleaning_keys as ck
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -12,6 +21,9 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 
 
 Cell = Tuple[int, int]
+
+FuncType = TypeVar("FuncType")
+ArgsType = TypeVarTuple("ArgsType")
 
 
 class ParameterList:
@@ -25,24 +37,25 @@ class ParameterList:
         return ParameterList(self.parameters + (param,))
 
     def apply_to_all(
-        self, func: Callable, additional_arguments: tuple = tuple()
-    ) -> Iterator:
+        self,
+        func: Callable[[Parameter, *ArgsType], FuncType],
+        additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
+    ) -> Iterator[FuncType]:
         """Applies func to all parameters in the list and yields the output"""
+        temp_func = lambda param: func(*((param,) + additional_arguments))
         for param in self:
-            yield func(*((param,) + additional_arguments))
+            yield temp_func(param)
 
     def combined_image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
         """Gives all base tiling rows and cols to which a parameter in the list maps"""
-        col_images, row_images = set(), set()
-        for param in self:
-            param_images = param.image_rows_and_cols()
-            col_images = col_images.union(param_images[0])
-            row_images = row_images.union(param_images[1])
+        col_images, row_images = map(
+            set, zip(*self.apply_to_all(Parameter.image_rows_and_cols))
+        )
         return col_images, row_images
 
     def combined_image_cells(self) -> Set[Cell]:
         """Gives all base cells to which a parameter in the list maps"""
-        return set(product(*self.combined_image_rows_and_cols()))
+        return set(chain(*self.apply_to_all(Parameter.image_cells)))
 
     def clean_desired(self) -> "ParameterList":
         """Cleans the param list according to todo list"""
@@ -123,17 +136,19 @@ class ListCleaner:
         )
 
     @staticmethod
-    def method_name0(param_list: ParameterList) -> ParameterList:
-        """An example cleaning function"""
-        return param_list
+    def remove_empty_ghosts(param_list: ParameterList) -> ParameterList:
+        """Remove any parameters with empty tilings."""
+        return ParameterList(
+            (param for param in param_list if not param.ghost.is_empty())
+        )
 
     @staticmethod
-    def method_name1(param_list: ParameterList) -> ParameterList:
-        """An example cleaning function"""
-        return param_list
+    def clean_parameters(param_list: ParameterList) -> ParameterList:
+        """Runs each parameter's cleaner."""
+        return ParameterList(param_list.apply_to_all(Parameter.clean_desired))
 
 
 list_cleaning_function_map = {
-    lc_method_nickname0: ListCleaner.method_name0,
-    lc_method_nickname1: ListCleaner.method_name1,
+    lc_remove_empty: ListCleaner.remove_empty_ghosts,
+    lc_clean_params: ListCleaner.clean_parameters,
 }

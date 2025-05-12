@@ -4,23 +4,20 @@
 
 # Mappling Cleaner Keys
 # Prefix with mc_
-mc_method_nickname0 = 0
-mc_method_nickname1 = 1
-insert_avoiders = 2
-reap_contradictions = 3
-backmap_points = 4
-remove_empty_ghosts = 5
-mc_remove_empty_rows_and_cols = 6
-clean_parameter_lists = 7
-remove_redundant_parameters = 8
+mc_try_to_kill = 0
+mc_tidy_containers = 1
+mc_insert_avoiders = 2
+mc_backmap = 4
+mc_reap_contradictions = 3
+mc_remove_empty = 5
+mc_clean_params = 6
+mc_redundancy_check = 7
+mc_full = -1  # Flags a full cleanup
 
 # Parameter Cleaner keys
 # Prefix with pc_
-pc_method_nickname0 = 0
-pc_method_nickname1 = 1
-
-
-# List Cleaner Keys
-# Prefix with lc_
-lc_method_nickname0 = 0
-lc_method_nickname1 = 1
+pc_fusion = 3
+pc_reduce_empty = 1
+pc_remove_blank = 0
+pc_unplace_points = 2
+pc_full = -1  # Flags a full cleanup
