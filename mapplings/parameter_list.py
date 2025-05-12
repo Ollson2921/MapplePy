@@ -3,8 +3,8 @@
 from typing import Iterator, Iterable, Tuple, Set, Callable, TypeVar
 from itertools import product, chain
 
-from parameter import Parameter, ParamCleaner
-from cleaning_keys import *
+from .parameter import Parameter, ParamCleaner
+from .cleaning_keys import *
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -13,7 +13,8 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 
 Cell = Tuple[int, int]
 
-FuncType = TypeVar('FuncType')
+FuncType = TypeVar("FuncType")
+
 
 class ParameterList:
     """A tiling (called a ghost) mapping to a base tiling."""
@@ -25,16 +26,19 @@ class ParameterList:
     def append(self, param: Parameter):
         return ParameterList(self.parameters + (param,))
 
-    def apply_to_all(self, func: Callable[...,FuncType], additional_arguments: Tuple = tuple()
+    def apply_to_all(
+        self, func: Callable[..., FuncType], additional_arguments: Tuple = tuple()
     ) -> Iterator[FuncType]:
         """Applies func to all parameters in the list and yields the output"""
-        temp_func = lambda param : func(*((param,) + additional_arguments))
+        temp_func = lambda param: func(*((param,) + additional_arguments))
         for param in self:
             yield temp_func(param)
 
     def combined_image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
         """Gives all base tiling rows and cols to which a parameter in the list maps"""
-        col_images, row_images = map(set,zip(*self.apply_to_all(Parameter.image_rows_and_cols)))
+        col_images, row_images = map(
+            set, zip(*self.apply_to_all(Parameter.image_rows_and_cols))
+        )
         return col_images, row_images
 
     def combined_image_cells(self) -> Set[Cell]:

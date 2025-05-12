@@ -1,8 +1,8 @@
 """Module with the mapped tiling class."""
 
-from parameter import Parameter, ParamCleaner
-from parameter_list import ParameterList
-from cleaning_keys import *
+from .parameter import Parameter, ParamCleaner
+from .parameter_list import ParameterList
+from .cleaning_keys import *
 
 from typing import (
     Iterable,
@@ -13,6 +13,7 @@ from typing import (
     Callable,
     TypeVar,
     Optional,
+    Any,
 )
 from collections import defaultdict
 from itertools import chain
@@ -148,7 +149,10 @@ class MappedTiling(CombinatorialClass):
         return MappedTiling(
             Tiling.from_dict(d["tiling"]),
             ParameterList(Parameter.from_dict(p) for p in d["avoiding_parameters"]),
-            [ParameterList(Parameter.from_dict(p) for p in ps) for ps in d["containing_parameters"]],
+            [
+                ParameterList(Parameter.from_dict(p) for p in ps)
+                for ps in d["containing_parameters"]
+            ],
             [
                 ParameterList(Parameter.from_dict(p) for p in ps)
                 for ps in d["enumerating_parameters"]
@@ -346,7 +350,7 @@ class Cleaner:
                 Tiling(
                     [GriddedCayleyPerm(CayleyPermutation((0,)), [(0, 0)])], [], (1, 1)
                 ),
-                [],
+                ParameterList([]),
                 [],
                 [],
             )
@@ -398,6 +402,10 @@ class Cleaner:
             keep_cells = param.map.preimage_of_cells(param.image_cells() - image_cells)
             new_param_list.append(param.sub_parameter(keep_cells))
         return [new_param_list] + [ParameterList([factor]) for factor in intersection]
+
+    @staticmethod
+    def new_method(param: Parameter):
+        pass
 
 
 # this uses the keys from cleaning_keys to assign an order to the cleaning functions

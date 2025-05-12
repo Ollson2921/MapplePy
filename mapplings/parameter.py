@@ -1,7 +1,7 @@
 """Module with the parameter class."""
 
-from row_col_map import RowColMap
-from cleaning_keys import *
+from .row_col_map import RowColMap
+from .cleaning_keys import *
 
 from typing import Iterator, Tuple, Set, Iterable
 from itertools import product
@@ -44,7 +44,7 @@ class Parameter:
         """Determines if the sub-gridding of the gcp that lives in the image region has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
-            if self.ghost.gcp_in_tiling(sub_gridding):
+            if self.ghost.gcp_in_tiling(preimage):
                 return True
         return False
 
@@ -80,10 +80,10 @@ class Parameter:
     ) -> "Parameter":
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys while preserving values."""
-        '''vvv This bit is only neede while deleting rows and cols is broken vvv'''
+        """vvv This bit is only neede while deleting rows and cols is broken vvv"""
         keep_cols = (i for i in range(self.dimensions[0]) if i not in cols_to_delete)
         keep_rows = (i for i in range(self.dimensions[1]) if i not in rows_to_delete)
-        '''^^^ This bit is only neede while deleting rows and cols is broken ^^^'''
+        """^^^ This bit is only neede while deleting rows and cols is broken ^^^"""
         new_ghost = self.ghost.sub_tiling(
             product(keep_cols, keep_rows)
         ).delete_rows_and_columns(cols_to_delete, rows_to_delete)
