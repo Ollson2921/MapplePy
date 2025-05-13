@@ -1,50 +1,22 @@
 """Module with the parameter class."""
 
-from typing import Iterator, Tuple
-
+from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from .row_col_map import RowColMap
-
-Cell = Tuple[int, int]
+from gridded_cayley_permutations.row_col_map import RowColMap
 
 
 class Parameter:
     """A tiling (called a ghost) mapping to a base tiling."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
-        self.row_map = row_col_map.row_map
-        self.col_map = row_col_map.col_map
         self.ghost = ghost
-        self.obstructions = ghost.obstructions
-        self.requirements = ghost.requirements
-        self.dimensions = ghost.dimensions
-        self.cleaner = ParamCleaner(self)
-
-    def clean_desired(self) -> "Parameter":
-        """Cleans the parameter according to specified cleaning bools"""
-        return self.cleaner.clean_desired()
-
-    def full_cleanup(self) -> "Parameter":
-        """Applies all cleaning functions to the parameter"""
-        return self.cleaner.full_cleanup()
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
             if self.ghost.gcp_in_tiling(gcp):
                 yield gcp
-
-    def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
-        """Returns True if the gridded cayley permutation has a preimage in the parameter"""
-        sub_gridding = gcp.sub_gridded_cayley_perm(self.map.image_cells)
-        for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
-            if self.ghost.gcp_in_tiling(preimage):
-                return True
-        return False
-
-    # dunder methods
 
     @classmethod
     def from_dict(cls, d: dict) -> "Parameter":
@@ -68,19 +40,3 @@ class Parameter:
 
     def __str__(self) -> str:
         return str(self.map) + "\n" + str(self.ghost)
-
-
-class ParamCleaner:
-    """Class for cleaning parameters"""
-
-    def __init__(self, param: Parameter):
-        self.param = param
-        self.cleaning_bool_name = False  # this is what a to do list item will look like
-
-    def clean_desired(self) -> Parameter:
-        """Applies cleaning functions for each true cleaning bool"""
-        return self.param
-
-    def full_cleanup(self) -> Parameter:
-        """Applies all cleanup functions"""
-        return self.param

@@ -5,8 +5,8 @@ from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+
 from .parameter import Parameter
-from .parameter_list import ParameterList
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 
@@ -15,22 +15,21 @@ class MappedTiling(CombinatorialClass):
     """A mapped tiling is a tiling with avoiding and containing parameters
     which map to it by row and column maps."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         tiling: Tiling,
-        avoiding_parameters: ParameterList,
-        containing_parameters: Iterable[ParameterList],
-        enumerating_parameters: Iterable[ParameterList],
+        avoiding_parameters: Iterable[Parameter],
+        containing_parameters: Iterable[Iterable[Parameter]],
+        enumeration_parameters: Iterable[Iterable[Parameter]],
     ):
-        self.avoiding_parameters = avoiding_parameters
-        self.containing_parameters = tuple(sorted(containing_parameters))
-        self.enumerating_parameters = tuple(sorted(enumerating_parameters))
+        self.avoiding_parameters = tuple(sorted(avoiding_parameters))
+        self.containing_parameters = tuple(
+            sorted(tuple(sorted(params)) for params in containing_parameters)
+        )
+        self.enumeration_parameters = tuple(
+            sorted(tuple(sorted(params)) for params in enumeration_parameters)
+        )
         self.tiling = tiling
-        self.obstructions = tiling.obstructions
-        self.requirements = tiling.requirements
-        self.dimensions = tiling.dimensions
-        self.cleaner = Cleaner(self)
 
     # Containment and avoidance functions
 
@@ -43,14 +42,15 @@ class MappedTiling(CombinatorialClass):
     def gcp_satisfies_avoiding_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the avoiding parameters"""
         return not any(
-            self.avoiding_parameters.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
+            any(True for _ in param.preimage_of_gcp(gcp))
+            for param in self.avoiding_parameters
         )
 
     def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the containing parameters"""
-        return any(
-            c_list.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
-            for c_list in self.containing_parameters
+        return all(
+            any(any(True for _ in param.preimage_of_gcp(gcp)) for param in params)
+            for params in self.containing_parameters
         )
 
     def has_contradictory_parameters(self) -> bool:
@@ -80,7 +80,7 @@ class MappedTiling(CombinatorialClass):
 
     def has_parameters(self) -> bool:
         """Check if the tiling has avoiding or containing parameters
-        (doesn't check for enumerating parameters)."""
+        (doesn't check for enumeration parameters)."""
         return bool(self.avoiding_parameters or self.containing_parameters)
 
     def is_atom(self) -> bool:
@@ -115,7 +115,7 @@ class MappedTiling(CombinatorialClass):
         combinatorical class parameters"""
         return tuple(
             sum(1 for param in param_list for _ in param.preimage_of_gcp(obj))
-            for param_list in self.enumerating_parameters
+            for param_list in self.enumeration_parameters
         )
 
     def is_empty(self) -> bool:
@@ -132,26 +132,13 @@ class MappedTiling(CombinatorialClass):
         """Construct a MappedTiling from a dictionary."""
         return MappedTiling(
             Tiling.from_dict(d["tiling"]),
-            ParameterList([Parameter.from_dict(p) for p in d["avoiding_parameters"]]),
+            [Parameter.from_dict(p) for p in d["avoiding_parameters"]],
+            [[Parameter.from_dict(p) for p in ps] for ps in d["containing_parameters"]],
             [
-                ParameterList([Parameter.from_dict(p) for p in ps])
-                for ps in d["containing_parameters"]
-            ],
-            [
-                ParameterList([Parameter.from_dict(p) for p in ps])
-                for ps in d["enumerating_parameters"]
+                [Parameter.from_dict(p) for p in ps]
+                for ps in d["enumeration_parameters"]
             ],
         )
-
-    # other stuff
-
-    def clean_desired(self) -> "MappedTiling":
-        """Applies some of the cleaning functions."""
-        return self.cleaner.clean_desired()
-
-    def full_cleanup(self) -> "MappedTiling":
-        """Applies all cleanup functions to the mapped tiling."""
-        return self.cleaner.full_cleanup()
 
     # dunder methods
 
@@ -180,7 +167,7 @@ class MappedTiling(CombinatorialClass):
         return (
             self.__class__.__name__
             + f"({repr(self.tiling)}, {repr(self.avoiding_parameters)}, "
-            + f"{repr(self.containing_parameters)}, {repr(self.enumerating_parameters)})"
+            + f"{repr(self.containing_parameters)}, {repr(self.enumeration_parameters)})"
         )
 
     def __str__(self) -> str:
@@ -194,23 +181,8 @@ class MappedTiling(CombinatorialClass):
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
-            + "\nEnumerating parameters:\n"
-            + "\nNew enumerating parameters list\n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
+            + "\nEnumeration parameters:\n"
+            + "\nNew enumeration parameters list\n".join(
+                ["\n".join([str(p) for p in ps]) for ps in self.enumeration_parameters]
             )
         )
-
-
-class Cleaner:
-    """A class for cleaning the mapped tiling."""
-
-    def __init__(self, mappling: MappedTiling):
-        self.mappling = mappling
-
-    def clean_desired(self) -> MappedTiling:
-        """Applies cleaning functions for each true variable."""
-        return self.mappling
-
-    def full_cleanup(self) -> MappedTiling:
-        """Applies all cleanup functions."""
-        return self.mappling

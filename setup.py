@@ -4,7 +4,7 @@ setup(
     name="mapped_tilings",
     version="0.1.0",
     description="A module for using mapped tilings.",
-    author="Reed Acton, Christian Bean, and Abigail Ollson",
+    author="Reid Acton, Christian Bean, and Abigail Ollson",
     author_email="c.n.bean@keele.ac.uk",
     packages=[
         "mapplings",
