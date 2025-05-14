@@ -10,14 +10,8 @@ from typing import (
     TypeVarTuple,
     Union,
 )
-from itertools import product, chain
-
-from .parameter import Parameter, ParamCleaner
-from . import cleaning_keys as ck
-
-from cayley_permutations import CayleyPermutation
-from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.row_col_map import RowColMap
+from itertools import chain
+from .parameter import Parameter
 
 
 Cell = Tuple[int, int]
@@ -42,7 +36,10 @@ class ParameterList:
         additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
     ) -> Iterator[FuncType]:
         """Applies func to all parameters in the list and yields the output"""
-        temp_func = lambda param: func(*((param,) + additional_arguments))
+
+        def temp_func(param):
+            return func(*((param,) + additional_arguments))
+
         for param in self:
             yield temp_func(param)
 
