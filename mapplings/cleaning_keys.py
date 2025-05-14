@@ -30,7 +30,7 @@ T = TypeVar("T")
 
 def make_register(
     function_map: dict[int, Callable[[T], T]],
-) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
+) -> Callable[[int], Callable[[Callable[[T], T]], Callable[[T], T]]]:
     """Makes a decorator that adds decorated functions to a function map according to an index"""
 
     def register(index: int) -> Callable[[Callable[[T], T]], Callable[[T], T]]:

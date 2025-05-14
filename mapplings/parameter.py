@@ -1,14 +1,15 @@
 """Module with the parameter class."""
 
-from .row_col_map import RowColMap
-from . import cleaning_keys as ck
-
 from typing import Iterator, Tuple, Set, Iterable, Callable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.factors import Factors
 from cayley_permutations import CayleyPermutation
+
+from .row_col_map import RowColMap
+from . import cleaning_keys as ck
+
 
 Cell = Tuple[int, int]
 
@@ -41,7 +42,8 @@ class Parameter:
                 yield gcp
 
     def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
-        """Determines if the sub-gridding of the gcp that lives in the image region has a preimage on the ghost"""
+        """Determines if the sub-gridding of the gcp that lives in the image region
+        has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.ghost.gcp_in_tiling(preimage):
@@ -80,10 +82,10 @@ class Parameter:
     ) -> "Parameter":
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys while preserving values."""
-        """vvv This bit is only needed while deleting rows and cols is broken vvv"""
+        # """vvv This bit is only needed while deleting rows and cols is broken vvv"""
         keep_cols = (i for i in range(self.dimensions[0]) if i not in cols_to_delete)
         keep_rows = (i for i in range(self.dimensions[1]) if i not in rows_to_delete)
-        """^^^ This bit is only needed while deleting rows and cols is broken ^^^"""
+        # """^^^ This bit is only needed while deleting rows and cols is broken ^^^"""
         new_ghost = self.ghost.sub_tiling(
             product(keep_cols, keep_rows)
         ).delete_rows_and_columns(cols_to_delete, rows_to_delete)
@@ -201,6 +203,10 @@ param_register = ck.make_register(param_cleaning_function_map)
 
 
 class ParamCleaner:
+    """The class used to clean paramaters.
+    Core fuctions are decorated with @param_register(index)
+    where index is the order of cleaning"""
+
     def __init__(self, todo_list: Iterable[int] = set()):
         self.todo_list = set(todo_list)
 
@@ -225,7 +231,8 @@ class ParamCleaner:
     def tracked_cleanup(
         self, param: Parameter, cleaning_list: Iterable[int]
     ) -> Parameter:
-        """Cleans param according to the cleaning list, and removes any completed cleaning functions from the cleaner's todo_list"""
+        """Cleans param according to the cleaning list,
+        removes any completed cleaning functions from the cleaner's todo_list"""
         if -1 in cleaning_list:
             cleaning_list = param_cleaning_function_map.keys()
         new_param = ParamCleaner.list_cleanup(param, cleaning_list)
@@ -314,6 +321,7 @@ class ParamCleaner:
 
     @staticmethod
     def unplace_point(param: Parameter, cell: Cell) -> Parameter:
+        """Tries to unplace a point in cell"""
         preimage_map = param.map.preimage_map()
         if (
             not cell[0] - 1 in preimage_map[param.col_map[cell[0]]]
@@ -350,10 +358,11 @@ class ParamCleaner:
     def find_unplaced_req_list(
         param: Parameter, cell: Cell
     ) -> Iterable[GriddedCayleyPerm]:
+        """Identifies a valid req list that can be merged with the point to be unplaced"""
         check_cells = set(
             product((cell[0] - 1, cell[0] + 1), (cell[1] - 1, cell[1], cell[1] + 1))
         )
-        list_found = tuple()
+        list_found: tuple = tuple()
         for req_list in param.requirements:
             reqs_intersect = (
                 bool(set(req.positions).intersection(check_cells)) for req in req_list
