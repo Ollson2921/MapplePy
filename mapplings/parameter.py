@@ -10,7 +10,6 @@ from cayley_permutations import CayleyPermutation
 from .row_col_map import RowColMap
 from . import cleaning_keys as ck
 
-
 Cell = Tuple[int, int]
 
 
@@ -82,13 +81,7 @@ class Parameter:
     ) -> "Parameter":
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys while preserving values."""
-        # """vvv This bit is only needed while deleting rows and cols is broken vvv"""
-        keep_cols = (i for i in range(self.dimensions[0]) if i not in cols_to_delete)
-        keep_rows = (i for i in range(self.dimensions[1]) if i not in rows_to_delete)
-        # """^^^ This bit is only needed while deleting rows and cols is broken ^^^"""
-        new_ghost = self.ghost.sub_tiling(
-            product(keep_cols, keep_rows)
-        ).delete_rows_and_columns(cols_to_delete, rows_to_delete)
+        new_ghost = self.ghost.delete_rows_and_columns(cols_to_delete, rows_to_delete)
         image_cols = sorted(
             (
                 self.col_map[key]
@@ -130,9 +123,9 @@ class Parameter:
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""
         factor_cells = Factors(self.ghost).find_factors_as_cells()
-        find_images = lambda pair: self.map.images_of_rows_and_cols(*pair)
+        find_images = self.map.images_of_rows_and_cols
         factor_image_rows_and_cols = list(
-            (find_images(zip(*factor)) for factor in factor_cells)
+            (find_images(*zip(*factor)) for factor in factor_cells)
         )
         for index1, pair1 in enumerate(factor_image_rows_and_cols):
             for index2, pair2 in enumerate(factor_image_rows_and_cols):
@@ -140,9 +133,9 @@ class Parameter:
                     new_images = (pair1[0] | pair2[0], pair1[1] | pair2[1])
                     factor_image_rows_and_cols[index1] = new_images
                     factor_image_rows_and_cols[index2] = new_images
-        make_factor = lambda pair: product(*self.map.preimages_of_rows_and_cols(*pair))
+        make_factor = self.map.preimages_of_rows_and_cols
         factors = {
-            tuple(make_factor(factor_image))
+            tuple(product(*make_factor(*factor_image)))
             for factor_image in factor_image_rows_and_cols
         }
         for factor in factors:
@@ -153,7 +146,13 @@ class Parameter:
         Is contradictory if any of the requirements in the ghost map to a gcp
         containing an obstruction in the tiling
         """
-        raise NotImplementedError
+        for req_list in self.ghost.requirements:
+            if all(
+                self.map.map_gridded_cperm(gcp).contains(tiling.obstructions)
+                for gcp in req_list
+            ):
+                return True
+        return False
 
     def add_to_cleaner(self, cleaner_items: Iterable[int]) -> "Parameter":
         """Adds the cleaner items to the Parameter's Cleaner's todo list."""
@@ -278,7 +277,7 @@ class ParamCleaner:
     @staticmethod
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
-        raise NotImplementedError
+        return param.delete_rows_and_columns(*param.ghost.find_blank_columns_and_rows())
 
     @param_register(ck.pc_unplace_points)
     @staticmethod
