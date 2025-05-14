@@ -1,7 +1,7 @@
 """Module with the parameter class."""
 
 from .row_col_map import RowColMap
-import cleaning_keys as ck
+from . import cleaning_keys as ck
 
 from typing import Iterator, Tuple, Set, Iterable, Callable
 from itertools import product
@@ -80,10 +80,10 @@ class Parameter:
     ) -> "Parameter":
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys while preserving values."""
-        """vvv This bit is only neede while deleting rows and cols is broken vvv"""
+        """vvv This bit is only needed while deleting rows and cols is broken vvv"""
         keep_cols = (i for i in range(self.dimensions[0]) if i not in cols_to_delete)
         keep_rows = (i for i in range(self.dimensions[1]) if i not in rows_to_delete)
-        """^^^ This bit is only neede while deleting rows and cols is broken ^^^"""
+        """^^^ This bit is only needed while deleting rows and cols is broken ^^^"""
         new_ghost = self.ghost.sub_tiling(
             product(keep_cols, keep_rows)
         ).delete_rows_and_columns(cols_to_delete, rows_to_delete)
@@ -123,8 +123,6 @@ class Parameter:
         cols, rows = zip(*cells)
         cols_to_delete = {i for i in range(self.dimensions[0]) if i not in cols}
         rows_to_delete = {i for i in range(self.dimensions[1]) if i not in rows}
-        print(cols_to_delete)
-        print(rows_to_delete)
         return self.delete_rows_and_columns(cols_to_delete, rows_to_delete)
 
     def factor(self) -> Iterator["Parameter"]:
@@ -179,7 +177,9 @@ class Parameter:
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"({repr(self.ghost)}, {repr(self.map)})"
 
-    def __eq__(self, other: "Parameter") -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Parameter):
+            return NotImplemented
         return self.ghost == other.ghost and self.map == other.map
 
     def __hash__(self) -> int:

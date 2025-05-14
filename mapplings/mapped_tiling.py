@@ -2,7 +2,7 @@
 
 from .parameter import Parameter, ParamCleaner
 from .parameter_list import ParameterList
-import cleaning_keys as ck
+from . import cleaning_keys as ck
 
 from typing import (
     Iterable,
@@ -191,8 +191,10 @@ class MappedTiling(CombinatorialClass):
 
     # dunder methods
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check if two MappedTilings are equal."""
+        if not isinstance(other, MappedTiling):
+            return NotImplemented
         return (
             self.tiling == other.tiling
             and self.avoiding_parameters == other.avoiding_parameters
