@@ -84,13 +84,7 @@ class Parameter:
             del new_row_map[index]
         return RowColMap(new_col_map, new_row_map).standardise_map()
 
-<<<<<<< HEAD
-    def back_map_obs_and_reqs(
-        self, tiling: Tiling, simplify=True
-    ) -> "Parameter":  # cleaner
-=======
     def back_map_obs_and_reqs(self, tiling: Tiling, simplify=True) -> "Parameter":
->>>>>>> main
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
