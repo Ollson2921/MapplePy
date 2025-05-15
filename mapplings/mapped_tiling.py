@@ -242,7 +242,7 @@ class MappedTiling(CombinatorialClass):
         )
 
 
-# This is the mao used in the cleaner functions and the decorator used to build the map
+# This is the map used in the cleaner functions and the decorator used to build the map
 cleaning_function_map = dict[int, Callable[[MappedTiling], MappedTiling]]()
 mt_register = ck.make_register(cleaning_function_map)
 
@@ -253,7 +253,7 @@ class Cleaner:
     that correspond to the keys in the cleaning_function_map. The cleaner will
     apply all functions in the todo_list to the mappling."""
 
-    def __init__(self, todo_list: Iterable[int] = None):
+    def __init__(self, todo_list: Iterable[int] | None = None):
         self.todo_list = set(todo_list) if todo_list is not None else set()
 
     def __call__(self, mappling: MappedTiling) -> MappedTiling:

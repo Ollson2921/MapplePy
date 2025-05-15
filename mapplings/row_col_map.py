@@ -1,6 +1,6 @@
 """Module with the inherited RowColMap class."""
 
-from typing import Iterable, Tuple, List, DefaultDict, Iterator, Callable
+from typing import Iterable, Tuple
 from gridded_cayley_permutations.row_col_map import RowColMap as RCMap
 
 
