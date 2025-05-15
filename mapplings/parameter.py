@@ -109,10 +109,16 @@ class Parameter:
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys and values."""
         preimage_cols = self.map.preimages_of_cols(image_cols_to_delete)
-        preimage_rows = self.map.preimages_of_cols(image_rows_to_delete)
+        preimage_rows = self.map.preimages_of_rows(image_rows_to_delete)
         temp_param = self.delete_rows_and_columns(preimage_cols, preimage_rows)
-        new_map = temp_param.map.standardise_map()
-        return Parameter(temp_param.ghost, new_map)
+        new_col_map, new_row_map = {},{}
+        for key,value in temp_param.col_map.items():
+            adjust = sum(idx < value for idx in image_cols_to_delete)
+            new_col_map[key] = temp_param.col_map[key] = value - adjust
+        for key,value in temp_param.row_map.items():
+            adjust = sum(idx < value for idx in image_rows_to_delete)
+            new_row_map[key] = temp_param.row_map[key] = value - adjust
+        return Parameter(temp_param.ghost, RowColMap(new_col_map, new_row_map))
 
     def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
         """Reutrns the parameter containig only the specified cells"""
@@ -188,7 +194,7 @@ class Parameter:
         return hash((self.ghost, self.map))
 
     def __leq__(self, other: "Parameter") -> int:
-        return self.ghost <= other.ghost
+        return self.ghost < other.ghost or self.ghost == other.ghost
 
     def __lt__(self, other: "Parameter") -> bool:
         return self.ghost < other.ghost
