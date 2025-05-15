@@ -207,8 +207,8 @@ class ParamCleaner:
     Core fuctions are decorated with @param_register(index)
     where index is the order of cleaning"""
 
-    def __init__(self, todo_list: Iterable[int] = set()):
-        self.todo_list = set(todo_list)
+    def __init__(self, todo_list: Iterable[int] | None = None):
+        self.todo_list = set(todo_list) if todo_list is not None else set()
 
     def __call__(self, param: Parameter) -> Parameter:
         """Cleans the input param according to the cleaner's todo_list"""

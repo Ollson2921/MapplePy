@@ -1,8 +1,9 @@
+"""These give names to the cleaning_function_map keys so they show up for autocomplete
+The value assigned to each dictates the order in which the associated function will be applied
+Function maps are defined beneath each cleaner class"""
+
 from typing import Callable, TypeVar
 
-# These give names to the cleaning_function_map keys so they show up for autocomplete
-# The value assigned to each dictates the order in which the associated function will be applied
-# Function maps are defined beneath each cleaner class
 
 # Mappling Cleaner Keys
 # Prefix with mc_

@@ -16,7 +16,7 @@ from .parameter import Parameter
 
 Cell = Tuple[int, int]
 
-FuncType = TypeVar("FuncType")
+FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
 
@@ -32,9 +32,9 @@ class ParameterList:
 
     def apply_to_all(
         self,
-        func: Callable[[Parameter, *ArgsType], FuncType],
+        func: Callable[[Parameter, *ArgsType], FuncTypeT],
         additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
-    ) -> Iterator[FuncType]:
+    ) -> Iterator[FuncTypeT]:
         """Applies func to all parameters in the list and yields the output"""
 
         def temp_func(param):
