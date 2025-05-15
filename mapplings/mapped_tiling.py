@@ -1,9 +1,5 @@
 """Module with the mapped tiling class."""
 
-from .parameter import Parameter, ParamCleaner
-from .parameter_list import ParameterList
-from . import cleaning_keys as ck
-
 from typing import (
     Iterable,
     Tuple,
@@ -18,14 +14,18 @@ from typing import (
 from collections import defaultdict
 from itertools import chain
 from comb_spec_searcher import CombinatorialClass
-
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+
+from .parameter import Parameter
+from .parameter_list import ParameterList
+from . import cleaning_keys as ck
+
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
 Cell = Tuple[int, int]
 
-FuncType = TypeVar("FuncType")
+FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
 
@@ -33,6 +33,7 @@ class MappedTiling(CombinatorialClass):
     """A mapped tiling is a tiling with avoiding and containing parameters
     which map to it by row and column maps."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         tiling: Tiling,
@@ -184,9 +185,11 @@ class MappedTiling(CombinatorialClass):
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
 
     def clean_desired(self) -> "MappedTiling":
+        """Cleans the mappling according to the cleaner's todo_list"""
         return self.cleaner(self)
 
     def full_cleanup(self) -> "MappedTiling":
+        """Applies all cleanup functions."""
         return Cleaner.full_cleanup(self)
 
     # dunder methods
@@ -245,8 +248,13 @@ mt_register = ck.make_register(cleaning_function_map)
 
 
 class Cleaner:
-    def __init__(self, todo_list: Iterable[int] = set()):
-        self.todo_list = set(todo_list)
+    """A class for cleaning mapplings. It is a callable that takes a MappedTiling
+    and returns a MappedTiling. It also has a todo_list which is a set of integers
+    that correspond to the keys in the cleaning_function_map. The cleaner will
+    apply all functions in the todo_list to the mappling."""
+
+    def __init__(self, todo_list: Iterable[int] = None):
+        self.todo_list = set(todo_list) if todo_list is not None else set()
 
     def __call__(self, mappling: MappedTiling) -> MappedTiling:
         """Cleans the input mappling according to the cleaner's todo_list"""
@@ -271,7 +279,8 @@ class Cleaner:
     def tracked_cleanup(
         self, mappling: MappedTiling, cleaning_list: Iterable[int]
     ) -> MappedTiling:
-        """Cleans mappling according to the cleaning list, and removes any completed cleaning functions from the cleaner's todo_list"""
+        """Cleans mappling according to the cleaning list, and removes
+        any completed cleaning functions from the cleaner's todo_list"""
         if -1 in cleaning_list:
             cleaning_list = cleaning_function_map.keys()
         new_mappling = Cleaner.list_cleanup(mappling, cleaning_list)
@@ -354,7 +363,8 @@ class Cleaner:
     @mt_register(ck.mc_remove_empty)
     @staticmethod
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
-        """Removes empty rows and cols in the base tiling and removes preimage rows and cols from the parameters"""
+        """Removes empty rows and cols in the base tiling and removes
+        preimage rows and cols from the parameters"""
         empty_cols, empty_rows = mappling.tiling.find_empty_rows_and_columns()
         if (
             len(empty_cols) == mappling.dimensions[0]
@@ -402,7 +412,3 @@ class Cleaner:
             keep_cells = param.map.preimage_of_cells(param.image_cells() - image_cells)
             new_param_list.append(param.sub_parameter(keep_cells))
         return [new_param_list] + [ParameterList([factor]) for factor in intersection]
-
-    @staticmethod
-    def new_method(param: Parameter):
-        pass
