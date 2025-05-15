@@ -3,9 +3,7 @@
 from typing import Iterable, Tuple, List, DefaultDict, Iterator
 from collections import defaultdict
 from comb_spec_searcher import CombinatorialClass
-
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-
 from .parameter import Parameter
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
@@ -148,7 +146,7 @@ class MappedTiling(CombinatorialClass):
             self.tiling == other.tiling
             and self.avoiding_parameters == other.avoiding_parameters
             and self.containing_parameters == other.containing_parameters
-            and self.enumerating_parameters == other.enumerating_parameters
+            and self.enumeration_parameters == other.enumeration_parameters
         )
 
     def __hash__(self) -> int:
@@ -158,7 +156,7 @@ class MappedTiling(CombinatorialClass):
                 self.tiling,
                 self.avoiding_parameters,
                 self.containing_parameters,
-                self.enumerating_parameters,
+                self.enumeration_parameters,
             )
         )
 
