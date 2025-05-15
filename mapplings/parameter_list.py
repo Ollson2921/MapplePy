@@ -45,7 +45,7 @@ class ParameterList:
 
     def combined_image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
         """Gives all base tiling rows and cols to which a parameter in the list maps"""
-        col_images, row_images = set[int](),set[int]()
+        col_images, row_images = set[int](), set[int]()
         for col_image, row_image in self.apply_to_all(Parameter.image_rows_and_cols):
             col_images.update(col_image)
             row_images.update(row_image)

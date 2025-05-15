@@ -111,11 +111,11 @@ class Parameter:
         preimage_cols = self.map.preimages_of_cols(image_cols_to_delete)
         preimage_rows = self.map.preimages_of_rows(image_rows_to_delete)
         temp_param = self.delete_rows_and_columns(preimage_cols, preimage_rows)
-        new_col_map, new_row_map = {},{}
-        for key,value in temp_param.col_map.items():
+        new_col_map, new_row_map = {}, {}
+        for key, value in temp_param.col_map.items():
             adjust = sum(idx < value for idx in image_cols_to_delete)
             new_col_map[key] = temp_param.col_map[key] = value - adjust
-        for key,value in temp_param.row_map.items():
+        for key, value in temp_param.row_map.items():
             adjust = sum(idx < value for idx in image_rows_to_delete)
             new_row_map[key] = temp_param.row_map[key] = value - adjust
         return Parameter(temp_param.ghost, RowColMap(new_col_map, new_row_map))
