@@ -84,7 +84,9 @@ class Parameter:
             del new_row_map[index]
         return RowColMap(new_col_map, new_row_map).standardise_map()
 
-    def back_map_obs_and_reqs(self, tiling: Tiling, simplify=True) -> "Parameter":
+    def back_map_obs_and_reqs(
+        self, tiling: Tiling, simplify=True
+    ) -> "Parameter":  # cleaner
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
@@ -99,7 +101,9 @@ class Parameter:
             Tiling(new_obs, new_reqs, self.ghost.dimensions, simplify), self.map
         )
 
-    def back_map_point_obstructions(self, tiling: Tiling, simplify=True) -> "Parameter":
+    def back_map_point_obstructions(
+        self, tiling: Tiling, simplify=True
+    ) -> "Parameter":  # cleaner
         """Places all obs and reqs of tiling into the parameter according to the row/col map.
         Returns a new parameter, but maybe we should just add obs and reqs to existing parameters, IDK
         Doing this for req lists is weird...
@@ -118,7 +122,7 @@ class Parameter:
         preimage_of_cells = self.map.preimage_of_cells(factor)
         return Parameter(self.ghost.sub_tiling(preimage_of_cells), self.map)
 
-    def reduce_by_fusion(self):
+    def reduce_by_fusion(self):  # cleaner
         """Fuses valid rows and columns"""
         rows_to_delete = tuple(
             row
@@ -140,7 +144,7 @@ class Parameter:
 
     def delete_rows_and_columns(
         self, cols_to_delete: tuple[int, ...], rows_to_delete: tuple[int, ...]
-    ) -> "Parameter":
+    ) -> "Parameter":  # cleaner
         """Removes rows and columns from the parameter"""
         new_map = self.reduce_row_col_map(cols_to_delete, rows_to_delete)
         new_ghost = self.ghost.delete_rows_and_columns(cols_to_delete, rows_to_delete)
@@ -151,7 +155,7 @@ class Parameter:
         rows: bool,
         preimages: dict[int, list[int, ...]],
         currently_empty: set[int],
-    ) -> "Parameter":
+    ) -> "Parameter":  # cleaner
         """
         Removes empty rows or columns if they share an image with another row or column.
 
@@ -174,7 +178,7 @@ class Parameter:
         new_ghost = self.ghost.delete_rows_and_columns(empty_cols, empty_rows)
         return Parameter(new_ghost, RowColMap(*new_maps).standardise_map())
 
-    def reduce_empty_rows_and_cols(self):
+    def reduce_empty_rows_and_cols(self):  # cleaner
         """Removes empty rows and columns in the parameter"""
         col_preimages = {
             i: self.map.preimages_of_col(i) for i in set(self.map.col_map.values())
@@ -187,7 +191,7 @@ class Parameter:
             0, col_preimages, currently_empty[0]
         )._reduce_empty_rows_or_cols(1, row_preimages, currently_empty[1])
 
-    def split_and_squish_in_range(self, min_index, max_index, direction):
+    def split_and_squish_in_range(self, min_index, max_index, direction):  # useless
         """Used in expand together. splits each row/column in the range of min_index, max_index.
         each way the parameter is split contributes to a final parameter made by backmapping obs and reqs without simplifying
         """
@@ -220,7 +224,7 @@ class Parameter:
         }
         return Parameter(new_parameter.ghost, RowColMap(*tuple(original_maps)))
 
-    def expand_together(self, other):
+    def expand_together(self, other):  # useless
         """Transforms self and other into parameters with the same dimension while respecting the row col map.
         The returned parameters are not simplified."""
         parameters = [self, other]
@@ -248,7 +252,7 @@ class Parameter:
         return parameters[0], parameters[1]
 
     @staticmethod
-    def make_comparisons(parameters, base_dimensions, tolerance):
+    def make_comparisons(parameters, base_dimensions, tolerance):  # useless?
         """Creates a comparisons dictionary from a list of parameters.
         comparisons[a] is the set of indices b such that the objects from a mappling with parameters[a] as an avoider are a subset of the objects with parameters[b] as an avoider.
         The size of objects created is the maximum size of the upper bound of mimimal GCPS across all paramters plus the tolerance
@@ -410,7 +414,7 @@ class MappedTiling(CombinatorialClass):
             .fuse_parameters()
         )
 
-    def kill_to_empty_or_obstructed(self):
+    def kill_to_empty_or_obstructed(self):  # cleaner
         """Used to decide how to kill mapplings in full_cleanup"""
         if self.tiling.is_empty():
             return MappedTiling.empty_mappling()
@@ -418,7 +422,7 @@ class MappedTiling(CombinatorialClass):
             Tiling([GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),))]), [], [], []
         )
 
-    def fuse_parameters(self):
+    def fuse_parameters(self):  # cleaner
         """Fuses valid rows and cols in every parameter"""
         avoiding_parameters, containing_parameters = [], []
         for avoider in self.avoiding_parameters:
@@ -473,7 +477,7 @@ class MappedTiling(CombinatorialClass):
             self.enumeration_parameters,
         )
 
-    def avoider_can_be_placed(self, avoider: Parameter):
+    def avoider_can_be_placed(self, avoider: Parameter):  # cleaner
         """returns the index of a requirement in the avoider that can be added to the tiling as an obstruction if it exists
         for now, this only happens if the avoider is trivial other than that single requirement
         """
@@ -579,7 +583,7 @@ class MappedTiling(CombinatorialClass):
                 )
         self.parameters.append(new_ghost)
 
-    def remove_redundant_parameters(self, tolerance=REDUNDANCE_TOLERANCE):
+    def remove_redundant_parameters(self, tolerance=REDUNDANCE_TOLERANCE):  # useless
         """Removes reduncant parameters from the avoiding parameters, and from each containing parameter list.
         Higher tolerance makes the function check largers GCPS"""
         avoider_comparisons = Parameter.make_comparisons(
@@ -603,7 +607,9 @@ class MappedTiling(CombinatorialClass):
             self.tiling, new_avoiders, new_containers, self.enumeration_parameters
         )
 
-    def is_trivial(self, confidence=8):  # TODO: Make this better and based on theory
+    def is_trivial(
+        self, confidence=8
+    ):  # TODO: Make this better and based on theory #main
         return set(self.objects_of_size(confidence)) == set(
             self.tiling.objects_of_size(confidence)
         )
@@ -662,7 +668,7 @@ class MappedTiling(CombinatorialClass):
             new_parameters.append(Parameter(new_parameter, parameter.map))
         return new_parameters
 
-    def add_requirements_to_tiling(self, requirements):
+    def add_requirements_to_tiling(self, requirements):  # main
         new_tiling = self.tiling.add_requirements(requirements)
         return MappedTiling(
             new_tiling,
@@ -671,7 +677,7 @@ class MappedTiling(CombinatorialClass):
             self.enumeration_parameters,
         )
 
-    def add_obstructions_to_tiling(self, obstructions):
+    def add_obstructions_to_tiling(self, obstructions):  # main
         new_tiling = self.tiling.add_obstructions(obstructions)
         return MappedTiling(
             new_tiling,
@@ -680,7 +686,7 @@ class MappedTiling(CombinatorialClass):
             self.enumeration_parameters,
         )
 
-    def add_requirements(self, requirements: List[List[GriddedCayleyPerm]]):  # Good
+    def add_requirements(self, requirements: List[List[GriddedCayleyPerm]]):  # useless
         """Adds requirements to the mappling by adding them to each of the
         parameters in all possible ways."""
         new_containing_parameters = []
@@ -705,7 +711,7 @@ class MappedTiling(CombinatorialClass):
         """Adds a requirement list to the tiling and the parameters."""
         return self.add_requirements([req_list])
 
-    def remove_empty_rows_and_columns(self) -> "MappedTiling":  # Good
+    def remove_empty_rows_and_columns(self) -> "MappedTiling":  # cleaner
         """Finds and removes empty rows and cols in the base tiling then removes the
         corresponding rows and columns in the parameters"""
         empty_cols, empty_rows = self.tiling.find_empty_rows_and_columns()
@@ -767,7 +773,7 @@ class MappedTiling(CombinatorialClass):
             self.enumeration_parameters + enumeration_parameters,
         )
 
-    def all_parameters(self) -> tuple["Parameter", ...]:  # Good
+    def all_parameters(self) -> tuple["Parameter", ...]:  # main
         """Returns a list of all parameters."""
         return (
             self.avoiding_parameters
