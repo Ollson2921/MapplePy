@@ -2,7 +2,7 @@
 
 from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.row_col_map import RowColMap
+from .row_col_map import RowColMap
 
 
 class Parameter:
