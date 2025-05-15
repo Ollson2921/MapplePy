@@ -51,12 +51,13 @@ class RowColMap(RCMap):
             self._product_of_cols(gcp), self._product_of_rows(gcp)
         ):
             new_positions = tuple(zip(cols, rows))
-            if any(cell not in self.cells_in_parameter() for cell in new_positions):
+            if any(cell not in self.cells_in_parameter for cell in new_positions):
                 raise ValueError(
                     f"The gridded Cayley perm {gcp} does not have a preimage in the parameter."
                 )
             yield GriddedCayleyPerm(gcp.pattern, new_positions)
 
+    @cached_property
     def cells_in_parameter(self) -> set[Cell]:
         """Returns the cells in the parameter"""
         all_cells = set()
