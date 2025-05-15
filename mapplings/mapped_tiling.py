@@ -294,20 +294,20 @@ class Cleaner:
             Parameter.add_to_cleaner,
             (
                 {
-                    ck.pc_full,
+                    ck.PC_FULL,
                 },
             ),
         )
         return Cleaner.list_cleanup(mappling, tuple(cleaning_function_map.keys()))
 
     # Final Methods
-    @mt_register(ck.mc_try_to_kill)
+    @mt_register(ck.MC_KILL)
     @staticmethod
     def try_to_kill(mappling: MappedTiling) -> MappedTiling:
         """Used to decide how to kill mapplings in full_cleanup"""
         raise NotImplementedError
 
-    @mt_register(ck.mc_tidy_containers)
+    @mt_register(ck.MC_TIDY)
     @staticmethod
     def tidy_containers(mappling: MappedTiling) -> MappedTiling:
         """For parameters with empty tilings, if it is the only
@@ -320,7 +320,7 @@ class Cleaner:
         """
         raise NotImplementedError
 
-    @mt_register(ck.mc_factor_containers)
+    @mt_register(ck.MC_FACTOR_CONTAINERS)
     @staticmethod
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
@@ -339,13 +339,13 @@ class Cleaner:
             mappling.enumerating_parameters,
         )
 
-    @mt_register(ck.mc_insert_avoiders)
+    @mt_register(ck.MC_INSERT_AVOIDERS)
     @staticmethod
     def insert_valid_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         raise NotImplementedError
 
-    @mt_register(ck.mc_backmap)
+    @mt_register(ck.MC_BACKMAP)
     @staticmethod
     def backmap_points(mappling: MappedTiling) -> MappedTiling:
         """Backmaps point obstructions to all parameters"""
@@ -354,13 +354,13 @@ class Cleaner:
             Parameter.backmap_obstructions, (point_obstructions,)
         )
 
-    @mt_register(ck.mc_reap_contradictions)
+    @mt_register(ck.MC_REAP)
     @staticmethod
     def reap_all_contradictions(mappling: MappedTiling) -> MappedTiling:
         """Removes any contradictory parameters"""
         raise NotImplementedError
 
-    @mt_register(ck.mc_remove_empty)
+    @mt_register(ck.MC_EMPTY)
     @staticmethod
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
@@ -385,7 +385,7 @@ class Cleaner:
             Parameter.delete_preimage_of_rows_and_columns, (empty_cols, empty_rows)
         )
 
-    @mt_register(ck.mc_redundancy_check)
+    @mt_register(ck.MC_REDUNDANT)
     @staticmethod
     def reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another"""

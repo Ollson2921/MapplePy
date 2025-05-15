@@ -253,7 +253,7 @@ class ParamCleaner:
         )
 
     # Final Methods
-    @param_register(ck.pc_fusion)
+    @param_register(ck.PC_FUSION)
     @staticmethod
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
@@ -261,7 +261,7 @@ class ParamCleaner:
             ParamCleaner.fuse_valid_rows_or_cols(param, 0), 1
         )
 
-    @param_register(ck.pc_reduce_empty)
+    @param_register(ck.PC_EMPTY)
     @staticmethod
     def reduce_empty_rows_and_cols(param: Parameter) -> Parameter:
         """Removes empty rows and columns in the parameter"""
@@ -280,13 +280,13 @@ class ParamCleaner:
                 rows_to_remove = rows_to_remove - intersection
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
-    @param_register(ck.pc_remove_blank)
+    @param_register(ck.PC_BLANK)
     @staticmethod
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
         return param.delete_rows_and_columns(*param.ghost.find_blank_columns_and_rows())
 
-    @param_register(ck.pc_unplace_points)
+    @param_register(ck.PC_UNPLACEMENT)
     @staticmethod
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
