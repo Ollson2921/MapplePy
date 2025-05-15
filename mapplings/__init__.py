@@ -2,7 +2,6 @@
 
 from .mapped_tiling import MappedTiling
 from .parameter import Parameter
-from .parameter_list import ParameterList
 
-__all__ = ["MappedTiling", "Parameter", "ParameterList"]
+__all__ = ["MappedTiling", "Parameter"]
 __version__ = "0.1.0"
