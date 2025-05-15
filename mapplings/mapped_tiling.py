@@ -37,13 +37,17 @@ class MappedTiling(CombinatorialClass):
     def __init__(
         self,
         tiling: Tiling,
-        avoiding_parameters: ParameterList,
-        containing_parameters: Iterable[ParameterList],
-        enumerating_parameters: Iterable[ParameterList],
+        avoiding_parameters: Iterable[Parameter],
+        containing_parameters: Iterable[Iterable[Parameter]],
+        enumeration_parameters: Iterable[Iterable[Parameter]],
     ):
-        self.avoiding_parameters = avoiding_parameters
-        self.containing_parameters = tuple(sorted(containing_parameters))
-        self.enumerating_parameters = tuple(sorted(enumerating_parameters))
+        self.avoiding_parameters = tuple(sorted(avoiding_parameters))
+        self.containing_parameters = tuple(
+            sorted(tuple(sorted(params)) for params in containing_parameters)
+        )
+        self.enumeration_parameters = tuple(
+            sorted(tuple(sorted(params)) for params in enumeration_parameters)
+        )
         self.tiling = tiling
         self.obstructions = tiling.obstructions
         self.requirements = tiling.requirements
@@ -61,7 +65,8 @@ class MappedTiling(CombinatorialClass):
     def gcp_satisfies_avoiding_params(self, gcp: GriddedCayleyPerm) -> bool:
         """Returns True if the gridded cayley permutation satisfies the avoiding parameters"""
         return not any(
-            self.avoiding_parameters.apply_to_all(Parameter.gcp_has_preimage, (gcp,))
+            any(True for _ in param.preimage_of_gcp(gcp))
+            for param in self.avoiding_parameters
         )
 
     def gcp_satisfies_containing_params(self, gcp: GriddedCayleyPerm) -> bool:
@@ -98,7 +103,7 @@ class MappedTiling(CombinatorialClass):
 
     def has_parameters(self) -> bool:
         """Check if the tiling has avoiding or containing parameters
-        (doesn't check for enumerating parameters)."""
+        (doesn't check for enumeration parameters)."""
         return bool(self.avoiding_parameters or self.containing_parameters)
 
     def is_atom(self) -> bool:
@@ -133,7 +138,7 @@ class MappedTiling(CombinatorialClass):
         combinatorical class parameters"""
         return tuple(
             sum(1 for param in param_list for _ in param.preimage_of_gcp(obj))
-            for param_list in self.enumerating_parameters
+            for param_list in self.enumeration_parameters
         )
 
     def is_empty(self) -> bool:
@@ -202,7 +207,7 @@ class MappedTiling(CombinatorialClass):
             self.tiling == other.tiling
             and self.avoiding_parameters == other.avoiding_parameters
             and self.containing_parameters == other.containing_parameters
-            and self.enumerating_parameters == other.enumerating_parameters
+            and self.enumeration_parameters == other.enumeration_parameters
         )
 
     def __hash__(self) -> int:
@@ -212,7 +217,7 @@ class MappedTiling(CombinatorialClass):
                 self.tiling,
                 self.avoiding_parameters,
                 self.containing_parameters,
-                self.enumerating_parameters,
+                self.enumeration_parameters,
             )
         )
 
@@ -221,7 +226,7 @@ class MappedTiling(CombinatorialClass):
         return (
             self.__class__.__name__
             + f"({repr(self.tiling)}, {repr(self.avoiding_parameters)}, "
-            + f"{repr(self.containing_parameters)}, {repr(self.enumerating_parameters)})"
+            + f"{repr(self.containing_parameters)}, {repr(self.enumeration_parameters)})"
         )
 
     def __str__(self) -> str:
@@ -235,9 +240,9 @@ class MappedTiling(CombinatorialClass):
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
-            + "\nenumerating parameters:\n"
-            + "\nNew enumerating parameters list\n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
+            + "\nEnumeration parameters:\n"
+            + "\nNew enumeration parameters list\n".join(
+                ["\n".join([str(p) for p in ps]) for ps in self.enumeration_parameters]
             )
         )
 

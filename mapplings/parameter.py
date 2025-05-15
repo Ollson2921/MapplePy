@@ -19,8 +19,6 @@ class Parameter:
     # pylint: disable=too-many-instance-attributes
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
-        self.row_map = row_col_map.row_map
-        self.col_map = row_col_map.col_map
         self.ghost = ghost
         self.obstructions = ghost.obstructions
         self.requirements = ghost.requirements
