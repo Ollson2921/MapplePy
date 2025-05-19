@@ -16,43 +16,57 @@ Cell = tuple[int, int]
 
 
 class Register(Generic[T]):
-    """Used within cleaners to register core functions"""
+    """Used within cleaners to register core functions.
+    Can be initialized with a custom string
+    to determine the name of the attribute added to functions
+    """
 
-    def __init__(self):
+    def __init__(self, attr_name: str = "index"):
         self.registered_functions = set[Callable[[T], T]]()
         self.map = dict[int, Callable[[T], T]]()
+        self.attr_name = attr_name
 
     def __call__(
         self, idx: int, update_register: bool = True
     ) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
         """Used as the decorator to register functions. Setting update_register to False"""
-        assert idx not in self.map.keys(), (
-            "Register index "
-            + str(idx)
-            + " is already assigned to "
-            + self[idx].__name__
-        )
 
         def register_function(func: Callable[[T], T]) -> Callable[[T], T]:
-            setattr(func, "reg_index", idx)
             if update_register:
+                assert idx not in self.map.keys(), " ".join(
+                    (
+                        self.attr_name,
+                        str(idx),
+                        "is already assigned to",
+                        self[idx].__name__,
+                        "and cannot be assigned to",
+                        func.__name__,
+                    )
+                )
                 self.registered_functions.add(func)
                 self.map[idx] = func
+            setattr(func, self.attr_name, idx)
+
             return func
 
         return register_function
+
+    def sorting_key(self, func: Callable[[T], T]) -> int:
+        """Used to sort fuctions in cleaners"""
+        assert hasattr(func, self.attr_name), (
+            func.__name__ + " has no assigned " + self.attr_name
+        )
+        return getattr(func, self.attr_name)
 
     def __getitem__(self, key: int) -> Callable[[T], T]:
         return self.map[key]
 
     def __repr__(self):
-        return repr({idx: self[idx].__name__ for idx in sorted(self.map)})
-
-
-def sorting_key(func: Callable[[T], T]) -> int:
-    """Used to sort fuctions in cleaners"""
-    assert hasattr(func, "reg_index"), func.__name__ + " has no registered index"
-    return func.reg_index
+        return (
+            self.attr_name
+            + " : "
+            + repr({idx: self[idx].__name__ for idx in sorted(self.map)})
+        )
 
 
 class Cleaner(Generic[T]):
@@ -61,29 +75,25 @@ class Cleaner(Generic[T]):
     where index is the order of cleaning"""
 
     reg = Register[T]()
-    registered_functions = tuple(sorted(reg.registered_functions, key=sorting_key))
 
     def __init__(self, todo_list: Iterable[Callable[[T], T]]):
-        self.todo_list = set(todo_list)
+        self.todo_list = tuple(sorted(todo_list, key=self.__class__.reg.sorting_key))
 
     def __call__(self, cleaning_object: T) -> T:
         """Cleans the input cleaning_object according to the cleaner's todo_list"""
         return self.__class__.list_cleanup(cleaning_object, self.todo_list)
-
-    def __add__(self, other: Iterable[Callable[[T], T]]):
-        return self.__class__(self.todo_list | set(other))
 
     def __repr__(self):
         return self.__class__.__name__ + repr(
             tuple(func.__name__ for func in self.todo_list)
         )
 
-    @staticmethod
+    @classmethod
     def list_cleanup(
-        cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
+        cls, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
     ) -> T:
         """Applies all functions in cleaning_list in order according to their index"""
-        cleaning_list = sorted(cleaning_list, key=sorting_key)
+        cleaning_list = sorted(cleaning_list, key=cls.reg.sorting_key)
         return Cleaner.unordered_cleanup(cleaning_object, cleaning_list)
 
     @staticmethod
@@ -102,18 +112,21 @@ class Cleaner(Generic[T]):
         """Cleans cleaning_object according to the cleaning list,
         removes any completed cleaning functions from the cleaner's todo_list"""
         new_cleaning_object = self.list_cleanup(cleaning_object, cleaning_list)
-        self.todo_list = self.todo_list - set(cleaning_list)
+        self.todo_list = tuple(set(self.todo_list) - set(cleaning_list))
         return new_cleaning_object
 
     @classmethod
     def make_full_cleaner(cls):
         """Returns an instance of a cleaner with all registered cleaning functions"""
-        return cls(cls.registered_functions)
+        return cls(tuple(sorted(cls.reg.registered_functions, key=cls.reg.sorting_key)))
 
     @classmethod
     def full_cleanup(cls, cleaning_object: T) -> T:
         """Applies all cleanup functions."""
-        return cls.unordered_cleanup(cleaning_object, cls.registered_functions)
+        return cls.unordered_cleanup(
+            cleaning_object,
+            tuple(sorted(cls.reg.registered_functions, key=cls.reg.sorting_key)),
+        )
 
 
 class ParamCleaner(Cleaner[Parameter]):
@@ -121,16 +134,15 @@ class ParamCleaner(Cleaner[Parameter]):
     core functions need to be registered with @reg(index)
     where index determines cleaning order"""
 
-    reg = Register[Parameter]()
-    registered_functions = tuple(sorted(reg.registered_functions, key=sorting_key))
+    reg = Register[Parameter]("param_register")
     # Final Methods
 
     @staticmethod
     @reg(3)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
-        return ParamCleaner.fuse_valid_rows_or_cols(
-            ParamCleaner.fuse_valid_rows_or_cols(param, 0), 1
+        return ParamCleaner._fuse_valid_rows_or_cols(
+            ParamCleaner._fuse_valid_rows_or_cols(param, 0), 1
         )
 
     @staticmethod
@@ -165,13 +177,13 @@ class ParamCleaner(Cleaner[Parameter]):
         points = param.ghost.point_cells()
         new_param = param
         for cell in points:
-            new_param = ParamCleaner.unplace_point(new_param, cell)
+            new_param = ParamCleaner._unplace_point(new_param, cell)
         return new_param
 
     # Internal Methods
 
     @staticmethod
-    def fuse_valid_rows_or_cols(param: Parameter, direction: int) -> Parameter:
+    def _fuse_valid_rows_or_cols(param: Parameter, direction: int) -> Parameter:
         """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
         direction = 0 for cols, directions = 1 for rows"""
         new_ghost = param.ghost
@@ -198,7 +210,7 @@ class ParamCleaner(Cleaner[Parameter]):
         return Parameter(new_ghost, RowColMap(*new_maps))
 
     @staticmethod
-    def unplace_point(param: Parameter, cell: Cell) -> Parameter:
+    def _unplace_point(param: Parameter, cell: Cell) -> Parameter:
         """Tries to unplace a point in cell"""
         preimage_map = param.map.preimage_map()
         if (
@@ -217,7 +229,7 @@ class ParamCleaner(Cleaner[Parameter]):
             or param.dimensions[1] == cell[1]
         ):
             return param
-        intersecting_list = ParamCleaner.find_unplaced_req_list(param, cell)
+        intersecting_list = ParamCleaner._find_unplaced_req_list(param, cell)
         if not intersecting_list:
             return param
         new_reqs = tuple(
@@ -233,7 +245,7 @@ class ParamCleaner(Cleaner[Parameter]):
         raise NotImplementedError
 
     @staticmethod
-    def find_unplaced_req_list(
+    def _find_unplaced_req_list(
         param: Parameter, cell: Cell
     ) -> Iterable[GriddedCayleyPerm]:
         """Identifies a valid req list that can be merged with the point to be unplaced"""
@@ -262,11 +274,11 @@ class MTCleaner(Cleaner[MappedTiling]):
     core functions need to be registered with @reg(index)
     where index determines cleaning order"""
 
-    reg = Register[MappedTiling]()
-    registered_functions = tuple(sorted(reg.registered_functions, key=sorting_key))
+    reg = Register[MappedTiling]("mappling_register")
 
+    # Final Methods
     @staticmethod
-    def _clean_parameters(
+    def clean_parameters(
         param_cleaner: ParamCleaner,
     ) -> Callable[[MappedTiling], MappedTiling]:
         """Creates a function (index = 6) that applies a param cleaner to all parameters.
@@ -274,19 +286,18 @@ class MTCleaner(Cleaner[MappedTiling]):
         To apply to a mappling, can be run as MTCleaner.make_param_cleaner(param_cleaner)(mappling)
         """
 
-        def clean_parameters(mappling: MappedTiling) -> MappedTiling:
+        @MTCleaner.reg(6, update_register=False)
+        def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             return mappling.apply_to_all_parameters(param_cleaner)
 
-        setattr(clean_parameters, "reg_index", 6)
-        return clean_parameters
+        return _clean_parameters
 
     @staticmethod
     @reg(6)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
-        return MTCleaner._clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
+        return MTCleaner.clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
 
-    # Final Methods
     @staticmethod
     @reg(0)
     def try_to_kill(mappling: MappedTiling) -> MappedTiling:
@@ -313,7 +324,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         new_containers = list(
             chain(
                 *(
-                    MTCleaner.find_intersection(c_list)
+                    MTCleaner._find_intersection(c_list)
                     for c_list in mappling.containing_parameters
                 )
             )
@@ -380,7 +391,7 @@ class MTCleaner(Cleaner[MappedTiling]):
     # Internal Methods
 
     @staticmethod
-    def find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
+    def _find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
         """Returns the intersection of the factors of the container list"""
         if len(container_list) == 1:
             return [ParameterList([factor]) for factor in container_list[0].factor()]

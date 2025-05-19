@@ -6,5 +6,3 @@ print(repr(tiling))
 
 mt = MappedTiling(tiling, [], [], [])
 print(repr(mt))
-
-print(MTCleaner.registered_functions)
