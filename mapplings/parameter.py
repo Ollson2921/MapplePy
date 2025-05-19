@@ -1,13 +1,13 @@
 """Module with the parameter class."""
 
-from typing import Iterator, Tuple, Set, Iterable
+from typing import Iterator, Iterable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.factors import Factors
 
-Cell = Tuple[int, int]
+Cell = tuple[int, int]
 
 
 class Parameter:
@@ -23,7 +23,7 @@ class Parameter:
         self.requirements = ghost.requirements
         self.dimensions = ghost.dimensions
 
-    def image_cells(self) -> Set[Cell]:
+    def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
         return self.map.image_cells
 
