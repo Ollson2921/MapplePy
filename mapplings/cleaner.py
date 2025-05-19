@@ -22,11 +22,22 @@ class Register(Generic[T]):
         self.registered_functions = set[Callable[[T], T]]()
         self.map = dict[int, Callable[[T], T]]()
 
-    def __call__(self, idx: int) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
-        assert idx not in self.map.keys()
+    def __call__(
+        self, idx: int, update_register: bool = True
+    ) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
+        """Used as the decorator to register functions. Setting update_register to False"""
+        assert idx not in self.map.keys(), (
+            "Register index "
+            + str(idx)
+            + " is already assigned to "
+            + self[idx].__name__
+        )
 
         def register_function(func: Callable[[T], T]) -> Callable[[T], T]:
-            self.add(func, idx)
+            setattr(func, "reg_index", idx)
+            if update_register:
+                self.registered_functions.add(func)
+                self.map[idx] = func
             return func
 
         return register_function
@@ -34,20 +45,14 @@ class Register(Generic[T]):
     def __getitem__(self, key: int) -> Callable[[T], T]:
         return self.map[key]
 
-    def add(self, func: Callable[[T], T], idx: int):
-        """Adds func to the register with given index"""
-        setattr(func, "index", idx)
-        self.registered_functions.add(func)
-        self.map[idx] = func
-
     def __repr__(self):
         return repr({idx: self[idx].__name__ for idx in sorted(self.map)})
 
 
 def sorting_key(func: Callable[[T], T]) -> int:
     """Used to sort fuctions in cleaners"""
-    assert hasattr(func, "index")
-    return func.index
+    assert hasattr(func, "reg_index"), func.__name__ + " has no registered index"
+    return func.reg_index
 
 
 class Cleaner(Generic[T]):
@@ -56,7 +61,7 @@ class Cleaner(Generic[T]):
     where index is the order of cleaning"""
 
     reg = Register[T]()
-    registered_functions = reg.registered_functions
+    registered_functions = tuple(sorted(reg.registered_functions, key=sorting_key))
 
     def __init__(self, todo_list: Iterable[Callable[[T], T]]):
         self.todo_list = set(todo_list)
@@ -88,8 +93,7 @@ class Cleaner(Generic[T]):
         """Applies all functions in cleaning_list without reordering"""
         new_cleaning_object = cleaning_object
         for func in cleaning_list:
-            print(func.__name__)
-            # new_cleaning_object = func(new_cleaning_object)
+            new_cleaning_object = func(new_cleaning_object)
         return new_cleaning_object
 
     def tracked_cleanup(
@@ -102,9 +106,14 @@ class Cleaner(Generic[T]):
         return new_cleaning_object
 
     @classmethod
+    def make_full_cleaner(cls):
+        """Returns an instance of a cleaner with all registered cleaning functions"""
+        return cls(cls.registered_functions)
+
+    @classmethod
     def full_cleanup(cls, cleaning_object: T) -> T:
         """Applies all cleanup functions."""
-        return cls.list_cleanup(cleaning_object, cls.registered_functions)
+        return cls.unordered_cleanup(cleaning_object, cls.registered_functions)
 
 
 class ParamCleaner(Cleaner[Parameter]):
@@ -113,7 +122,7 @@ class ParamCleaner(Cleaner[Parameter]):
     where index determines cleaning order"""
 
     reg = Register[Parameter]()
-    registered_functions = reg.registered_functions
+    registered_functions = tuple(sorted(reg.registered_functions, key=sorting_key))
     # Final Methods
 
     @staticmethod
@@ -150,7 +159,7 @@ class ParamCleaner(Cleaner[Parameter]):
         return param.delete_rows_and_columns(*param.ghost.find_blank_columns_and_rows())
 
     @staticmethod
-    # @reg(2)
+    @reg(2, update_register=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
         points = param.ghost.point_cells()
@@ -254,7 +263,7 @@ class MTCleaner(Cleaner[MappedTiling]):
     where index determines cleaning order"""
 
     reg = Register[MappedTiling]()
-    registered_functions = reg.registered_functions
+    registered_functions = tuple(sorted(reg.registered_functions, key=sorting_key))
 
     @staticmethod
     def _clean_parameters(
@@ -268,14 +277,14 @@ class MTCleaner(Cleaner[MappedTiling]):
         def clean_parameters(mappling: MappedTiling) -> MappedTiling:
             return mappling.apply_to_all_parameters(param_cleaner)
 
-        setattr(clean_parameters, "index", 6)
+        setattr(clean_parameters, "reg_index", 6)
         return clean_parameters
 
     @staticmethod
     @reg(6)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
-        return MTCleaner._clean_parameters(ParamCleaner.registered_functions)(mappling)
+        return MTCleaner._clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
 
     # Final Methods
     @staticmethod
