@@ -126,7 +126,7 @@ class Parameter:
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""
         factor_cells = Factors(self.ghost).find_factors_as_cells()
-        find_images = self.map.images_of_rows_and_cols
+        find_images = self.map.image_rows_and_cols
         factor_image_rows_and_cols = list(
             (find_images(*zip(*factor)) for factor in factor_cells)
         )
