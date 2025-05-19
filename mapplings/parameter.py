@@ -4,10 +4,9 @@ from typing import Iterator, Tuple, Set, Iterable, Callable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.factors import Factors
 from cayley_permutations import CayleyPermutation
-
-from .row_col_map import RowColMap
 from . import cleaning_keys as ck
 
 Cell = Tuple[int, int]
