@@ -12,9 +12,7 @@ from typing import (
     Union,
 )
 from collections import defaultdict
-from itertools import chain
 from comb_spec_searcher import CombinatorialClass
-from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
 from .parameter import Parameter
