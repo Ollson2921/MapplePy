@@ -2,7 +2,6 @@
 
 from typing import (
     Iterator,
-    Iterable,
     Tuple,
     Set,
     Callable,
@@ -20,15 +19,20 @@ FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
 
-class ParameterList:
+class ParameterList(frozenset[Parameter]):
     """A tiling (called a ghost) mapping to a base tiling."""
 
-    def __init__(self, parameters: Iterable[Parameter]):
-        self.parameters = tuple(sorted(parameters))
-
-    def append(self, param: Parameter):
+    def add(self, param: Parameter) -> "ParameterList":
         """Adds param to self"""
-        return ParameterList(self.parameters + (param,))
+        return ParameterList(
+            self.union(
+                ParameterList(
+                    {
+                        param,
+                    }
+                )
+            )
+        )
 
     def apply_to_all(
         self,
@@ -54,37 +58,3 @@ class ParameterList:
     def combined_image_cells(self) -> Set[Cell]:
         """Gives all base cells to which a parameter in the list maps"""
         return set(chain(*self.apply_to_all(Parameter.image_cells)))
-
-    # dunder methods
-
-    def __getitem__(self, index) -> Parameter:
-        return self.parameters[index]
-
-    def __add__(self, other: "ParameterList") -> "ParameterList":
-        return ParameterList(self.parameters + other.parameters)
-
-    def __iter__(self) -> Iterator[Parameter]:
-        return self.parameters.__iter__()
-
-    def __len__(self) -> int:
-        return len(self.parameters)
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, ParameterList):
-            return NotImplemented
-        return self.parameters == other.parameters
-
-    def __lt__(self, other: "ParameterList") -> bool:
-        return self.parameters < other.parameters
-
-    def __leq__(self, other: "ParameterList") -> bool:
-        return self.parameters <= other.parameters
-
-    def __hash__(self) -> int:
-        return hash(self.parameters)
-
-    def __repr__(self) -> str:
-        return repr(self.parameters)
-
-    def __str__(self) -> str:
-        return "\n".join([str(p) for p in self])

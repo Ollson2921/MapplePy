@@ -19,7 +19,6 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
 from .parameter import Parameter
 from .parameter_list import ParameterList
-from . import cleaning_keys as ck
 
 
 Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
@@ -48,7 +47,6 @@ class MappedTiling(CombinatorialClass):
         self.obstructions = tiling.obstructions
         self.requirements = tiling.requirements
         self.dimensions = tiling.dimensions
-        self.cleaner = Cleaner()
 
     # Containment and avoidance functions
 
@@ -87,7 +85,7 @@ class MappedTiling(CombinatorialClass):
         if not len_one_cont_params:
             return False
         if any(
-            contain_list[0] == avoiding_parameter
+            avoiding_parameter in contain_list
             for contain_list in len_one_cont_params
             for avoiding_parameter in self.avoiding_parameters
         ):
@@ -184,14 +182,6 @@ class MappedTiling(CombinatorialClass):
         )
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
 
-    def clean_desired(self) -> "MappedTiling":
-        """Cleans the mappling according to the cleaner's todo_list"""
-        return self.cleaner(self)
-
-    def full_cleanup(self) -> "MappedTiling":
-        """Applies all cleanup functions."""
-        return Cleaner.full_cleanup(self)
-
     # dunder methods
 
     def __eq__(self, other: object) -> bool:
@@ -240,175 +230,3 @@ class MappedTiling(CombinatorialClass):
                 ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
             )
         )
-
-
-# This is the map used in the cleaner functions and the decorator used to build the map
-cleaning_function_map = dict[int, Callable[[MappedTiling], MappedTiling]]()
-mt_register = ck.make_register(cleaning_function_map)
-
-
-class Cleaner:
-    """A class for cleaning mapplings. It is a callable that takes a MappedTiling
-    and returns a MappedTiling. It also has a todo_list which is a set of integers
-    that correspond to the keys in the cleaning_function_map. The cleaner will
-    apply all functions in the todo_list to the mappling."""
-
-    def __init__(self, todo_list: Iterable[int] | None = None):
-        self.todo_list = set(todo_list) if todo_list is not None else set()
-
-    def __call__(self, mappling: MappedTiling) -> MappedTiling:
-        """Cleans the input mappling according to the cleaner's todo_list"""
-        return Cleaner.list_cleanup(mappling, self.todo_list)
-
-    def __add__(self, other: Iterable[int]):
-        return Cleaner(self.todo_list | set(other))
-
-    @staticmethod
-    def list_cleanup(
-        mappling: MappedTiling, cleaning_list: Iterable[int]
-    ) -> MappedTiling:
-        """Applies all functions indicated by keys in cleaning_list"""
-        if -1 in cleaning_list:
-            cleaning_list = cleaning_function_map.keys()
-        cleaning_list = tuple(sorted(cleaning_list))
-        new_mappling = mappling
-        for i in cleaning_list:
-            new_mappling = cleaning_function_map[i](new_mappling)
-        return new_mappling
-
-    def tracked_cleanup(
-        self, mappling: MappedTiling, cleaning_list: Iterable[int]
-    ) -> MappedTiling:
-        """Cleans mappling according to the cleaning list, and removes
-        any completed cleaning functions from the cleaner's todo_list"""
-        if -1 in cleaning_list:
-            cleaning_list = cleaning_function_map.keys()
-        new_mappling = Cleaner.list_cleanup(mappling, cleaning_list)
-        new_mappling.cleaner = Cleaner(self.todo_list - set(cleaning_list))
-        return new_mappling
-
-    @staticmethod
-    def full_cleanup(mappling: MappedTiling) -> MappedTiling:
-        """Applies all cleanup functions."""
-        mappling.apply_to_all_parameters(
-            Parameter.add_to_cleaner,
-            (
-                {
-                    ck.PC_FULL,
-                },
-            ),
-        )
-        return Cleaner.list_cleanup(mappling, tuple(cleaning_function_map.keys()))
-
-    # Final Methods
-    @mt_register(ck.MC_KILL)
-    @staticmethod
-    def try_to_kill(mappling: MappedTiling) -> MappedTiling:
-        """Used to decide how to kill mapplings in full_cleanup"""
-        raise NotImplementedError
-
-    @mt_register(ck.MC_TIDY)
-    @staticmethod
-    def tidy_containers(mappling: MappedTiling) -> MappedTiling:
-        """For parameters with empty tilings, if it is the only
-        one in a list then the mappling is empty, otherwise remove the empty
-        parameter.
-        If only one parameter in a list and it maps to base tiling by the identity map
-        then map obs and reqs down and remove the parameter list.
-        Note: As we always assume a parameter maps to the whole tiling, we defined a row
-        col map as being trivial iff the dimensions of the tiling and ghost are the same.
-        """
-        raise NotImplementedError
-
-    @mt_register(ck.MC_FACTOR_CONTAINERS)
-    @staticmethod
-    def factor_containters(mappling: MappedTiling) -> MappedTiling:
-        """Factors out the intersection factors of a containing parameter list"""
-        new_containers = list(
-            chain(
-                *(
-                    Cleaner.find_intersection(c_list)
-                    for c_list in mappling.containing_parameters
-                )
-            )
-        )
-        return MappedTiling(
-            mappling.tiling,
-            mappling.avoiding_parameters,
-            new_containers,
-            mappling.enumerating_parameters,
-        )
-
-    @mt_register(ck.MC_INSERT_AVOIDERS)
-    @staticmethod
-    def insert_valid_avoiders(mappling: MappedTiling) -> MappedTiling:
-        """Adds requirements from every avoider that is near-trivial and removes that avoider"""
-        raise NotImplementedError
-
-    @mt_register(ck.MC_BACKMAP)
-    @staticmethod
-    def backmap_points(mappling: MappedTiling) -> MappedTiling:
-        """Backmaps point obstructions to all parameters"""
-        point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
-        return mappling.apply_to_all_parameters(
-            Parameter.backmap_obstructions, (point_obstructions,)
-        )
-
-    @mt_register(ck.MC_REAP)
-    @staticmethod
-    def reap_all_contradictions(mappling: MappedTiling) -> MappedTiling:
-        """Removes any contradictory parameters"""
-        raise NotImplementedError
-
-    @mt_register(ck.MC_EMPTY)
-    @staticmethod
-    def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
-        """Removes empty rows and cols in the base tiling and removes
-        preimage rows and cols from the parameters"""
-        empty_cols, empty_rows = mappling.tiling.find_empty_rows_and_columns()
-        if (
-            len(empty_cols) == mappling.dimensions[0]
-            or len(empty_rows) == mappling.dimensions[1]
-        ):
-            return MappedTiling(
-                Tiling(
-                    [GriddedCayleyPerm(CayleyPermutation((0,)), [(0, 0)])], [], (1, 1)
-                ),
-                ParameterList([]),
-                [],
-                [],
-            )
-        mappling.tiling = mappling.tiling.delete_rows_and_columns(
-            empty_cols, empty_rows
-        )
-        return mappling.apply_to_all_parameters(
-            Parameter.delete_preimage_of_rows_and_columns, (empty_cols, empty_rows)
-        )
-
-    @mt_register(ck.MC_REDUNDANT)
-    @staticmethod
-    def reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
-        """Removes any parameter implied by another"""
-        raise NotImplementedError
-
-    # Internal Methods
-
-    @staticmethod
-    def find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
-        """Returns the intersection of the factors of the container list"""
-        if len(container_list) == 1:
-            return [ParameterList([factor]) for factor in container_list[0].factor()]
-        all_factors = tuple(map(set, container_list.apply_to_all(Parameter.factor)))
-        intersection = all_factors[0]
-        for factors in all_factors:
-            intersection = intersection & factors
-            if not intersection:
-                return [
-                    container_list,
-                ]
-        image_cells = set(chain(*(factor.image_cells() for factor in intersection)))
-        new_param_list = ParameterList([])
-        for param in container_list:
-            keep_cells = param.map.preimage_of_cells(param.image_cells() - image_cells)
-            new_param_list.append(param.sub_parameter(keep_cells))
-        return [new_param_list] + [ParameterList([factor]) for factor in intersection]
