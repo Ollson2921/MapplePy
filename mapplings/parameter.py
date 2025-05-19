@@ -23,13 +23,9 @@ class Parameter:
         self.requirements = ghost.requirements
         self.dimensions = ghost.dimensions
 
-    def image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
-        """Gives the indices for the rows and cols to which the parameter maps"""
-        return set(self.col_map.values()), set(self.row_map.values())
-
     def image_cells(self) -> Set[Cell]:
         """Gives the cells to which the parameter maps"""
-        return set(product(*self.image_rows_and_cols()))
+        return self.map.image_cells
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
@@ -170,48 +166,22 @@ class Parameter:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (
-            self.ghost,
-            frozenset(self.col_map.items()),
-            frozenset(self.row_map.items()),
-        ) == (
-            other.ghost,
-            frozenset(other.col_map.items()),
-            frozenset(other.row_map.items()),
-        )
+        return (self.ghost, self.map) == (other.ghost, other.map)
 
     def __hash__(self) -> int:
         return hash(
             (
                 self.ghost,
-                tuple(self.col_map.items()),
-                tuple(self.row_map.items()),
+                tuple(sorted(self.col_map.items())),
+                tuple(sorted(self.row_map.items())),
             )
         )
 
     def __leq__(self, other: "Parameter") -> int:
-        comparable_self = (
-            self.ghost,
-            frozenset(self.col_map.items()),
-            frozenset(self.row_map.items()),
-        )
-        comparable_other = (
-            other.ghost,
-            frozenset(other.col_map.items()),
-            frozenset(other.row_map.items()),
-        )
-        return comparable_self < comparable_other or comparable_self == comparable_other
+        return (self.ghost, self.map) <= (other.ghost, other.map)
 
     def __lt__(self, other: "Parameter") -> bool:
-        return (
-            self.ghost,
-            frozenset(self.col_map.items()),
-            frozenset(self.row_map.items()),
-        ) < (
-            other.ghost,
-            frozenset(other.col_map.items()),
-            frozenset(other.row_map.items()),
-        )
+        return (self.ghost, self.map) < (other.ghost, other.map)
 
     def __str__(self) -> str:
         return str(self.map) + "\n" + str(self.ghost)

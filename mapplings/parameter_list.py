@@ -2,8 +2,6 @@
 
 from typing import (
     Iterator,
-    Tuple,
-    Set,
     Callable,
     TypeVar,
     TypeVarTuple,
@@ -13,7 +11,7 @@ from itertools import chain
 from .parameter import Parameter
 
 
-Cell = Tuple[int, int]
+Cell = tuple[int, int]
 
 FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
@@ -47,14 +45,11 @@ class ParameterList(frozenset[Parameter]):
         for param in self:
             yield temp_func(param)
 
-    def combined_image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
+    def combined_image_rows_and_cols(self) -> tuple[set[int], set[int]]:
         """Gives all base tiling rows and cols to which a parameter in the list maps"""
-        col_images, row_images = set[int](), set[int]()
-        for col_image, row_image in self.apply_to_all(Parameter.image_rows_and_cols):
-            col_images.update(col_image)
-            row_images.update(row_image)
-        return col_images, row_images
+        image_cols, image_rows = map(set[int], zip(*self.combined_image_cells()))
+        return image_cols, image_rows
 
-    def combined_image_cells(self) -> Set[Cell]:
+    def combined_image_cells(self) -> set[Cell]:
         """Gives all base cells to which a parameter in the list maps"""
         return set(chain(*self.apply_to_all(Parameter.image_cells)))
