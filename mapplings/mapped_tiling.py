@@ -2,7 +2,6 @@
 
 from typing import (
     Iterable,
-    Tuple,
     List,
     DefaultDict,
     Iterator,
@@ -19,8 +18,8 @@ from .parameter import Parameter
 from .parameter_list import ParameterList
 
 
-Objects = DefaultDict[Tuple[int, ...], List[GriddedCayleyPerm]]
-Cell = Tuple[int, int]
+Objects = DefaultDict[tuple[int, ...], List[GriddedCayleyPerm]]
+Cell = tuple[int, int]
 
 FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
@@ -83,7 +82,7 @@ class MappedTiling(CombinatorialClass):
         if not len_one_cont_params:
             return False
         if any(
-            contain_list[0] == avoiding_parameter
+            avoiding_parameter in contain_list
             for contain_list in len_one_cont_params
             for avoiding_parameter in self.avoiding_parameters
         ):
@@ -124,7 +123,7 @@ class MappedTiling(CombinatorialClass):
                 objects[param].append(gcp)
         return objects
 
-    def get_parameters(self, obj: GriddedCayleyPerm) -> Tuple[int, ...]:
+    def get_parameters(self, obj: GriddedCayleyPerm) -> tuple[int, ...]:
         """Parameters are not what you think!!! This is specific to
         combinatorical class parameters"""
         return tuple(

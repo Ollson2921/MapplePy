@@ -1,14 +1,13 @@
 """Module with the parameter class."""
 
-from typing import Iterator, Tuple, Set, Iterable
+from typing import Iterator, Iterable
 from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.factors import Factors
 
-from .row_col_map import RowColMap
-
-Cell = Tuple[int, int]
+Cell = tuple[int, int]
 
 
 class Parameter:
@@ -24,13 +23,9 @@ class Parameter:
         self.requirements = ghost.requirements
         self.dimensions = ghost.dimensions
 
-    def image_rows_and_cols(self) -> Tuple[Set[int], Set[int]]:
-        """Gives the indices for the rows and cols to which the parameter maps"""
-        return set(self.col_map.values()), set(self.row_map.values())
-
-    def image_cells(self) -> Set[Cell]:
+    def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
-        return set(product(*self.image_rows_and_cols()))
+        return self.map.image_cells
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
@@ -127,7 +122,7 @@ class Parameter:
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""
         factor_cells = Factors(self.ghost).find_factors_as_cells()
-        find_images = self.map.images_of_rows_and_cols
+        find_images = self.map.image_rows_and_cols
         factor_image_rows_and_cols = list(
             (find_images(*zip(*factor)) for factor in factor_cells)
         )
@@ -171,16 +166,22 @@ class Parameter:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return self.ghost == other.ghost and self.map == other.map
+        return (self.ghost, self.map) == (other.ghost, other.map)
 
     def __hash__(self) -> int:
-        return hash((self.ghost, self.map))
+        return hash(
+            (
+                self.ghost,
+                tuple(sorted(self.col_map.items())),
+                tuple(sorted(self.row_map.items())),
+            )
+        )
 
     def __leq__(self, other: "Parameter") -> int:
-        return self.ghost < other.ghost or self.ghost == other.ghost
+        return (self.ghost, self.map) <= (other.ghost, other.map)
 
     def __lt__(self, other: "Parameter") -> bool:
-        return self.ghost < other.ghost
+        return (self.ghost, self.map) < (other.ghost, other.map)
 
     def __str__(self) -> str:
         return str(self.map) + "\n" + str(self.ghost)
