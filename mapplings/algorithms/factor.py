@@ -3,9 +3,7 @@
 from typing import Iterable
 from gridded_cayley_permutations.factors import Factors
 
-from .mapped_tiling import MappedTiling
-from .parameter_list import ParameterList
-from .cleaner import MTCleaner
+from mapplings import MappedTiling, ParameterList, MTCleaner
 
 
 Cell = tuple[int, int]
