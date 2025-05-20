@@ -1,7 +1,6 @@
 """Contains the Factor class"""
 
 from typing import Iterable
-from functools import partial
 from gridded_cayley_permutations.factors import Factors
 
 from .mapped_tiling import MappedTiling
@@ -35,10 +34,10 @@ class Factor:
             )
             | set(
                 param_list.combined_image_cells()
-                for param_list in self.mappling.containing_parameters
+                for param_list in self.mappling.enumerating_parameters
             )
         )
-        return Factor.combine_cells_groups(list(base_factors | parameter_regions))
+        return Factor.combine_cell_groups(list(base_factors | parameter_regions))
 
     def make_factors(
         self, factor_cells: tuple[tuple[Cell, ...], ...]
@@ -46,16 +45,19 @@ class Factor:
         """Creates a new mappling for each factor"""
         for factor in factor_cells:
             _factor = set(factor)
-            restrict = partial(Factor.restrict_param_list, _factor)
 
-            new_avoiders = restrict(self.mappling.avoiding_parameters)
+            new_avoiders = ParameterList(
+                avoider
+                for avoider in self.mappling.avoiding_parameters
+                if avoider.image_cells() & _factor
+            )
             new_containers = [
-                restrict(c_list)
+                c_list
                 for c_list in self.mappling.containing_parameters
                 if c_list.combined_image_cells() & _factor
             ]
             new_enumerators = [
-                restrict(e_list)
+                e_list
                 for e_list in self.mappling.enumerating_parameters
                 if e_list.combined_image_cells() & _factor
             ]
@@ -68,25 +70,16 @@ class Factor:
             yield MTCleaner.remove_empty_rows_and_cols(new_mappling)
 
     @staticmethod
-    def combine_cells_groups(
+    def combine_cell_groups(
         cell_groups: list[set[Cell]],
     ) -> tuple[tuple[Cell, ...], ...]:
         """Joins sets of cells that have a shared intersection"""
         n = len(cell_groups)
-        new_cell_groups = cell_groups
+        new_cell_groups = list(map(frozenset, cell_groups))
         for i in range(n):
             for j in range(n):
-                if cell_groups[i] & cell_groups[j]:
-                    combined = cell_groups[i] | cell_groups[j]
+                if new_cell_groups[i] & new_cell_groups[j]:
+                    combined = new_cell_groups[i] | new_cell_groups[j]
                     new_cell_groups[i] = combined
                     new_cell_groups[j] = combined
-        return tuple(map(tuple, new_cell_groups))
-
-    @staticmethod
-    def restrict_param_list(
-        cells: set[Cell], param_list: ParameterList
-    ) -> ParameterList:
-        """Removes params from param list if their image region doesn't intersect cells"""
-        return ParameterList(
-            param for param in param_list if param.image_cells() & cells
-        )
+        return tuple(map(tuple, set(new_cell_groups)))
