@@ -53,3 +53,13 @@ class ParameterList(frozenset[Parameter]):
     def combined_image_cells(self) -> set[Cell]:
         """Gives all base cells to which a parameter in the list maps"""
         return set(chain(*self.apply_to_all(Parameter.image_cells)))
+
+    def __le__(self, other: object):
+        if isinstance(other, ParameterList):
+            return tuple(sorted(self)) <= tuple(sorted(other))
+        return NotImplemented
+
+    def __lt__(self, other: object):
+        if isinstance(other, ParameterList):
+            return tuple(sorted(self)) < tuple(sorted(other))
+        return NotImplemented
