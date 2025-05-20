@@ -394,7 +394,9 @@ class MTCleaner(Cleaner[MappedTiling]):
     def _find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
         """Returns the intersection of the factors of the container list"""
         if len(container_list) == 1:
-            return [ParameterList([factor]) for factor in tuple(container_list)[0].factor()]
+            return [
+                ParameterList([factor]) for factor in tuple(container_list)[0].factor()
+            ]
         all_factors = tuple(map(set, container_list.apply_to_all(Parameter.factor)))
         intersection = all_factors[0]
         for factors in all_factors:
