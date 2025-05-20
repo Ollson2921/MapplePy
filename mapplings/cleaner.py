@@ -4,9 +4,9 @@ from typing import TypeVar, Callable, Generic, Iterable
 from itertools import product, chain
 
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
+from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
 
-from .row_col_map import RowColMap
 from .parameter import Parameter
 from .parameter_list import ParameterList
 from .mapped_tiling import MappedTiling
@@ -394,7 +394,7 @@ class MTCleaner(Cleaner[MappedTiling]):
     def _find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
         """Returns the intersection of the factors of the container list"""
         if len(container_list) == 1:
-            return [ParameterList([factor]) for factor in container_list[0].factor()]
+            return [ParameterList([factor]) for factor in tuple(container_list)[0].factor()]
         all_factors = tuple(map(set, container_list.apply_to_all(Parameter.factor)))
         intersection = all_factors[0]
         for factors in all_factors:
@@ -407,5 +407,5 @@ class MTCleaner(Cleaner[MappedTiling]):
         new_param_list = ParameterList([])
         for param in container_list:
             keep_cells = param.map.preimage_of_cells(param.image_cells() - image_cells)
-            new_param_list.append(param.sub_parameter(keep_cells))
+            new_param_list.add(param.sub_parameter(keep_cells))
         return [new_param_list] + [ParameterList([factor]) for factor in intersection]
