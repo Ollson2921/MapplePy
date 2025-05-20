@@ -1,6 +1,7 @@
 """Contains the Factor class"""
 
 from typing import Iterable
+from itertools import chain
 from gridded_cayley_permutations.factors import Factors
 
 from mapplings import MappedTiling, ParameterList, MTCleaner
@@ -22,20 +23,24 @@ class Factor:
     def find_factor_cells(self) -> tuple[tuple[Cell, ...], ...]:
         """Returns the cells for each factor as a tuple"""
         base_factors = set(
-            map(set, Factors(self.mappling.tiling).find_factors_as_cells())
+            map(frozenset, Factors(self.mappling.tiling).find_factors_as_cells())
         )
-        parameter_regions = set(
-            set(param.image_cells() for param in self.mappling.avoiding_parameters)
-            | set(
-                param_list.combined_image_cells()
-                for param_list in self.mappling.containing_parameters
-            )
-            | set(
-                param_list.combined_image_cells()
-                for param_list in self.mappling.enumerating_parameters
-            )
+        avoider_regions = set(
+            frozenset(param.image_cells())
+            for param in self.mappling.avoiding_parameters
         )
-        return Factor.combine_cell_groups(list(base_factors | parameter_regions))
+        container_regions = set(
+            frozenset(param_list.combined_image_cells())
+            for param_list in self.mappling.containing_parameters
+        )
+        enumerator_regions = set(
+            frozenset(param_list.combined_image_cells())
+            for param_list in self.mappling.enumerating_parameters
+        )
+        all_regions = set(
+            chain(base_factors, avoider_regions, container_regions, enumerator_regions)
+        )
+        return Factor.combine_cell_groups(list(all_regions))
 
     def make_factors(
         self, factor_cells: tuple[tuple[Cell, ...], ...]
@@ -69,11 +74,11 @@ class Factor:
 
     @staticmethod
     def combine_cell_groups(
-        cell_groups: list[set[Cell]],
+        cell_groups: list[frozenset[Cell]],
     ) -> tuple[tuple[Cell, ...], ...]:
         """Joins sets of cells that have a shared intersection"""
         n = len(cell_groups)
-        new_cell_groups = list(map(frozenset, cell_groups))
+        new_cell_groups = cell_groups
         for i in range(n):
             for j in range(n):
                 if new_cell_groups[i] & new_cell_groups[j]:
