@@ -418,6 +418,8 @@ class MTCleaner(Cleaner[MappedTiling]):
         base = mappling.tiling
         new_containers = []
         for c_list in mappling.containing_parameters:
+            if not c_list:
+                continue
             new_c_list = c_list.remove_contradictions(base)
             if not new_c_list:
                 return MappedTiling.empty_mappling()
@@ -458,10 +460,20 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(9, update_register=False)
-    def reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
-        """Removes any parameter implied by another"""
-        raise NotImplementedError
+    @reg(9)
+    def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
+        """Removes any parameter implied by another with a basic check"""
+        new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
+        new_containers = [
+            c_list.simple_remove_redundant(True)
+            for c_list in mappling.containing_parameters
+        ]
+        return MappedTiling(
+            mappling.tiling,
+            new_avoiders,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
 
     @staticmethod
     @reg(3)
@@ -477,12 +489,6 @@ class MTCleaner(Cleaner[MappedTiling]):
         return tiling.add_obstructions(
             param.map.map_gridded_cperms(param.obstructions)
         ).add_requirements(param.map.map_requirements(param.requirements))
-
-    @classmethod
-    def _insertion_cleaner(cls):
-        return cls(
-            (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps)
-        )
 
     @staticmethod
     def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:

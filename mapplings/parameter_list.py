@@ -7,7 +7,7 @@ from typing import (
     TypeVarTuple,
     Union,
 )
-from itertools import chain
+from itertools import chain, combinations
 
 from gridded_cayley_permutations import Tiling
 
@@ -56,10 +56,34 @@ class ParameterList(frozenset[Parameter]):
     def combined_image_cells(self) -> set[Cell]:
         """Gives all base cells to which a parameter in the list maps"""
         return set(chain(*self.apply_to_all(Parameter.image_cells)))
-    
-    def remove_contradictions(self, tiling : Tiling) -> "ParameterList":
+
+    def remove_contradictions(self, tiling: Tiling) -> "ParameterList":
         """Removes any contradictory ghosts from the parameter list."""
-        return ParameterList(param for param in self if not param.is_contradictory(tiling))
+        return ParameterList(
+            param for param in self if not param.is_contradictory(tiling)
+        )
+
+    def remove_empty(self) -> "ParameterList":
+        """Removes parameters with empty ghost"""
+        return ParameterList(param for param in self if not param.ghost.is_empty())
+
+    def simple_remove_redundant(self, is_c_list: bool = False) -> "ParameterList":
+        """Removes any parameter implied by another through a basic check"""
+        exclude = set[Parameter]()
+        for param0, param1 in combinations(self, 2):
+            if not {param0, param1} & exclude:
+                image_cells = param0.image_cells()
+                if image_cells.issubset(param1.image_cells()):
+                    temp_param = param1.sub_parameter(
+                        param1.map.preimage_of_cells(image_cells)
+                    )
+                    if param0.map == temp_param.map:
+                        if param0.ghost.is_subset(temp_param.ghost):
+                            if is_c_list:
+                                exclude.add(param0)
+                            else:
+                                exclude.add(param1)
+        return ParameterList(param for param in self if param not in exclude)
 
     def __le__(self, other: object):
         if isinstance(other, ParameterList):
