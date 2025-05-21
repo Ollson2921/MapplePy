@@ -8,6 +8,9 @@ from typing import (
     Union,
 )
 from itertools import chain
+
+from gridded_cayley_permutations import Tiling
+
 from .parameter import Parameter
 
 
@@ -53,6 +56,10 @@ class ParameterList(frozenset[Parameter]):
     def combined_image_cells(self) -> set[Cell]:
         """Gives all base cells to which a parameter in the list maps"""
         return set(chain(*self.apply_to_all(Parameter.image_cells)))
+    
+    def remove_contradictions(self, tiling : Tiling) -> "ParameterList":
+        """Removes any contradictory ghosts from the parameter list."""
+        return ParameterList(param for param in self if not param.is_contradictory(tiling))
 
     def __le__(self, other: object):
         if isinstance(other, ParameterList):
