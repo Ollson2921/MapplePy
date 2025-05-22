@@ -1,4 +1,4 @@
-from mapplings import MappedTiling
+from mapplings import MappedTiling, ParameterList
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
 

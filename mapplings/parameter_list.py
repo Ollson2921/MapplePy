@@ -86,6 +86,9 @@ class ParameterList(frozenset[Parameter]):
                     exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
 
+    def __repr__(self):
+        return self.__class__.__name__ + f"({frozenset(self)})"
+
     def __le__(self, other: object):
         if isinstance(other, ParameterList):
             return tuple(sorted(self)) <= tuple(sorted(other))

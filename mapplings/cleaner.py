@@ -80,8 +80,12 @@ class Cleaner(Generic[T]):
         return self.__class__.list_cleanup(cleaning_object, self.todo_list)
 
     def __repr__(self):
-        return self.__class__.__name__ + repr(
-            tuple(func.__name__ for func in self.todo_list)
+        return self.__class__.__name__ + f"({self.todo_list})"
+
+    def __str__(self):
+        return (
+            self.__class__.__name__
+            + f"({dict((self.reg.sorting_key(func) , func.__name__) for func in self.todo_list)})"
         )
 
     @classmethod
