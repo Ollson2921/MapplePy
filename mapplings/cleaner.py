@@ -1,7 +1,7 @@
 """Module with the cleaner classes"""
 
 from typing import TypeVar, Callable, Generic, Iterable
-from itertools import product, chain
+from itertools import chain
 from functools import partial
 
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling

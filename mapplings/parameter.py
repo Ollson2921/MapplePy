@@ -173,7 +173,7 @@ class Parameter:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"({repr(self.ghost)}, {repr(self.map)})"
-    
+
     def __bool__(self) -> bool:
         return not bool(self.ghost)
 

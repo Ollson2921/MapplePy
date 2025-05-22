@@ -71,18 +71,19 @@ class ParameterList(frozenset[Parameter]):
         """Removes any parameter implied by another through a basic check"""
         exclude = set[Parameter]()
         for param0, param1 in combinations(self, 2):
-            if not {param0, param1} & exclude:
-                image_cells = param0.image_cells()
-                if image_cells.issubset(param1.image_cells()):
-                    temp_param = param1.sub_parameter(
-                        param1.map.preimage_of_cells(image_cells)
-                    )
-                    if param0.map == temp_param.map:
-                        if param0.ghost.is_subset(temp_param.ghost):
-                            if is_c_list:
-                                exclude.add(param0)
-                            else:
-                                exclude.add(param1)
+            if {param0, param1} & exclude:
+                continue
+            image_cells = param0.image_cells()
+            if not image_cells.issubset(param1.image_cells()):
+                continue
+            temp_param = param1.sub_parameter(param1.map.preimage_of_cells(image_cells))
+            if param0.map != temp_param.map:
+                continue
+            if param0.ghost.is_subset(temp_param.ghost):
+                if is_c_list:
+                    exclude.add(param0)
+                else:
+                    exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
 
     def __le__(self, other: object):

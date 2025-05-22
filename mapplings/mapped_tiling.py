@@ -207,7 +207,7 @@ class MappedTiling(CombinatorialClass):
                 self.enumerating_parameters,
             )
         )
-        
+
     def __bool__(self) -> bool:
         return not bool(self.tiling)
 
