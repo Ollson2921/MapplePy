@@ -1,5 +1,6 @@
 """Contains the Factor class"""
 
+from typing import Iterator
 from itertools import chain, combinations
 from gridded_cayley_permutations.factors import Factors
 
@@ -35,17 +36,17 @@ class Factor(Factors):
     def combine_cells_from_parameters(self) -> None:
         """Uses the parameter regions to combine cells."""
         all_regions = self.get_parameter_regions()
-        for cell1, cell2 in combinations(self.cells, 2):
-            for region in all_regions:
-                if cell1 in region and cell2 in region:
-                    self.combine_cells(cell1, cell2)
-                    break
+        region_combinations = chain(
+            *(set(combinations(region, 2)) for region in all_regions)
+        )
+        for cell1, cell2 in region_combinations:
+            self.combine_cells(cell1, cell2)
 
     def find_factors_as_cells(self):
         self.combine_cells_from_parameters()
         return super().find_factors_as_cells()
 
-    def find_factors(self):
+    def _find_factors(self) -> Iterator[MappedTiling]:
         """Creates a new mappling for each factor"""
         for factor in self.find_factors_as_cells():
             _factor = set(factor)
