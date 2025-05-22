@@ -173,11 +173,7 @@ class ParamCleaner(Cleaner[Parameter]):
     @reg(2, update_register=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
-        points = param.ghost.point_cells()
-        new_param = param
-        for cell in points:
-            new_param = ParamCleaner._unplace_point(new_param, cell)
-        return new_param
+        raise NotImplementedError
 
     # Internal Methods
 
@@ -208,65 +204,6 @@ class ParamCleaner(Cleaner[Parameter]):
         new_maps[direction] = new_direction_map
         return Parameter(new_ghost, RowColMap(*new_maps))
 
-    @staticmethod
-    def _unplace_point(param: Parameter, cell: Cell) -> Parameter:
-        """Tries to unplace a point in cell"""
-        preimage_map = param.map.preimage_map()
-        if (
-            not cell[0] - 1 in preimage_map[param.col_map[cell[0]]]
-            or cell[0] + 1 in preimage_map[0][param.col_map[cell[0]]]
-        ):
-            return param
-        if (
-            not cell[1] - 1 in preimage_map[param.row_map[cell[1]]]
-            or cell[1] + 1 in preimage_map[1][param.row_map[cell[1]]]
-        ):
-            return param
-        if (
-            0 in cell
-            or param.dimensions[0] == cell[0]
-            or param.dimensions[1] == cell[1]
-        ):
-            return param
-        intersecting_list = ParamCleaner._find_unplaced_req_list(param, cell)
-        if not intersecting_list:
-            return param
-        new_reqs = tuple(
-            req_list for req_list in param.requirements if req_list != intersecting_list
-        )
-        new_ghost = Tiling(param.obstructions, new_reqs, param.dimensions)
-        new_ghost = new_ghost.delete_columns((cell[0],))
-        if not new_ghost.is_fusable(0, cell[0]):
-            return param
-        new_ghost = new_ghost.delete_rows((cell[1],))
-        if not new_ghost.is_fusable(1, cell[1]):
-            return param
-        raise NotImplementedError
-
-    @staticmethod
-    def _find_unplaced_req_list(
-        param: Parameter, cell: Cell
-    ) -> Iterable[GriddedCayleyPerm]:
-        """Identifies a valid req list that can be merged with the point to be unplaced"""
-        check_cells = set(
-            product((cell[0] - 1, cell[0] + 1), (cell[1] - 1, cell[1], cell[1] + 1))
-        )
-        list_found: tuple = tuple()
-        for req_list in param.requirements:
-            reqs_intersect = (
-                bool(set(req.positions).intersection(check_cells)) for req in req_list
-            )
-            if any(reqs_intersect):
-                if all(reqs_intersect):
-                    if not list_found:
-                        list_found = req_list
-                        continue
-                    return tuple()
-                return tuple()
-        if not list_found:
-            return (GriddedCayleyPerm(CayleyPermutation((0,)), (cell,)),)
-        return list_found
-
 
 class MTCleaner(Cleaner[MappedTiling]):
     """The cleaner for mapped tilings.
@@ -285,14 +222,14 @@ class MTCleaner(Cleaner[MappedTiling]):
         To apply to a mappling, can be run as MTCleaner.make_param_cleaner(param_cleaner)(mappling)
         """
 
-        @MTCleaner.reg(4, update_register=False)
+        @MTCleaner.reg(5, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             return mappling.apply_to_all_parameters(param_cleaner)
 
         return _clean_parameters
 
     @staticmethod
-    @reg(4)
+    @reg(5)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
         return MTCleaner.clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
@@ -315,7 +252,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling
 
     @staticmethod
-    @reg(7)
+    @reg(8)
     def insert_containers(mappling: MappedTiling) -> MappedTiling:
         """For parameters with empty tilings, if it is the only
         one in a list then the mappling is empty, otherwise remove the empty
@@ -345,7 +282,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(6)
+    @reg(7)
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
         new_containers = list(
@@ -368,7 +305,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(5)
+    @reg(6)
     def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         new_avoiders = []
@@ -402,7 +339,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(8, update_register=False)
+    @reg(9, update_register=False)
     def backmap_points(mappling: MappedTiling) -> MappedTiling:
         """Backmaps point obstructions to all parameters"""
         point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
@@ -460,7 +397,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(9)
+    @reg(10)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
@@ -481,6 +418,28 @@ class MTCleaner(Cleaner[MappedTiling]):
         """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
         param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
         return mappling.apply_to_all_parameters(param_reducer)
+
+    @staticmethod
+    @reg(4)
+    def reap_blank(mappling: MappedTiling) -> MappedTiling:
+        """Kills mappling if any avoiders are blank,
+        and removes any c_lists with blank containers"""
+        if any(
+            not (param.ghost.not_blank_cells())
+            for param in mappling.avoiding_parameters
+        ):
+            return MappedTiling.empty_mappling()
+        new_containeres = []
+        for c_list in mappling.containing_parameters:
+            if any(not (param.ghost.not_blank_cells()) for param in c_list):
+                continue
+            new_containeres.append(c_list)
+        return MappedTiling(
+            mappling.tiling,
+            mappling.avoiding_parameters,
+            new_containeres,
+            mappling.enumerating_parameters,
+        )
 
     # Internal Methods
 
