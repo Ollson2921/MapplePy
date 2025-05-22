@@ -35,18 +35,15 @@ class Factor(Factors):
 
     def combine_cells_from_parameters(self) -> None:
         """Uses the parameter regions to combine cells."""
-        all_regions = self.get_parameter_regions()
-        region_combinations = chain(
-            *(set(combinations(region, 2)) for region in all_regions)
-        )
-        for cell1, cell2 in region_combinations:
-            self.combine_cells(cell1, cell2)
+        for region in self.get_parameter_regions():
+            for cell1, cell2 in combinations(region, 2):
+                self.combine_cells(cell1, cell2)
 
     def find_factors_as_cells(self):
         self.combine_cells_from_parameters()
         return super().find_factors_as_cells()
 
-    def _find_factors(self) -> Iterator[MappedTiling]:
+    def temp_find_factors(self) -> Iterator[MappedTiling]:
         """Creates a new mappling for each factor"""
         for factor in self.find_factors_as_cells():
             _factor = set(factor)
