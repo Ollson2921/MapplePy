@@ -105,7 +105,6 @@ class Cleaner(Generic[T]):
         for func in cleaning_list:
             new_cleaning_object = func(new_cleaning_object)
             if not bool(new_cleaning_object):
-                print(func.__name__)
                 return new_cleaning_object
         return new_cleaning_object
 
@@ -282,7 +281,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             new_tiling,
             mappling.avoiding_parameters,
             new_containers,
-            mappling.containing_parameters,
+            mappling.enumerating_parameters,
         )
 
     @staticmethod
@@ -477,7 +476,7 @@ class MTCleaner(Cleaner[MappedTiling]):
                 )
             ]
             if new_req_list:
-                new_reqs.append(tuple(req_list))
+                new_reqs.append(tuple(new_req_list))
         new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
         return Parameter(new_ghost, param.map)
 
