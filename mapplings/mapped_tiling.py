@@ -163,7 +163,7 @@ class MappedTiling(CombinatorialClass):
 
     # other stuff
 
-    def apply_to_all_parameters(
+    def apply_to_containers_and_avoiders(
         self,
         func: Callable[[Parameter, *ArgsType], Parameter],
         additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
@@ -178,11 +178,29 @@ class MappedTiling(CombinatorialClass):
             ParameterList(c_list.apply_to_all(*param_method))
             for c_list in self.containing_parameters
         )
+        return MappedTiling(
+            self.tiling, new_avoiders, new_containers, self.enumerating_parameters
+        )
+
+    def apply_to_all_parameters(
+        self,
+        func: Callable[[Parameter, *ArgsType], Parameter],
+        additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
+    ) -> "MappedTiling":
+        """Applies func to all parameters with additional arguments.
+        Parameter must be the first argument of the function"""
+        param_method = (func, additional_arguments)
+        new_mappling = self.apply_to_all_parameters(*param_method)
         new_enumerators = (
             ParameterList(e_list.apply_to_all(*param_method))
             for e_list in self.enumerating_parameters
         )
-        return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
+        return MappedTiling(
+            self.tiling,
+            new_mappling.avoiding_parameters,
+            new_mappling.containing_parameters,
+            new_enumerators,
+        )
 
     # dunder methods
 

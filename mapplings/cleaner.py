@@ -21,48 +21,78 @@ Cell = tuple[int, int]
 
 class Register(Generic[T]):
     """Used within cleaners to register core functions.
-    Can be initialized with a custom string
-    to determine the name of the attribute added to functions
+    Initialize with a string to determine the name of the index attribute added to functions.
+    Initialize with flag_name = bool to make flag_name an attribute of all registered functions.
     """
 
-    def __init__(self, attr_name: str = "index"):
+    def __init__(self, attr_name: str = "index", **additional_flags: bool):
         self.registered_functions = set[Callable[[T], T]]()
         self.map = dict[int, Callable[[T], T]]()
+        self.flags = dict(additional_flags)
         self.attr_name = attr_name
 
     def __call__(
-        self, idx: int, update_register: bool = True
+        self, idx: int, update_register: bool = True, **update_flags: bool
     ) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
         """Used as the decorator to register functions. Setting update_register to False"""
 
         def register_function(func: Callable[[T], T]) -> Callable[[T], T]:
             if update_register:
-                assert idx not in self.map.keys(), (
-                    f"{self.attr_name} {idx} is already assigned to {self[idx].__name__} "
-                    + f"and cannot be assigned to {func.__name__}"
-                )
-                self.registered_functions.add(func)
-                self.map[idx] = func
+                self.add_to_register(func, idx)
             setattr(func, self.attr_name, idx)
 
-            return func
+            return self.adjust_flags(func, update_flags)
 
         return register_function
+
+    def add_to_register(self, func: Callable[[T], T], idx: int) -> None:
+        """Used to add functions to the register"""
+        assert idx not in self.map.keys(), (
+            f"{self.attr_name} {idx} is already assigned to {self[idx].__qualname__} "
+            + f"and cannot be assigned to {func.__qualname__}"
+        )
+        self.registered_functions.add(func)
+        self.map[idx] = func
+
+    def adjust_flags(self, func: Callable[[T], T], flag_updates: dict[str, bool]):
+        """Adds all registered flags as attributes to func.
+        Default flag values are overwritten by flag updates."""
+        known_flags = tuple(self.flags.keys())
+        adjusted_dict = self.flags.copy()
+        for key, value in flag_updates.items():
+            assert key in known_flags, (
+                f"Unknown Flag : {key} \n."
+                + f"{func.__qualname__} can be registered with the following flags : {known_flags}"
+            )
+            adjusted_dict[key] = value
+        func.__dict__.update(adjusted_dict)
+        return func
 
     def sorting_key(self, func: Callable[[T], T]) -> int:
         """Used to sort fuctions in cleaners"""
         assert hasattr(
             func, self.attr_name
-        ), f"{func.__name__} has no assigned {self.attr_name}"
+        ), f"{func.__qualname__} has no assigned {self.attr_name}"
         return getattr(func, self.attr_name)
 
     def __getitem__(self, key: int) -> Callable[[T], T]:
         return self.map[key]
 
     def __repr__(self):
-        return f"{self.attr_name} : " + repr(
-            {idx: self[idx].__name__ for idx in sorted(self.map)}
+        return (
+            f"{self.__class__.__name__}(attr_name={self.attr_name},"
+            + f"{",".join({f"{key}={value}" for key, value in self.flags.items()})})"
         )
+
+    def __str__(self):
+        functions = sorted(self.registered_functions, key=self.sorting_key)
+        output = f"{functions[0].__qualname__.split('.')[0]} Register:"
+        for func in functions:
+            output += f"\n  {func.__name__}"
+            for key, value in func.__dict__.items():
+                output += f"\n    {key}={value}"
+            output += "\n"
+        return output
 
 
 class Cleaner(Generic[T]):
@@ -87,6 +117,9 @@ class Cleaner(Generic[T]):
             self.__class__.__name__
             + f"({dict((self.reg.sorting_key(func) , func.__name__) for func in self.todo_list)})"
         )
+
+    def __iter__(self):
+        return iter(sorted(self.todo_list, key=self.reg.sorting_key))
 
     @classmethod
     def list_cleanup(
@@ -136,11 +169,11 @@ class ParamCleaner(Cleaner[Parameter]):
     core functions need to be registered with @reg(index)
     where index determines cleaning order"""
 
-    reg = Register[Parameter]("param_register")
+    reg = Register[Parameter]("param_register", exclude_enumerators=False)
     # Final Methods
 
     @staticmethod
-    @reg(3)
+    @reg(3, exclude_enumerators=True)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         return ParamCleaner._fuse_valid_rows_or_cols(
@@ -167,13 +200,13 @@ class ParamCleaner(Cleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(0)
+    @reg(0, exclude_enumerators=True)
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
         return param.delete_rows_and_columns(*param.ghost.find_blank_columns_and_rows())
 
     @staticmethod
-    @reg(2, update_register=False)
+    @reg(2, update_register=False, exclude_enumerators=True)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
         raise NotImplementedError
@@ -227,7 +260,13 @@ class MTCleaner(Cleaner[MappedTiling]):
 
         @MTCleaner.reg(5, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
-            return mappling.apply_to_all_parameters(param_cleaner)
+            new_mappling = mappling
+            for func in param_cleaner:
+                if getattr(func, "exclude_enumerators"):
+                    new_mappling = new_mappling.apply_to_containers_and_avoiders(func)
+                else:
+                    new_mappling = new_mappling.apply_to_all_parameters(func)
+            return new_mappling
 
         return _clean_parameters
 
