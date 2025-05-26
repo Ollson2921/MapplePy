@@ -32,16 +32,18 @@ class Register(Generic[T]):
         self.attr_name = attr_name
 
     def __call__(
-        self, idx: int, update_register: bool = True, **update_flags: bool
+        self, idx: int, update_register: bool = True, **flag_updates: bool
     ) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
-        """Used as the decorator to register functions. Setting update_register to False"""
+        """Used as the decorator to register functions.
+        Setting update_register to False doesn't add the function to registered functions
+        Flag updates will overwrite the register's default flag states."""
 
         def register_function(func: Callable[[T], T]) -> Callable[[T], T]:
             if update_register:
                 self.add_to_register(func, idx)
             setattr(func, self.attr_name, idx)
 
-            return self.adjust_flags(func, update_flags)
+            return self.set_flags(func, flag_updates)
 
         return register_function
 
@@ -54,7 +56,7 @@ class Register(Generic[T]):
         self.registered_functions.add(func)
         self.map[idx] = func
 
-    def adjust_flags(self, func: Callable[[T], T], flag_updates: dict[str, bool]):
+    def set_flags(self, func: Callable[[T], T], flag_updates: dict[str, bool]):
         """Adds all registered flags as attributes to func.
         Default flag values are overwritten by flag updates."""
         known_flags = tuple(self.flags.keys())
@@ -79,15 +81,15 @@ class Register(Generic[T]):
         return self.map[key]
 
     def __repr__(self):
-        return (
-            f"{self.__class__.__name__}(attr_name={self.attr_name},"
-            + f"{",".join({f"{key}={value}" for key, value in self.flags.items()})})"
-        )
+        output = f"{self.__class__.__name__}(attr_name={self.attr_name}"
+        for key, value in self.flags.items():
+            output += f", {key}={value}"
+        return output + ")"
 
     def __str__(self):
-        functions = sorted(self.registered_functions, key=self.sorting_key)
-        output = f"{functions[0].__qualname__.split('.')[0]} Register:"
-        for func in functions:
+        funcs = sorted(self.registered_functions, key=self.sorting_key)
+        output = f"{funcs[0].__qualname__.split('.')[0]} has registered the following functions:"
+        for func in funcs:
             output += f"\n  {func.__name__}"
             for key, value in func.__dict__.items():
                 output += f"\n    {key}={value}"
