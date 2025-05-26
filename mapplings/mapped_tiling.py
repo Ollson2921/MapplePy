@@ -162,24 +162,14 @@ class MappedTiling(CombinatorialClass):
         )
 
     # other stuff
-
-    def apply_to_containers_and_avoiders(
+    def ace_parameters(
         self,
-        func: Callable[[Parameter, *ArgsType], Parameter],
-        additional_arguments: Union[tuple[*ArgsType], tuple] = tuple(),
-    ) -> "MappedTiling":
-        """Applies func to all parameters with additional arguments.
-        Parameter must be the first argument of the function"""
-        param_method = (func, additional_arguments)
-        new_avoiders = ParameterList(
-            self.avoiding_parameters.apply_to_all(*param_method)
-        )
-        new_containers = (
-            ParameterList(c_list.apply_to_all(*param_method))
-            for c_list in self.containing_parameters
-        )
-        return MappedTiling(
-            self.tiling, new_avoiders, new_containers, self.enumerating_parameters
+    ) -> tuple[ParameterList, Iterable[ParameterList], Iterable[ParameterList]]:
+        """Returns the mappling's avoiding, containing, and enumerating parameters as a tuple"""
+        return (
+            self.avoiding_parameters,
+            self.containing_parameters,
+            self.enumerating_parameters,
         )
 
     def apply_to_all_parameters(
@@ -189,18 +179,18 @@ class MappedTiling(CombinatorialClass):
     ) -> "MappedTiling":
         """Applies func to all parameters with additional arguments.
         Parameter must be the first argument of the function"""
-        param_method = (func, additional_arguments)
-        new_mappling = self.apply_to_all_parameters(*param_method)
-        new_enumerators = (
-            ParameterList(e_list.apply_to_all(*param_method))
+        new_avoiders = ParameterList(
+            self.avoiding_parameters.apply_to_all(func, additional_arguments)
+        )
+        new_containers = [
+            ParameterList(c_list.apply_to_all(func, additional_arguments))
+            for c_list in self.containing_parameters
+        ]
+        new_enumerators = [
+            ParameterList(e_list.apply_to_all(func, additional_arguments))
             for e_list in self.enumerating_parameters
-        )
-        return MappedTiling(
-            self.tiling,
-            new_mappling.avoiding_parameters,
-            new_mappling.containing_parameters,
-            new_enumerators,
-        )
+        ]
+        return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
 
     # dunder methods
 
