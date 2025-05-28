@@ -11,6 +11,10 @@ from ..mapped_tiling import MappedTiling, Parameter
 
 
 class LTRowColSeparationMT:
+    """
+    When separating, cells must be strictly above/below each other.
+    """
+
     def __init__(self, mapped_tiling: MappedTiling, or_equal=False):
         self.tiling = mapped_tiling.tiling
         self.avoiding_parameters = mapped_tiling.avoiding_parameters
