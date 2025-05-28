@@ -14,16 +14,17 @@ class LTRowColSeparationMT:
     When separating, cells must be strictly above/below each other.
     """
 
-    def __init__(self, mapped_tiling: MappedTiling, or_equal=False):
+    def __init__(self, mapped_tiling: MappedTiling):
         self.tiling = mapped_tiling.tiling
         self.avoiding_parameters = mapped_tiling.avoiding_parameters
         self.containing_parameters = mapped_tiling.containing_parameters
         self.enumeration_parameters = mapped_tiling.enumerating_parameters
-        if or_equal:
-            self.separation = LessThanOrEqualRowColSeparation(self.tiling)
-        else:
-            self.separation = LessThanRowColSeparation(self.tiling)
+        self.separation = self.separation_map()
         self.preimage_map = self.separation.row_col_map.preimage_map()
+
+    def separation_map(self):
+        """Returns the row/col separation map."""
+        return LessThanRowColSeparation(self.tiling)
 
     def base_extensions(self) -> tuple:
         """Returns how many new rows/cols are added to the new base tiling
@@ -174,3 +175,14 @@ class LTRowColSeparationMT:
         }
         for parameter in separation.row_col_separation():
             yield Parameter(parameter, RowColMap(new_col_map, new_row_map))
+
+
+class LTORERowColSeparationMT(LTRowColSeparationMT):
+    """
+    Allow cells to interleave in the top/bottom rows when
+    separating cells in a row.
+    """
+
+    def separation_map(self):
+        """Returns the row/col separation map."""
+        return LessThanOrEqualRowColSeparation(self.tiling)
