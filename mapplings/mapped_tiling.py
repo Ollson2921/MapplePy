@@ -33,11 +33,11 @@ class MappedTiling(CombinatorialClass):
     def __init__(
         self,
         tiling: Tiling,
-        avoiding_parameters: ParameterList,
+        avoiding_parameters: Iterable[Parameter],
         containing_parameters: Iterable[ParameterList],
         enumerating_parameters: Iterable[ParameterList],
     ):
-        self.avoiding_parameters = avoiding_parameters
+        self.avoiding_parameters = ParameterList(avoiding_parameters)
         self.containing_parameters = tuple(sorted(containing_parameters))
         self.enumerating_parameters = tuple(sorted(enumerating_parameters))
         self.tiling = tiling
@@ -66,7 +66,7 @@ class MappedTiling(CombinatorialClass):
             for c_list in self.containing_parameters
         )
 
-    def has_contradictory_parameters(self) -> bool:
+    def parameters_are_contradictory(self) -> bool:
         """
         Returns True if there is a contradiction between the avoiding and
         containing parameters - if a len 1 containing parameter list is the
@@ -88,6 +88,11 @@ class MappedTiling(CombinatorialClass):
         ):
             return True
         return False
+
+    @classmethod
+    def empty_mappling(cls) -> "MappedTiling":
+        """Returns the mappling with no parameters and base as the empty tiling"""
+        return MappedTiling(Tiling.empty_tiling(), [], [], [])
 
     # Combintatorial class stuff
 
@@ -138,7 +143,7 @@ class MappedTiling(CombinatorialClass):
         Returns True if the tiling is empty or there is a contradiction between
         containing and avoiding parameters.
         """
-        return self.tiling.is_empty() or self.has_contradictory_parameters()
+        return self.tiling.is_empty() or self.parameters_are_contradictory()
 
     @classmethod
     def from_dict(cls, d: dict) -> "MappedTiling":
@@ -202,6 +207,9 @@ class MappedTiling(CombinatorialClass):
                 self.enumerating_parameters,
             )
         )
+
+    def __bool__(self) -> bool:
+        return not bool(self.tiling)
 
     def __repr__(self) -> str:
         """The repr for the MappedTiling."""

@@ -5,6 +5,9 @@ from itertools import product
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
+from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
+    SimplifyObstructionsAndRequirements,
+)
 from gridded_cayley_permutations.factors import Factors
 
 Cell = tuple[int, int]
@@ -145,6 +148,14 @@ class Parameter:
         Is contradictory if any of the requirements in the ghost map to a gcp
         containing an obstruction in the tiling
         """
+        simplify = SimplifyObstructionsAndRequirements(
+            tiling.obstructions, tiling.requirements, tiling.dimensions
+        )
+        if any(
+            simplify.implied_by_requirements(self.map.map_gridded_cperm(ob))
+            for ob in self.obstructions
+        ):
+            return True
         for req_list in self.ghost.requirements:
             if all(
                 self.map.map_gridded_cperm(gcp).contains(tiling.obstructions)
@@ -162,6 +173,9 @@ class Parameter:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"({repr(self.ghost)}, {repr(self.map)})"
+
+    def __bool__(self) -> bool:
+        return not bool(self.ghost)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
