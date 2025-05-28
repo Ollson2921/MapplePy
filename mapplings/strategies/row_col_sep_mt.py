@@ -19,36 +19,53 @@ class LTRowColSeparationMT:
     def __init__(self, mapped_tiling: MappedTiling):
         self.mt = mapped_tiling
         self.separation = LessThanRowColSeparation(self.mt.tiling)
-        self.expansion_map = self.separation.row_col_map()
+        self.expansion_map = self.separation.row_col_map
         self.row_expansion, self.col_expansion = self.expansions(
             self.expansion_map.row_map
         ), self.expansions(self.expansion_map.col_map)
 
-    def expansions(self, rowcol_map: dict[int]) -> list[int]:
+        self.row_expansion, self.col_expansion = {0: 3, 1: 2}, {
+            0: 3,
+            1: 2,
+        }  # TODO: remove this!!
+
+    def expansions(self, rowcol_map: dict[int]) -> dict[int]:
         """Returns a list of multipliers for how much larger each row/column
         becomes in the map."""
-        expansion = []
+        expansion = {}
         for val in set(rowcol_map.values()):
-            expansion.append(sum(1 for v in rowcol_map.values() if v == val))
+            expansion[val] = sum(1 for v in rowcol_map.values() if v == val)
         return expansion
 
     def map_param(self, param: Parameter) -> Parameter:
         """Maps a parameter to a new parameter."""
         param_row_expansion = self.expansions(param.row_map)
         param_col_expansion = self.expansions(param.col_map)
-        new_param_row_expansion = [
-            param_row_expansion[i] * self.row_expansion[i]
-            for i in range(len(param_row_expansion))
-        ]  ## TODO: these might not line up! Only use part of self.row_expansion that
-        # maps to image region of param in bt. Maybe create them as dict so can keep
-        # track of where each multiplier comes from?
-        new_param_col_expansion = [
-            param_col_expansion[i] * self.col_expansion[i]
-            for i in range(len(param_col_expansion))
-        ]
-        row_partial_sum = list(accumulate(new_param_row_expansion))
-        col_partial_sum = list(accumulate(new_param_col_expansion))
+        new_row_expan = {
+            key: param_row_expansion[key] * self.row_expansion[key]
+            for key in param_row_expansion
+        }
+        new_col_expan = {
+            key: param_col_expansion[key] * self.col_expansion[key]
+            for key in param_col_expansion
+        }
+        row_partial_sum = list(accumulate(new_row_expan.values()))
+        col_partial_sum = list(accumulate(new_col_expan.values()))
+        new_row_map = self.new_row_col_map(row_partial_sum)
+        new_col_map = self.new_row_col_map(col_partial_sum)
+        new_map = RowColMap(new_row_map, new_col_map)
+
         ## Expand param based on these partial sums
+
+    def new_row_col_map(self, partial_sum: list[int]) -> dict[int, int]:
+        """Creates a new row/col map based on the partial sums."""
+        new_map = {}
+        last_index = 0
+        for idx, val in enumerate(partial_sum):
+            for value in range(last_index, val):
+                new_map[value] = idx
+            last_index = val
+        return new_map
 
     def separate(self) -> Iterator[MappedTiling]:
         """Returns MappedTilings with row and column separated."""
