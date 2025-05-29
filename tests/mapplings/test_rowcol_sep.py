@@ -1,4 +1,5 @@
-"""Testing row col separation for mapplings."""
+"""Testing row col separation for mapplings.
+TODO: should I make these ParameterLists?"""
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
