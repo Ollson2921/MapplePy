@@ -231,7 +231,7 @@ class ParamCleaner(Cleaner[Parameter]):
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         return ParamCleaner._fuse_valid_rows_or_cols(
-            ParamCleaner._fuse_valid_rows_or_cols(param, 0), 1
+            ParamCleaner._fuse_valid_rows_or_cols(param, True), False
         )
 
     @staticmethod
@@ -269,30 +269,30 @@ class ParamCleaner(Cleaner[Parameter]):
     # Internal Methods
 
     @staticmethod
-    def _fuse_valid_rows_or_cols(param: Parameter, direction: int) -> Parameter:
+    def _fuse_valid_rows_or_cols(param: Parameter, fuse_rows: bool) -> Parameter:
         """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
         direction = 0 for cols, directions = 1 for rows"""
         new_ghost = param.ghost
         new_maps = [param.col_map, param.row_map]
         old_idx, new_idx, extend = 0, 0, 1
-        while old_idx + extend < param.dimensions[direction]:
-            if new_maps[direction][old_idx] == new_maps[direction][old_idx + extend]:
-                if new_ghost.is_fusable(direction, new_idx):
-                    if direction == 0:
-                        new_ghost = new_ghost.delete_columns([new_idx])
-                    else:
+        while old_idx + extend < param.dimensions[fuse_rows]:
+            if new_maps[fuse_rows][old_idx] == new_maps[fuse_rows][old_idx + extend]:
+                if new_ghost.is_fusable(fuse_rows, new_idx):
+                    if fuse_rows:
                         new_ghost = new_ghost.delete_rows([new_idx])
-                    del new_maps[direction][old_idx + extend]
+                    else:
+                        new_ghost = new_ghost.delete_columns([new_idx])
+                    del new_maps[fuse_rows][old_idx + extend]
                     extend += 1
                     continue
             old_idx += extend
             new_idx += 1
             extend = 1
         new_direction_map = {
-            idx: new_maps[direction][value]
-            for idx, value in enumerate(new_maps[direction].keys())
+            idx: new_maps[fuse_rows][value]
+            for idx, value in enumerate(new_maps[fuse_rows].keys())
         }
-        new_maps[direction] = new_direction_map
+        new_maps[fuse_rows] = new_direction_map
         return Parameter(new_ghost, RowColMap(*new_maps))
 
 
