@@ -10,6 +10,9 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
     SimplifyObstructionsAndRequirements,
 )
+from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
+    SimplifyObstructionsAndRequirements,
+)
 from cayley_permutations import CayleyPermutation
 
 from .parameter import Parameter
@@ -144,6 +147,12 @@ class Cleaner(Generic[T]):
         return (
             self.__class__.__name__
             + f"({dict((self.reg.sorting_key(func) , func.__name__) for func in self.todo_list)})"
+        return self.__class__.__name__ + f"({self.todo_list})"
+
+    def __str__(self):
+        return (
+            self.__class__.__name__
+            + f"({dict((self.reg.sorting_key(func) , func.__name__) for func in self.todo_list)})"
         )
 
     def __iter__(self):
@@ -171,7 +180,9 @@ class Cleaner(Generic[T]):
         return Cleaner.unordered_cleanup(cleaning_object, cleaning_list)
 
     @classmethod
+    @classmethod
     def unordered_cleanup(
+        cls, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
         cls, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
     ) -> T:
         """Applies all functions in cleaning_list without reordering"""
@@ -229,16 +240,22 @@ class ParamCleaner(Cleaner[Parameter]):
         """Removes empty rows and columns in the parameter"""
         empty_cols, empty_rows = map(set, param.ghost.find_empty_rows_and_columns())
         cols_to_remove, rows_to_remove = set(), set()
+        empty_cols, empty_rows = map(set, param.ghost.find_empty_rows_and_columns())
+        cols_to_remove, rows_to_remove = set(), set()
         col_preimages, row_preimages = param.map.preimage_map()
         for key in col_preimages.keys():
+            intersection = set(col_preimages[key]) & empty_cols
             intersection = set(col_preimages[key]) & empty_cols
             if len(intersection) == len(col_preimages[key]):
                 intersection.remove(col_preimages[key][0])
             cols_to_remove.update(intersection)
+            cols_to_remove.update(intersection)
         for key in row_preimages.keys():
+            intersection = set(row_preimages[key]) & empty_rows
             intersection = set(row_preimages[key]) & empty_rows
             if len(intersection) == len(row_preimages[key]):
                 intersection.remove(row_preimages[key][0])
+            rows_to_remove.update(intersection)
             rows_to_remove.update(intersection)
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
@@ -252,6 +269,7 @@ class ParamCleaner(Cleaner[Parameter]):
     @reg(2, update_register=False, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
+        raise NotImplementedError
         raise NotImplementedError
 
     # Internal Methods
@@ -302,6 +320,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         """
 
         @MTCleaner.reg(5, update_register=False)
+        @MTCleaner.reg(5, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             new_avoiders, new_containers, new_enumerators = mappling.ace_parameters()
             for func in param_cleaner:
@@ -324,6 +343,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return _clean_parameters
 
     @staticmethod
+    @reg(5)
     @reg(5)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
@@ -358,11 +378,15 @@ class MTCleaner(Cleaner[MappedTiling]):
                 )
             )
         )
-        return MappedTiling(
+        new_mappling = MappedTiling(
             mappling.tiling,
             mappling.avoiding_parameters,
             new_containers,
             mappling.enumerating_parameters,
+        )
+        return MTCleaner.list_cleanup(
+            new_mappling,
+            (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
         )
 
     @staticmethod
@@ -375,6 +399,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
+    @reg(1)
     @reg(1)
     def reap_all_contradictions(mappling: MappedTiling) -> MappedTiling:
         """Removes any contradictory parameters
@@ -397,8 +422,29 @@ class MTCleaner(Cleaner[MappedTiling]):
         return MappedTiling(
             mappling.tiling, new_avoiders, new_containers, new_enumerators
         )
+        """Removes any contradictory parameters
+        and kills the mappling if all containers in a c-list are contradictory"""
+        base = mappling.tiling
+        new_containers = []
+        for c_list in mappling.containing_parameters:
+            if not c_list:
+                continue
+            new_c_list = c_list.remove_contradictions(base)
+            if not new_c_list:
+                return MappedTiling.empty_mappling()
+            new_containers.append(new_c_list)
+        new_avoiders = mappling.avoiding_parameters.remove_contradictions(base)
+        new_enumerators = []
+        for e_list in mappling.enumerating_parameters:
+            new_e_list = e_list.remove_contradictions(base)
+            if new_e_list:
+                new_enumerators.append(e_list)
+        return MappedTiling(
+            mappling.tiling, new_avoiders, new_containers, new_enumerators
+        )
 
     @staticmethod
+    @reg(2)
     @reg(2)
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
@@ -529,6 +575,40 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     # Internal Methods
+
+    @staticmethod
+    def _insert_param(tiling: Tiling, param: Parameter) -> Tiling:
+        return tiling.add_obstructions(
+            param.map.map_gridded_cperms(param.obstructions)
+        ).add_requirements(param.map.map_requirements(param.requirements))
+
+    @staticmethod
+    def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
+        """Removes all obs and reqs from param that are implied by mappling"""
+        simplify = SimplifyObstructionsAndRequirements(
+            mappling.obstructions, mappling.requirements, mappling.dimensions
+        )
+        new_obs = []
+        new_reqs = []
+        for ob in param.obstructions:
+            if any(
+                param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
+                for mt_ob in mappling.obstructions
+            ):
+                continue
+            new_obs.append(ob)
+        for req_list in param.requirements:
+            new_req_list = [
+                req
+                for req in req_list
+                if not simplify.implied_by_requirements(
+                    param.map.map_gridded_cperm(req)
+                )
+            ]
+            if new_req_list:
+                new_reqs.append(tuple(new_req_list))
+        new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
+        return Parameter(new_ghost, param.map)
 
     @staticmethod
     def _insert_param(tiling: Tiling, param: Parameter) -> Tiling:
