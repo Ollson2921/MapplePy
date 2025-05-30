@@ -72,9 +72,7 @@ class Register(Generic[T]):
         func.__dict__.update(adjusted_dict)
         return func
 
-    def add_requests(
-        self, func: Callable[[T], T], *extra_cleaning: Callable[[T], T]
-    ):
+    def add_requests(self, func: Callable[[T], T], *extra_cleaning: Callable[[T], T]):
         """Lets cleaning functions request additional cleaning while loop cleaning."""
 
         def wrapper(cleaning_object: T) -> T:
@@ -148,7 +146,7 @@ class Cleaner(Generic[T]):
 
     def __call__(self, cleaning_object: T) -> T:
         """Cleans the input cleaning_object according to the cleaner's todo_list"""
-        return self.__class__.list_cleanup(cleaning_object, self.todo_list)
+        return self.__class__.loop_cleanup(cleaning_object, self.todo_list)
 
     def __repr__(self):
         return self.__class__.__name__ + f"({self.todo_list})"
@@ -167,17 +165,12 @@ class Cleaner(Generic[T]):
         cls, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
     ) -> T:
         """Cleans the cleaning object according to the cleaning functions."""
-        new_cleaning_list = set(cleaning_list)
         new_cleaning_object = cleaning_object
-        while new_cleaning_list:
-            new_cleaning_object = cls.list_cleanup(
-                new_cleaning_object, new_cleaning_list
-            )
-            new_cleaning_list = set()
-            for func in new_cleaning_list:
-                if hasattr(func, "requests_cleaning"):
-                    new_cleaning_list.update(getattr(func, "requests_cleaning"))
-                    delattr(func, "requests_cleaning")
+        continue_cleaning = True
+        while continue_cleaning:
+            old_cleaning_object = new_cleaning_object
+            new_cleaning_object = cls.list_cleanup(old_cleaning_object, cleaning_list)
+            continue_cleaning = old_cleaning_object != new_cleaning_object
         return new_cleaning_object
 
     @classmethod
@@ -217,10 +210,7 @@ class Cleaner(Generic[T]):
     @classmethod
     def full_cleanup(cls, cleaning_object: T) -> T:
         """Applies all cleanup functions."""
-        return cls.unordered_cleanup(
-            cleaning_object,
-            tuple(sorted(cls.reg.registered_functions, key=cls.reg.sorting_key)),
-        )
+        return cls.make_full_cleaner()(cleaning_object)
 
 
 class ParamCleaner(Cleaner[Parameter]):
