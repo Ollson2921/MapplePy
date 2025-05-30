@@ -72,17 +72,6 @@ class Register(Generic[T]):
         func.__dict__.update(adjusted_dict)
         return func
 
-    def add_requests(self, func: Callable[[T], T], *extra_cleaning: Callable[[T], T]):
-        """Lets cleaning functions request additional cleaning while loop cleaning."""
-
-        def wrapper(cleaning_object: T) -> T:
-            new_object = func(cleaning_object)
-            if new_object != cleaning_object:
-                setattr(wrapper, "requests_cleaning", set(extra_cleaning))
-            return new_object
-
-        return wrapper
-
     def sorting_key(self, func: Callable[[T], T]) -> int:
         """Used to sort fuctions in cleaners"""
         assert hasattr(
@@ -261,7 +250,6 @@ class ParamCleaner(Cleaner[Parameter]):
 
     @staticmethod
     @reg(2, update_register=False, run_on_enumerators=False)
-    @reg.add_requests(remove_blank_rows_and_cols, reduce_by_fusion)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
         raise NotImplementedError
@@ -482,7 +470,6 @@ class MTCleaner(Cleaner[MappedTiling]):
 
     @staticmethod
     @reg(8)
-    @reg.add_requests(reap_all_contradictions, reduce_all_parameter_gcps)
     def insert_containers(mappling: MappedTiling) -> MappedTiling:
         """For parameters with empty tilings, if it is the only
         one in a list then the mappling is empty, otherwise remove the empty
@@ -513,7 +500,6 @@ class MTCleaner(Cleaner[MappedTiling]):
 
     @staticmethod
     @reg(6)
-    @reg.add_requests(reap_all_contradictions, reduce_all_parameter_gcps)
     def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         new_avoiders = []
