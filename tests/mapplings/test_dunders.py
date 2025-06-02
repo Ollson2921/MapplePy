@@ -1,8 +1,8 @@
-from mapplings import MappedTiling, ParameterList
-from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from cayley_permutations import CayleyPermutation
+"""Testing the dunder methods of MappedTiling."""
 
+from gridded_cayley_permutations import Tiling
 import pytest
+from mapplings import MappedTiling
 
 
 @pytest.fixture
