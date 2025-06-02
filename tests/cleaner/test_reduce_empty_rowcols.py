@@ -1,11 +1,10 @@
 """Testing the reduce_empty_rows_and_cols function for MappedTiling
 and for Parameters."""
 
-import pytest
-from mapplings import MTCleaner, ParamCleaner, MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
+from mapplings import MTCleaner, ParamCleaner, MappedTiling, Parameter, ParameterList
 
 
 def test_reduce_empty_rowcols_parameter():
