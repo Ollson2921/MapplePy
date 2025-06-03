@@ -4,7 +4,7 @@ from .mapped_tiling import MappedTiling
 from .parameter import Parameter
 from .parameter_list import ParameterList
 from .cleaner import MTCleaner, ParamCleaner
-from .strategies import LTRowColSeparationMT, LTORERowColSeparationMT
+from .algorithms import LTRowColSeparationMT, LTORERowColSeparationMT
 
 __all__ = [
     "MappedTiling",

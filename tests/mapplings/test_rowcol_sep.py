@@ -4,13 +4,11 @@ TODO: should I make these ParameterLists?"""
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
-import pytest
 from mapplings import (
     MappedTiling,
-    LTRowColSeparationMT,
     Parameter,
-    LTORERowColSeparationMT,
 )
+from mapplings.algorithms import LTRowColSeparationMT, LTORERowColSeparationMT
 
 
 def test_less_than_row_col_separation():
