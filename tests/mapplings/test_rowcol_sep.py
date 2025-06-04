@@ -6,7 +6,7 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
 from mapplings import (
     MappedTiling,
-    Parameter,
+    Parameter, ParameterList
 )
 from mapplings.algorithms import LTRowColSeparationMT, LTORERowColSeparationMT
 
@@ -24,7 +24,7 @@ def test_less_than_row_col_separation():
             (),
             (1, 4),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -36,9 +36,9 @@ def test_less_than_row_col_separation():
                 ),
                 RowColMap({0: 0}, {0: 0, 1: 2}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     separated_mt = MappedTiling(
@@ -52,7 +52,7 @@ def test_less_than_row_col_separation():
             (),
             (2, 4),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -64,9 +64,9 @@ def test_less_than_row_col_separation():
                 ),
                 RowColMap({0: 0, 1: 1}, {0: 0, 1: 2}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     all_separated = list(LTRowColSeparationMT(mt).separate())
@@ -82,7 +82,7 @@ def test_less_than_row_col_separation_rows():
             (),
             (1, 2),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -96,9 +96,9 @@ def test_less_than_row_col_separation_rows():
                 ),
                 RowColMap({0: 0, 1: 0}, {0: 0, 1: 1}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     separated_mt = MappedTiling(
@@ -110,7 +110,7 @@ def test_less_than_row_col_separation_rows():
             (),
             (2, 2),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -124,9 +124,9 @@ def test_less_than_row_col_separation_rows():
                 ),
                 RowColMap({0: 0, 1: 0, 2: 1, 3: 1}, {0: 0, 1: 1}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     for mappling in LTRowColSeparationMT(mt).separate():
@@ -144,7 +144,7 @@ def test_less_than_row_col_separation_cols():
             (),
             (2, 1),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -158,9 +158,9 @@ def test_less_than_row_col_separation_cols():
                 ),
                 RowColMap({0: 0, 1: 1}, {0: 0, 1: 0}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     separated_mt = MappedTiling(
@@ -172,7 +172,7 @@ def test_less_than_row_col_separation_cols():
             (),
             (2, 2),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -186,9 +186,9 @@ def test_less_than_row_col_separation_cols():
                 ),
                 RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     all_separated = list(LTRowColSeparationMT(mt).separate())
@@ -204,7 +204,7 @@ def test_less_than_or_equal_row_col_separation():
             (),
             (2, 1),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -218,9 +218,9 @@ def test_less_than_or_equal_row_col_separation():
                 ),
                 RowColMap({0: 0, 1: 1}, {0: 0, 1: 0}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     separated_1 = MappedTiling(
@@ -234,7 +234,7 @@ def test_less_than_or_equal_row_col_separation():
             (),
             (2, 3),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -248,9 +248,9 @@ def test_less_than_or_equal_row_col_separation():
                 ),
                 RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 4: 1, 5: 1, 8: 2, 9: 2}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     separated_2 = MappedTiling(
@@ -271,7 +271,7 @@ def test_less_than_or_equal_row_col_separation():
             ),
             (2, 3),
         ),
-        [
+        ParameterList([
             Parameter(
                 Tiling(
                     (),
@@ -285,9 +285,9 @@ def test_less_than_or_equal_row_col_separation():
                 ),
                 RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 4: 1, 5: 1, 8: 2, 9: 2}),
             )
-        ],
-        (),
-        (),
+        ]),
+        ParameterList([]),
+        ParameterList([]),
     )
 
     all_separated = list(LTORERowColSeparationMT(original_mt).separate())
