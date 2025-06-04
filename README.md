@@ -1,1 +1,1 @@
-# CayleyTilings
+# MapplePy

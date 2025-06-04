@@ -230,7 +230,7 @@ class MappedTiling(CombinatorialClass):
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
-            + "\nenumerating parameters:\n"
+            + "\nEnumerating parameters:\n"
             + "\nNew enumerating parameters list\n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
             )

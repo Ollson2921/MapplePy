@@ -40,6 +40,7 @@ class Factor(Factors):
                 self.combine_cells(cell1, cell2)
 
     def find_factors_as_cells(self):
+        """Finds the factors as cells."""
         self.combine_cells_from_parameters()
         return super().find_factors_as_cells()
 
