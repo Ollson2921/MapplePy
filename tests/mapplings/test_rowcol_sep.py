@@ -1,13 +1,9 @@
-"""Testing row col separation for mapplings.
-TODO: should I make these ParameterLists?"""
+"""Testing row col separation for mapplings."""
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
-from mapplings import (
-    MappedTiling,
-    Parameter, ParameterList
-)
+from mapplings import MappedTiling, Parameter, ParameterList
 from mapplings.algorithms import LTRowColSeparationMT, LTORERowColSeparationMT
 
 
@@ -24,19 +20,21 @@ def test_less_than_row_col_separation():
             (),
             (1, 4),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+                        ),
+                        (1, 2),
                     ),
-                    (1, 2),
-                ),
-                RowColMap({0: 0}, {0: 0, 1: 2}),
-            )
-        ]),
+                    RowColMap({0: 0}, {0: 0, 1: 2}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -52,19 +50,21 @@ def test_less_than_row_col_separation():
             (),
             (2, 4),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                        ),
+                        (2, 2),
                     ),
-                    (2, 2),
-                ),
-                RowColMap({0: 0, 1: 1}, {0: 0, 1: 2}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 2}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -82,21 +82,23 @@ def test_less_than_row_col_separation_rows():
             (),
             (1, 2),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                        ),
+                        (2, 2),
                     ),
-                    (2, 2),
-                ),
-                RowColMap({0: 0, 1: 0}, {0: 0, 1: 1}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 0}, {0: 0, 1: 1}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -110,21 +112,23 @@ def test_less_than_row_col_separation_rows():
             (),
             (2, 2),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 0),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 0),)),),
+                        ),
+                        (4, 2),
                     ),
-                    (4, 2),
-                ),
-                RowColMap({0: 0, 1: 0, 2: 1, 3: 1}, {0: 0, 1: 1}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 0, 2: 1, 3: 1}, {0: 0, 1: 1}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -144,21 +148,23 @@ def test_less_than_row_col_separation_cols():
             (),
             (2, 1),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                        ),
+                        (2, 2),
                     ),
-                    (2, 2),
-                ),
-                RowColMap({0: 0, 1: 1}, {0: 0, 1: 0}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 0}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -172,21 +178,23 @@ def test_less_than_row_col_separation_cols():
             (),
             (2, 2),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 3),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 3),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                        ),
+                        (2, 4),
                     ),
-                    (2, 4),
-                ),
-                RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -204,21 +212,23 @@ def test_less_than_or_equal_row_col_separation():
             (),
             (2, 1),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                        ),
+                        (2, 2),
                     ),
-                    (2, 2),
-                ),
-                RowColMap({0: 0, 1: 1}, {0: 0, 1: 0}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 0}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -234,21 +244,23 @@ def test_less_than_or_equal_row_col_separation():
             (),
             (2, 3),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 4),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 5),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 4),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 5),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                        ),
+                        (2, 6),
                     ),
-                    (2, 6),
-                ),
-                RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 4: 1, 5: 1, 8: 2, 9: 2}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 4: 1, 5: 1, 8: 2, 9: 2}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )
@@ -271,21 +283,23 @@ def test_less_than_or_equal_row_col_separation():
             ),
             (2, 3),
         ),
-        ParameterList([
-            Parameter(
-                Tiling(
-                    (),
-                    (
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 4),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 5),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
-                        (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+        ParameterList(
+            [
+                Parameter(
+                    Tiling(
+                        (),
+                        (
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 4),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 5),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),),
+                        ),
+                        (2, 6),
                     ),
-                    (2, 6),
-                ),
-                RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 4: 1, 5: 1, 8: 2, 9: 2}),
-            )
-        ]),
+                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 4: 1, 5: 1, 8: 2, 9: 2}),
+                )
+            ]
+        ),
         ParameterList([]),
         ParameterList([]),
     )

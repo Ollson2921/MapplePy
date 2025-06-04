@@ -302,36 +302,96 @@ def test_reduce_empty_rowcols_mapped_tiling():
 
 
 def test_empty_parameter():
-    """Parameter is a 2x2 tiling with point obs in each cell 
-    mapping to a 1x1 empty tiling. Parameter should only delete one row 
+    """Parameter is a 2x2 tiling with point obs in each cell
+    mapping to a 1x1 empty tiling. Parameter should only delete one row
     one column rather than both."""
-    obs = [GriddedCayleyPerm(CayleyPermutation([0]), [(0,0)]), GriddedCayleyPerm(CayleyPermutation([0]), [(0,1)]), GriddedCayleyPerm(CayleyPermutation([0]), [(1,0)]), GriddedCayleyPerm(CayleyPermutation([0]), [(1,1)])]
-    ghost = Tiling(obs, [], (2,2))
+    obs = [
+        GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),
+        GriddedCayleyPerm(CayleyPermutation([0]), [(0, 1)]),
+        GriddedCayleyPerm(CayleyPermutation([0]), [(1, 0)]),
+        GriddedCayleyPerm(CayleyPermutation([0]), [(1, 1)]),
+    ]
+    ghost = Tiling(obs, [], (2, 2))
     map_dict = {0: 0, 1: 0}
 
     param = Parameter(ghost, RowColMap(map_dict, map_dict))
     bt = Tiling([], [], (1, 1))
-    mt = MappedTiling(bt, ParameterList([param]), ParameterList([ParameterList([param])]), ParameterList([]))
+    mt = MappedTiling(
+        bt,
+        ParameterList([param]),
+        ParameterList([ParameterList([param])]),
+        ParameterList([]),
+    )
     param_cleaner = ParamCleaner([ParamCleaner.reduce_empty_rows_and_cols])
     cleaning_list = [MTCleaner.clean_parameters(param_cleaner)]
 
-    cleaned_tiling = MappedTiling(Tiling((), (),(1, 1)), ParameterList(frozenset({Parameter(Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (),(1, 1)), RowColMap({0: 0}, {0: 0}))})), (ParameterList(frozenset({Parameter(Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (),(1, 1)), RowColMap({0: 0}, {0: 0}))})),), ())
+    cleaned_tiling = MappedTiling(
+        Tiling((), (), (1, 1)),
+        ParameterList(
+            frozenset(
+                {
+                    Parameter(
+                        Tiling(
+                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),
+                            (),
+                            (1, 1),
+                        ),
+                        RowColMap({0: 0}, {0: 0}),
+                    )
+                }
+            )
+        ),
+        (
+            ParameterList(
+                frozenset(
+                    {
+                        Parameter(
+                            Tiling(
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 0),)
+                                    ),
+                                ),
+                                (),
+                                (1, 1),
+                            ),
+                            RowColMap({0: 0}, {0: 0}),
+                        )
+                    }
+                )
+            ),
+        ),
+        (),
+    )
 
     assert MTCleaner.list_cleanup(mt, cleaning_list) == cleaned_tiling
 
 
-
 def test_empty_base_tiling():
     """The base tiling is multiple empty rows and columns."""
-    obs = [GriddedCayleyPerm(CayleyPermutation([0]), [(0,0)]), GriddedCayleyPerm(CayleyPermutation([0]), [(0,1)]),
-        GriddedCayleyPerm(CayleyPermutation([0]), [(1,0)]), GriddedCayleyPerm(CayleyPermutation([0]), [(1,1)])]
-    bt = Tiling(obs, [], (2,2))
-    map_dict = {0: 0, 1: 1, 2:1}
+    obs = [
+        GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),
+        GriddedCayleyPerm(CayleyPermutation([0]), [(0, 1)]),
+        GriddedCayleyPerm(CayleyPermutation([0]), [(1, 0)]),
+        GriddedCayleyPerm(CayleyPermutation([0]), [(1, 1)]),
+    ]
+    bt = Tiling(obs, [], (2, 2))
+    map_dict = {0: 0, 1: 1, 2: 1}
 
     ghost = Tiling([], [obs], (3, 3))
     param = Parameter(ghost, RowColMap(map_dict, map_dict))
-    mt = MappedTiling(bt, ParameterList([param]), ParameterList([ParameterList([param])]), ParameterList([]))
-    cleaned_tiling = MappedTiling(Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (),(1, 1)), ParameterList(frozenset()), (), ())
+    mt = MappedTiling(
+        bt,
+        ParameterList([param]),
+        ParameterList([ParameterList([param])]),
+        ParameterList([]),
+    )
+    cleaned_tiling = MappedTiling(
+        Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (), (1, 1)),
+        ParameterList(frozenset()),
+        (),
+        (),
+    )
 
     cleaning_list = [MTCleaner.remove_empty_rows_and_cols]
     assert MTCleaner.list_cleanup(mt, cleaning_list) == cleaned_tiling
