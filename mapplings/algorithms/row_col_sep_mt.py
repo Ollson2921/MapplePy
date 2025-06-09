@@ -1,12 +1,13 @@
 """Module for row and column separating mapped tilings and related strategies."""
 
+from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope.strategies.row_column_separation import (
     LessThanRowColSeparation,
     LessThanOrEqualRowColSeparation,
 )
-from ..mapped_tiling import MappedTiling, Parameter
+from ..mapped_tiling import MappedTiling, Parameter, ParameterList
 
 
 class LTRowColSeparationMT:
@@ -22,11 +23,11 @@ class LTRowColSeparationMT:
         self.separation = self.separation_map()
         self.preimage_map = self.separation.row_col_map.preimage_map()
 
-    def separation_map(self):
+    def separation_map(self) -> LessThanRowColSeparation:
         """Returns the row/col separation map."""
         return LessThanRowColSeparation(self.tiling)
 
-    def base_extensions(self) -> tuple:
+    def base_extensions(self) -> tuple[list[int], list[int]]:
         """Returns how many new rows/cols are added to the new base tiling
         for each row/col in the original tiling"""
         row_extensions = [
@@ -37,7 +38,9 @@ class LTRowColSeparationMT:
         ]
         return col_extensions, row_extensions
 
-    def parameter_extensions(self, base_extensions, param: Parameter):
+    def parameter_extensions(
+        self, base_extensions: tuple[list[int], list[int]], param: Parameter
+    ) -> tuple[list[int], list[int]]:
         """Returns how many rows/cols must be added to the new parameter
         for each row/col in the original tiling"""
         col_parameter_extensions = [
@@ -50,7 +53,9 @@ class LTRowColSeparationMT:
         ]
         return col_parameter_extensions, row_parameter_extensions
 
-    def total_extensions(self, parameter_extensions):
+    def total_extensions(
+        self, parameter_extensions: tuple[list[int], list[int]]
+    ) -> tuple[list[int], list[int]]:
         """Returns how far each preimage group moves in the new parameter"""
         total_extensions = (
             [0]
@@ -66,7 +71,9 @@ class LTRowColSeparationMT:
         )
         return total_extensions
 
-    def cell_map(self, total_extensions, param: Parameter):
+    def cell_map(
+        self, total_extensions: tuple[list[int], list[int]], param: Parameter
+    ) -> dict[tuple[int, int], tuple[int, int]]:
         """Maps each cell of the original parameter to the correct active cell
         in the new parameter."""
         cell_map = {}
@@ -95,12 +102,19 @@ class LTRowColSeparationMT:
                     )
         return cell_map
 
-    def transform_gcp(self, cell_map, gcp: GriddedCayleyPerm) -> GriddedCayleyPerm:
+    def transform_gcp(
+        self, cell_map: dict[tuple[int, int], tuple[int, int]], gcp: GriddedCayleyPerm
+    ) -> GriddedCayleyPerm:
         """Moves a GCP to the correct cell"""
         new_positions = (cell_map[position] for position in gcp.positions)
         return GriddedCayleyPerm(gcp.pattern, new_positions)
 
-    def make_new_map(self, param: Parameter, direction, parameter_extensions):
+    def make_new_map(
+        self,
+        param: Parameter,
+        direction: int,
+        parameter_extensions: tuple[list[int], list[int]],
+    ) -> dict[int, list[int]]:
         """Makes the RowColMap from a new parameter to the new base tiling"""
         new_map = {}
         additions = 0
@@ -118,7 +132,9 @@ class LTRowColSeparationMT:
                     new_map[new_index] = item[1][i]
         return new_map
 
-    def make_new_parameter(self, base_extensions, param: Parameter) -> Parameter:
+    def make_new_parameter(
+        self, base_extensions: tuple[list[int], list[int]], param: Parameter
+    ) -> Parameter:
         """Returns the adjusted param after row/col separation"""
         param_extensions = self.parameter_extensions(base_extensions, param)
         total_extensions = self.total_extensions(param_extensions)
@@ -142,26 +158,32 @@ class LTRowColSeparationMT:
 
         return Parameter(new_ghost, new_map)
 
-    def separate(self):
+    def separate(self) -> Iterator[MappedTiling]:
         """Returns the row/col seperated mappling"""
         base_extensions = self.base_extensions()
-        new_avoiders = [
-            self.make_new_parameter(base_extensions, param)
-            for param in self.avoiding_parameters
-        ]
+        new_avoiders = ParameterList(
+            [
+                self.make_new_parameter(base_extensions, param)
+                for param in self.avoiding_parameters
+            ]
+        )
         new_containers = [
-            [self.make_new_parameter(base_extensions, param) for param in c_list]
+            ParameterList(
+                [self.make_new_parameter(base_extensions, param) for param in c_list]
+            )
             for c_list in self.containing_parameters
         ]
         new_enumerators = [
-            [self.make_new_parameter(base_extensions, param) for param in e_list]
+            ParameterList(
+                [self.make_new_parameter(base_extensions, param) for param in e_list]
+            )
             for e_list in self.enumeration_parameters
         ]
         for base in self.separation.row_col_separation():
             yield MappedTiling(base, new_avoiders, new_containers, new_enumerators)
 
     @staticmethod
-    def separate_parameter(param: Parameter):
+    def separate_parameter(param: Parameter) -> Iterator[Parameter]:
         """Row/Col separates a parameter and adjusts the map without altering the base tiling"""
         separation = LessThanOrEqualRowColSeparation(param.ghost)
         separation_map = separation.row_col_map
@@ -183,6 +205,6 @@ class LTORERowColSeparationMT(LTRowColSeparationMT):
     separating cells in a row.
     """
 
-    def separation_map(self):
+    def separation_map(self) -> LessThanOrEqualRowColSeparation:
         """Returns the row/col separation map."""
         return LessThanOrEqualRowColSeparation(self.tiling)
