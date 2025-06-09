@@ -13,7 +13,7 @@ from gridded_cayley_permutations.factors import Factors
 Cell = tuple[int, int]
 
 
-class Parameter:
+class Parameter(Tiling):
     """A tiling (called a ghost) mapping to a base tiling."""
 
     # pylint: disable=too-many-instance-attributes
@@ -22,9 +22,7 @@ class Parameter:
         self.row_map = row_col_map.row_map
         self.col_map = row_col_map.col_map
         self.ghost = ghost
-        self.obstructions = ghost.obstructions
-        self.requirements = ghost.requirements
-        self.dimensions = ghost.dimensions
+        super().__init__(ghost.obstructions, ghost.requirements, ghost.dimensions, False)
 
     def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
@@ -33,7 +31,7 @@ class Parameter:
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
-            if self.ghost.gcp_in_tiling(gcp):
+            if self.gcp_in_tiling(gcp):
                 yield gcp
 
     def gcp_has_preimage(self, gcp: GriddedCayleyPerm) -> bool:
@@ -41,7 +39,7 @@ class Parameter:
         has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
-            if self.ghost.gcp_in_tiling(preimage):
+            if self.gcp_in_tiling(preimage):
                 return True
         return False
 
@@ -49,47 +47,47 @@ class Parameter:
         self, obstructions=Iterable[GriddedCayleyPerm]
     ) -> "Parameter":
         """Places the obstructions on the tiling"""
-        new_ghost = self.ghost.add_obstructions(obstructions)
+        new_ghost = super().add_obstructions(obstructions)
         return Parameter(new_ghost, self.map)
 
     def backmap_all_from_tiling(self, tiling: Tiling) -> "Parameter":
         """Places all obs and reqs of tiling into the parameter according to the row/col map."""
-        new_obs = self.ghost.obstructions + self.map.preimage_of_obstructions(
+        new_obs = self.obstructions + self.map.preimage_of_obstructions(
             tiling.obstructions
         )
-        new_reqs = self.ghost.requirements + self.map.preimage_of_requirements(
+        new_reqs = self.requirements + self.map.preimage_of_requirements(
             tiling.requirements
         )
-        return Parameter(Tiling(new_obs, new_reqs, self.ghost.dimensions), self.map)
+        return Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
 
     def back_map_point_obstructions_from_tiling(self, tiling: Tiling) -> "Parameter":
         """Places all point obstructions in the parameter"""
-        new_obs = self.ghost.obstructions + self.map.preimage_of_obstructions(
+        new_obs = self.obstructions + self.map.preimage_of_obstructions(
             [ob for ob in tiling.obstructions if len(ob) == 1]
         )
         return Parameter(
-            Tiling(new_obs, self.ghost.requirements, self.ghost.dimensions),
+            Tiling(new_obs, self.requirements, self.dimensions),
             self.map,
         )
 
     def delete_rows_and_columns(
-        self, cols_to_delete: Iterable[int], rows_to_delete: Iterable[int]
+        self, cols: Iterable[int], rows: Iterable[int]
     ) -> "Parameter":
         """Removes rows and columns from the parameter.
         Adjusts row/col map keys while preserving values."""
-        new_ghost = self.ghost.delete_rows_and_columns(cols_to_delete, rows_to_delete)
+        new_ghost = super().delete_rows_and_columns(cols, rows)
         image_cols = sorted(
             (
                 self.col_map[key]
                 for key in self.col_map.keys()
-                if key not in cols_to_delete
+                if key not in cols
             )
         )
         image_rows = sorted(
             (
                 self.row_map[key]
                 for key in self.row_map.keys()
-                if key not in rows_to_delete
+                if key not in rows
             )
         )
         new_col_map = dict(enumerate(image_cols))
@@ -191,7 +189,7 @@ class Parameter:
             )
         )
 
-    def __leq__(self, other: "Parameter") -> int:
+    def __leq__(self, other: "Parameter") -> bool:
         return (self.ghost, self.map) <= (other.ghost, other.map)
 
     def __lt__(self, other: "Parameter") -> bool:
