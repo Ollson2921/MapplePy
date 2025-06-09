@@ -10,9 +10,6 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
     SimplifyObstructionsAndRequirements,
 )
-from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
-    SimplifyObstructionsAndRequirements,
-)
 from cayley_permutations import CayleyPermutation
 
 from .parameter import Parameter
@@ -142,7 +139,7 @@ class Cleaner(Generic[T]):
 
     def __repr__(self):
         return self.__class__.__name__ + f"({self.todo_list})"
-   
+
     def __str__(self):
         return (
             self.__class__.__name__
