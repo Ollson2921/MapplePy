@@ -114,7 +114,7 @@ class LTRowColSeparationMT:
         param: Parameter,
         direction: int,
         parameter_extensions: tuple[list[int], list[int]],
-    ) -> dict[int, list[int]]:
+    ) -> dict[int, int]:
         """Makes the RowColMap from a new parameter to the new base tiling"""
         new_map = {}
         additions = 0
