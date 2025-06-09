@@ -1,4 +1,4 @@
-"""Testing the inser_containers cleaning function on
+"""Testing the insert_containers cleaning function on
 MTCleaner for MappedTiling."""
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
