@@ -18,9 +18,9 @@ def test_remove_blank_rowcols():
     bt = Tiling([], [], (2, 1))
     mt = MappedTiling(
         bt,
-        ParameterList([]),
-        ParameterList([ParameterList([param])]),
-        ParameterList([]),
+        ParameterList(frozenset()),
+        (ParameterList([param]),),
+        (),
     )
 
     param_cleaner = ParamCleaner([ParamCleaner.remove_blank_rows_and_cols])

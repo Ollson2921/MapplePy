@@ -18,7 +18,7 @@ def test_reduce_by_fusion_rows_and_cols():
     param = Parameter(ghost, RowColMap(colmap, rowmap)).backmap_all_from_tiling(av12)
 
     bt = Tiling([], [], (2, 1))
-    mt = MappedTiling(bt, ParameterList([param]), ParameterList([]), ParameterList([]))
+    mt = MappedTiling(bt, (param,), (), ())
     cleaned = MappedTiling(
         Tiling((), (), (2, 1)),
         ParameterList(
@@ -64,7 +64,7 @@ def test_reduce_by_fusion_3_rows_to_1():
     param = Parameter(ghost, RowColMap(colmap, rowmap)).backmap_all_from_tiling(av12)
 
     bt = Tiling([], [], (2, 1))
-    mt = MappedTiling(bt, ParameterList([param]), ParameterList([]), ParameterList([]))
+    mt = MappedTiling(bt, ParameterList((param,)), (), ())
 
     param_cleaner = ParamCleaner([ParamCleaner.reduce_by_fusion])
     cleaning_list = [MTCleaner.clean_parameters(param_cleaner)]
@@ -108,9 +108,9 @@ def test_reduce_by_fusion_dont_fuse_columns():
     bt = Tiling([], [], (2, 1))
     mt = MappedTiling(
         bt,
-        ParameterList([]),
-        ParameterList([ParameterList([param])]),
-        ParameterList([]),
+        ParameterList(frozenset()),
+        (ParameterList([param]),),
+        (),
     )
 
     param_cleaner = ParamCleaner([ParamCleaner.reduce_by_fusion])

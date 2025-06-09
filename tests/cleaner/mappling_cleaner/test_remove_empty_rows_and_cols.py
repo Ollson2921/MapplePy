@@ -1,4 +1,5 @@
-"""Testing the remove_empty_rows_and_cols function for MappedTiling."""
+"""Testing the remove_empty_rows_and_cols cleaning function on
+MTCleaner for MappedTiling."""
 
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
@@ -17,9 +18,9 @@ def test_reduce_empty_rowcols_mapped_tiling():
     param = Parameter(ghost, RowColMap(map_dict, map_dict))
     mt = MappedTiling(
         bt,
-        ParameterList([]),
-        ParameterList([ParameterList([param])]),
-        ParameterList([]),
+        ParameterList(frozenset()),
+        (ParameterList((param,)),),
+        (),
     )
     cleaning_list = [MTCleaner.remove_empty_rows_and_cols]
 
@@ -125,9 +126,9 @@ def test_empty_base_tiling():
     param = Parameter(ghost, RowColMap(map_dict, map_dict))
     mt = MappedTiling(
         bt,
-        ParameterList([param]),
-        ParameterList([ParameterList([param])]),
-        ParameterList([]),
+        (param,),
+        (ParameterList([param]),),
+        (),
     )
     cleaned_tiling = MappedTiling(
         Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (), (1, 1)),

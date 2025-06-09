@@ -14,7 +14,7 @@ def test_reduce_empty_rowcols_parameter():
     map_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     param = Parameter(ghost, RowColMap(map_dict, map_dict))
     bt = Tiling([], [], (1, 1))
-    mt = MappedTiling(bt, ParameterList([param]), ParameterList([]), ParameterList([]))
+    mt = MappedTiling(bt, ParameterList((param,)), (), ())
     param_cleaner = ParamCleaner([ParamCleaner.reduce_empty_rows_and_cols])
     cleaning_list = [MTCleaner.clean_parameters(param_cleaner)]
 
@@ -214,8 +214,8 @@ def test_empty_parameter():
     mt = MappedTiling(
         bt,
         ParameterList([param]),
-        ParameterList([ParameterList([param])]),
-        ParameterList([]),
+        (ParameterList([param]),),
+        (),
     )
     param_cleaner = ParamCleaner([ParamCleaner.reduce_empty_rows_and_cols])
     cleaning_list = [MTCleaner.clean_parameters(param_cleaner)]
