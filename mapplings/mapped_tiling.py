@@ -35,12 +35,15 @@ class MappedTiling(Tiling):
         avoiding_parameters: Iterable[Parameter],
         containing_parameters: Iterable[ParameterList],
         enumerating_parameters: Iterable[ParameterList],
+        simplify: bool = False,
     ):
         self.avoiding_parameters = ParameterList(avoiding_parameters)
         self.containing_parameters = tuple(sorted(containing_parameters))
         self.enumerating_parameters = tuple(sorted(enumerating_parameters))
         self.tiling = tiling
-        super().__init__(tiling.obstructions, tiling.requirements, tiling.dimensions, False)
+        super().__init__(
+            tiling.obstructions, tiling.requirements, tiling.dimensions, simplify
+        )
 
     # Containment and avoidance functions
 

@@ -22,7 +22,9 @@ class Parameter(Tiling):
         self.row_map = row_col_map.row_map
         self.col_map = row_col_map.col_map
         self.ghost = ghost
-        super().__init__(ghost.obstructions, ghost.requirements, ghost.dimensions, False)
+        super().__init__(
+            ghost.obstructions, ghost.requirements, ghost.dimensions, False
+        )
 
     def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
@@ -77,18 +79,10 @@ class Parameter(Tiling):
         Adjusts row/col map keys while preserving values."""
         new_ghost = super().delete_rows_and_columns(cols, rows)
         image_cols = sorted(
-            (
-                self.col_map[key]
-                for key in self.col_map.keys()
-                if key not in cols
-            )
+            (self.col_map[key] for key in self.col_map.keys() if key not in cols)
         )
         image_rows = sorted(
-            (
-                self.row_map[key]
-                for key in self.row_map.keys()
-                if key not in rows
-            )
+            (self.row_map[key] for key in self.row_map.keys() if key not in rows)
         )
         new_col_map = dict(enumerate(image_cols))
         new_row_map = dict(enumerate(image_rows))
@@ -189,10 +183,14 @@ class Parameter(Tiling):
             )
         )
 
-    def __leq__(self, other: "Parameter") -> bool:
+    def __leq__(self, other: object) -> bool:
+        if not isinstance(other, Parameter):
+            return NotImplemented
         return (self.ghost, self.map) <= (other.ghost, other.map)
 
-    def __lt__(self, other: "Parameter") -> bool:
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Parameter):
+            return NotImplemented
         return (self.ghost, self.map) < (other.ghost, other.map)
 
     def __str__(self) -> str:
