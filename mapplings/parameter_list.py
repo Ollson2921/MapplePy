@@ -65,7 +65,7 @@ class ParameterList(frozenset[Parameter]):
 
     def remove_empty(self) -> "ParameterList":
         """Removes parameters with empty ghost"""
-        return ParameterList(param for param in self if not param.ghost.is_empty())
+        return ParameterList(param for param in self if not param.is_empty()) #?
 
     def simple_remove_redundant(self, is_c_list: bool = False) -> "ParameterList":
         """Removes any parameter implied by another through a basic check"""

@@ -44,7 +44,7 @@ class Factor(Factors):
         self.combine_cells_from_parameters()
         return super().find_factors_as_cells()
 
-    def temp_find_factors(self) -> Iterator[MappedTiling]:
+    def find_factors(self) -> Iterator[MappedTiling]: #?
         """Creates a new mappling for each factor"""
         for factor in self.find_factors_as_cells():
             _factor = set(factor)
