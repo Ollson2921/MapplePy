@@ -259,10 +259,6 @@ def test_obs_contradiction_becomes_empty():
     rowmap = {0: 0}
     param1 = Parameter(ghost, RowColMap(colmap, rowmap))
 
-    colmap = {0: 1}
-    rowmap = {0: 0}
-    param2 = Parameter(ghost, RowColMap(colmap, rowmap))
-
     mt = MappedTiling(
         bt,
         ParameterList([param1]),
