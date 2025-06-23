@@ -3,13 +3,14 @@ MTCleaner for MappedTiling.
 TODO: this cleaning function isn't working properly yet! Put tests
 back in when it is."""
 
+import pytest
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
 from mapplings import MTCleaner, MappedTiling, Parameter, ParameterList
 
 
-@pytest.disable()
+@pytest.mark.skip(reason="strategy not working yet")
 def test_reduce_all_parameter_gcps():
     """Test reduce_all_parameter_gcps with multiple obstructions
     and requirements and containing and avoiding parameters."""
@@ -107,7 +108,7 @@ def test_reduce_all_parameter_gcps():
     assert MTCleaner.reduce_all_parameter_gcps(mt) == cleaned
 
 
-@pytest.disable()
+@pytest.mark.skip(reason="strategy not working yet")
 def test_reduce_all_parameter_gcps_identical_params():
     """Test reduce_all_parameter_gcps when the parameters are identical
     to the base tiling."""
