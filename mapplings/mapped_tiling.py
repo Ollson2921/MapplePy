@@ -29,6 +29,8 @@ class MappedTiling(Tiling):
     which map to it by row and column maps."""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         tiling: Tiling,
