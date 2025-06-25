@@ -257,14 +257,9 @@ class MTCleaner(Cleaner[MappedTiling]):
     @staticmethod
     @reg(8)
     def insert_containers(mappling: MappedTiling) -> MappedTiling:
-        """For parameters with empty tilings, if it is the only
-        one in a list then the mappling is empty, otherwise remove the empty
-        parameter.
-        If only one parameter in a list and it maps to base tiling by the identity map
-        then map obs and reqs down and remove the parameter list.
-        Note: As we always assume a parameter maps to the whole tiling, we defined a row
-        col map as being trivial iff the dimensions of the tiling and ghost are the same.
-        """
+        """Looks for size 1 containing parameter lists with a one-to-one row col map,
+        puts all obstructions and requirements of the ghost onto the base tiling,
+        and removes the containing parameter list"""
         new_containers = []
         new_tiling = mappling.tiling
         for c_list in mappling.containing_parameters:
