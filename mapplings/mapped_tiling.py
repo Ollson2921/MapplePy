@@ -164,6 +164,15 @@ class MappedTiling(Tiling):
         )
 
     # other stuff
+    def ace_parameters(
+        self,
+    ) -> tuple[ParameterList, Iterable[ParameterList], Iterable[ParameterList]]:
+        """Returns the mappling's avoiding, containing, and enumerating parameters as a tuple"""
+        return (
+            self.avoiding_parameters,
+            self.containing_parameters,
+            self.enumerating_parameters,
+        )
 
     def apply_to_all_parameters(
         self,
@@ -172,18 +181,17 @@ class MappedTiling(Tiling):
     ) -> "MappedTiling":
         """Applies func to all parameters with additional arguments.
         Parameter must be the first argument of the function"""
-        param_method = (func, additional_arguments)
         new_avoiders = ParameterList(
-            self.avoiding_parameters.apply_to_all(*param_method)
+            self.avoiding_parameters.apply_to_all(func, additional_arguments)
         )
-        new_containers = (
-            ParameterList(c_list.apply_to_all(*param_method))
+        new_containers = [
+            ParameterList(c_list.apply_to_all(func, additional_arguments))
             for c_list in self.containing_parameters
-        )
-        new_enumerators = (
-            ParameterList(e_list.apply_to_all(*param_method))
+        ]
+        new_enumerators = [
+            ParameterList(e_list.apply_to_all(func, additional_arguments))
             for e_list in self.enumerating_parameters
-        )
+        ]
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
 
     # dunder methods
