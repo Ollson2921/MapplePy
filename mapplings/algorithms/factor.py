@@ -1,6 +1,5 @@
 """Contains the Factor class"""
 
-from typing import Iterator
 from itertools import chain, combinations
 from gridded_cayley_permutations.factors import Factors
 
@@ -40,11 +39,13 @@ class Factor(Factors):
                 self.combine_cells(cell1, cell2)
 
     def find_factors_as_cells(self):
+        """Finds the factors as cells."""
         self.combine_cells_from_parameters()
         return super().find_factors_as_cells()
 
-    def temp_find_factors(self) -> Iterator[MappedTiling]:
+    def find_factors(self) -> tuple[MappedTiling, ...]:
         """Creates a new mappling for each factor"""
+        all_factors = tuple[MappedTiling, ...]()
         for factor in self.find_factors_as_cells():
             _factor = set(factor)
 
@@ -69,4 +70,5 @@ class Factor(Factors):
                 new_containers,
                 new_enumerators,
             )
-            yield MTCleaner.remove_empty_rows_and_cols(new_mappling)
+            all_factors += (MTCleaner.remove_empty_rows_and_cols(new_mappling),)
+        return all_factors

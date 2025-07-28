@@ -227,7 +227,7 @@ class ParamCleaner(Cleaner[Parameter]):
     @reg(1)
     def reduce_empty_rows_and_cols(param: Parameter) -> Parameter:
         """Removes empty rows and columns in the parameter"""
-        empty_cols, empty_rows = map(set, param.ghost.find_empty_rows_and_columns())
+        empty_cols, empty_rows = map(set, param.find_empty_rows_and_columns())
         cols_to_remove, rows_to_remove = set(), set()
         col_preimages, row_preimages = param.map.preimage_map()
         for key in col_preimages.keys():
@@ -246,7 +246,7 @@ class ParamCleaner(Cleaner[Parameter]):
     @reg(0, run_on_enumerators=False)
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
-        return param.delete_rows_and_columns(*param.ghost.find_blank_columns_and_rows())
+        return param.delete_rows_and_columns(*param.find_blank_columns_and_rows())
 
     @staticmethod
     @reg(2, update_register=False, run_on_enumerators=False)
@@ -407,7 +407,7 @@ class MTCleaner(Cleaner[MappedTiling]):
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
         preimage rows and cols from the parameters"""
-        empty_cols, empty_rows = mappling.tiling.find_empty_rows_and_columns()
+        empty_cols, empty_rows = mappling.find_empty_rows_and_columns()
         if (
             len(empty_cols) == mappling.dimensions[0]
             or len(empty_rows) == mappling.dimensions[1]
@@ -420,10 +420,14 @@ class MTCleaner(Cleaner[MappedTiling]):
                 [],
                 [],
             )
-        mappling.tiling = mappling.tiling.delete_rows_and_columns(
-            empty_cols, empty_rows
+        new_tiling = mappling.delete_rows_and_columns(empty_cols, empty_rows)
+        new_mappling = MappedTiling(
+            new_tiling,
+            mappling.avoiding_parameters,
+            mappling.containing_parameters,
+            mappling.enumerating_parameters,
         )
-        return mappling.apply_to_all_parameters(
+        return new_mappling.apply_to_all_parameters(
             Parameter.delete_preimage_of_rows_and_columns, (empty_cols, empty_rows)
         )
 
@@ -455,14 +459,11 @@ class MTCleaner(Cleaner[MappedTiling]):
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
-        if any(
-            not (param.ghost.not_blank_cells())
-            for param in mappling.avoiding_parameters
-        ):
+        if any(not (param.not_blank_cells()) for param in mappling.avoiding_parameters):
             return MappedTiling.empty_mappling()
         new_containeres = []
         for c_list in mappling.containing_parameters:
-            if any(not (param.ghost.not_blank_cells()) for param in c_list):
+            if any(not (param.not_blank_cells()) for param in c_list):
                 continue
             new_containeres.append(c_list)
         return MappedTiling(

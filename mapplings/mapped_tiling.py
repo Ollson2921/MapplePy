@@ -11,7 +11,6 @@ from typing import (
     Union,
 )
 from collections import defaultdict
-from comb_spec_searcher import CombinatorialClass
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
 from .parameter import Parameter
@@ -25,25 +24,28 @@ FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
 
-class MappedTiling(CombinatorialClass):
+class MappedTiling(Tiling):
     """A mapped tiling is a tiling with avoiding and containing parameters
     which map to it by row and column maps."""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         tiling: Tiling,
         avoiding_parameters: Iterable[Parameter],
         containing_parameters: Iterable[ParameterList],
         enumerating_parameters: Iterable[ParameterList],
+        simplify: bool = False,
     ):
         self.avoiding_parameters = ParameterList(avoiding_parameters)
         self.containing_parameters = tuple(sorted(containing_parameters))
         self.enumerating_parameters = tuple(sorted(enumerating_parameters))
         self.tiling = tiling
-        self.obstructions = tiling.obstructions
-        self.requirements = tiling.requirements
-        self.dimensions = tiling.dimensions
+        super().__init__(
+            tiling.obstructions, tiling.requirements, tiling.dimensions, simplify
+        )
 
     # Containment and avoidance functions
 
@@ -215,9 +217,6 @@ class MappedTiling(CombinatorialClass):
                 self.enumerating_parameters,
             )
         )
-
-    def __bool__(self) -> bool:
-        return not bool(self.tiling)
 
     def __repr__(self) -> str:
         """The repr for the MappedTiling."""
