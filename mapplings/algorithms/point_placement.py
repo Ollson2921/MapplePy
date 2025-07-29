@@ -107,33 +107,118 @@ class MTRequirementPlacement:
         been mapped to the parameter)."""
         new_param_list = set()
         for parameter in param_list:
-            if not cell in parameter.image_cells():
-                new_map = self.update_map(parameter)
-                new_param_list.add(Parameter(parameter.ghost, new_map))
-                continue
-            n, m = parameter.dimensions
-            (
-                param_requirement_list,
-                param_indices,
-            ) = self.map_requirement_list_to_parameter(
-                requirement_list, indices, parameter
-            )
-            for param_cell in parameter.map.preimage_of_cell(cell):
-                new_ghost = PointPlacement(parameter.ghost).point_placement_in_cell(
-                    param_requirement_list, param_indices, direction, param_cell
+            if cell not in parameter.image_cells():
+                if any(
+                    image_cell[0] == cell[0] for image_cell in parameter.image_cells()
+                ):
+                    ## unfuse cols
+                    pass
+
+                if any(
+                    image_cell[1] == cell[1] for image_cell in parameter.image_cells()
+                ):
+                    # unfuse rows
+                    new_map = self.map_for_param_shared_rowcol(parameter, cell)
+                    new_param = self.expand_param(parameter, cell)
+                    new_param_list.add(new_param)
+                else:
+                    new_map = self.map_for_param_unchanged(parameter, cell)
+                    new_param_list.add(Parameter(parameter.ghost, new_map))
+            else:
+                (
+                    param_requirement_list,
+                    param_indices,
+                ) = self.map_requirement_list_to_parameter(
+                    requirement_list, indices, parameter
                 )
-                new_map = self.new_map(parameter, param_cell)
-                new_param_list.add(Parameter(new_ghost, new_map))
+                for param_cell in parameter.map.preimage_of_cell(cell):
+                    new_ghost = PointPlacement(parameter.ghost).point_placement_in_cell(
+                        param_requirement_list, param_indices, direction, param_cell
+                    )
+                    new_map = self.map_for_param_placed_point(
+                        new_ghost, param_cell, parameter.map
+                    )
+                    new_param_list.add(Parameter(new_ghost, new_map))
         return tuple(sorted(new_param_list))
 
-    def update_map(self, parameter: Parameter) -> RowColMap:
-        """Updates the map of the parameter which didn't have a
-        point placement in."""
+    def unfuse_rows_in_param(
+        self, parameter: Parameter, cell: tuple[int, int]
+    ) -> Iterator[Parameter]:
+        """For each row in param, if it's preimage is in the same row as the cell in the
+        base tiling that was inserted into then unfuse it by 3 rows and make the middle one a point row.
+        Anything below the point row stays the same,
+        the point row is shifted up by one and anything above it is shifted up by 2.
+        Note: this is the same as map_for_param_placed_point in only one direction."""
+        for row in parameter.dimensions[1]:
+            if parameter.map.row_map[row] == cell[1]:
+                new_ghost = self.unfuse_row(parameter, row)
+                new_row_map = self.map_for_param_expanded(
+                    new_ghost, parameter.map.row_map, (0, row), 1
+                )
+                new_col_map = self.map_for_adjust_rowcols(
+                    parameter.map.col_map, (0, cell, 0
+                )
+                yield Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+
+    def unfuse_row(self, parameter: Parameter, row: int) -> Parameter:
+        """Unfuse the param by 3 rows at the given row index and make
+        the middle one a point row."""
         pass
 
-    def new_map(self, parameter: Parameter, param_cell: tuple[int, int]) -> RowColMap:
-        """Creates a new map for a parameter which had a point placement in."""
-        pass
+    def map_for_param_unchanged(
+        self, parameter: Parameter, cell: tuple[int, int]
+    ) -> RowColMap:
+        """Updates the map of a parameter which didn't have a
+        point placement in, so the parameter itself is unchanged."""
+        new_row_map = self.map_for_adjust_rowcols(parameter.map.row_map, cell, 1)
+        new_col_map = self.map_for_adjust_rowcols(parameter.map.col_map, cell, 0)
+        return RowColMap(new_col_map, new_row_map)
+
+    def map_for_adjust_rowcols(
+        self, old_map: dict[int:int], cell: tuple[int, int], row: int
+    ) -> dict[int, int]:
+        """Updates the map of a parameter which didn't have a
+        point placement in, so the parameter itself is unchanged."""
+        """Adjusts the row/column map of a parameter after a point placement.
+        cols if row == 0, rows if row == 1."""
+        if old_map[0] < cell[row]:
+            return old_map
+        return {idx: old_map[row] + 2 for idx in old_map}
+
+    def map_for_param_placed_point(
+        self, new_ghost: Tiling, param_cell: tuple[int, int], old_rowcolmap: RowColMap
+    ) -> RowColMap:
+        """Creates a new map for a parameter which had a point placement in.
+
+        Expands the map in the parameter at the indices corresponding to the
+        cell where the point was placed in the parameter, and the cell where
+        the point was placed in the tiling."""
+        new_row_map = self.map_for_param_expanded(
+            new_ghost, old_rowcolmap.row_map, param_cell, 1
+        )
+        new_col_map = self.map_for_param_expanded(
+            new_ghost, old_rowcolmap.col_map, param_cell, 0
+        )
+        return RowColMap(new_col_map, new_row_map)
+
+    def map_for_param_expanded(
+        self,
+        new_ghost: Tiling,
+        old_map: dict[int:int],
+        param_cell: Tuple[int, int],
+        row: int,
+    ) -> dict[int, int]:
+        """Creates a new row/col map for a parameter which was expanded
+        because of a point placement."""
+        new_map = {}
+        for idx in range(new_ghost.dimensions[row]):
+            if idx < param_cell[idx]:
+                new_map[idx] = old_map[idx]
+            elif row == param_cell[1]:
+                new_map[idx] = old_map[idx - 1] + 1
+            else:
+                new_map[idx] = old_map[idx - 2] + 2
+        return new_map
 
     def map_requirement_list_to_parameter(
         self,
