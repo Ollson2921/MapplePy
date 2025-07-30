@@ -16,6 +16,10 @@ from itertools import combinations
 
 
 class MTRequirementPlacement:
+    """Handles point placement for requirements in a MappedTiling."""
+
+    # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-arguments
     def __init__(self, mappling: MappedTiling) -> None:
         self.mappling = mappling
 
@@ -25,6 +29,7 @@ class MTRequirementPlacement:
         indices: Tuple[int, ...],
         direction: int,
     ) -> Tuple[MappedTiling, ...]:
+        """Point placement in the mapped tiling."""
         cells = []
         for idx, gcp in zip(indices, requirement_list):
             cells.append(gcp.positions[idx])
@@ -41,6 +46,7 @@ class MTRequirementPlacement:
         direction: int,
         cell: Tuple[int, int],
     ) -> MappedTiling:
+        """Point placement in a specific cell of the mapped tiling."""
         base_tiling = PointPlacement(self.mappling.tiling).point_placement_in_cell(
             requirement_list, indices, direction, cell
         )
@@ -230,8 +236,8 @@ class MTRequirementPlacement:
         self, old_map: dict[int, int], cell: tuple[int, int], row: int
     ) -> dict[int, int]:
         """Updates the map of a parameter which didn't have a
-        point placement in, so the parameter itself is unchanged."""
-        """Adjusts the row/column map of a parameter after a point placement.
+        point placement in, so the parameter itself is unchanged.
+        Adjusts the row/column map of a parameter after a point placement.
         cols if row == 0, rows if row == 1."""
         if old_map[0] < cell[row]:
             return old_map
@@ -359,8 +365,9 @@ class MTPartialPointPlacements(MTRequirementPlacement):
     DIRECTIONS = [DIR_LEFT, DIR_RIGHT]
 
     def point_obstructions_and_requirements(
-        self, cell: Tuple[int, int], direction: int
+        self, cell: Tuple[int, int]
     ) -> Iterable[Iterable[GriddedCayleyPerm] | Iterable[Iterable[GriddedCayleyPerm]]]:
+        """Returns the point obstructions and requirements for a point placement in a cell."""
         cell = self.placed_cell(cell)
         _, y = self.new_dimensions()
         col_obs = [
@@ -379,12 +386,15 @@ class MTPartialPointPlacements(MTRequirementPlacement):
         )
 
     def placed_cell(self, cell: Tuple[int, int]) -> Tuple[int, int]:
+        """Returns the cell where the point is placed in the mapped tiling."""
         return (cell[0] + 1, cell[1])
 
     def multiplex_map(self, cell: Tuple[int, int]) -> MultiplexMap:
+        """Returns a multiplex map for the point placement in the cell."""
         return PartialMultiplexMap(cell, self.mappling.tiling.dimensions)
 
     def new_dimensions(self):
+        """Returns the new dimensions of the mapped tiling after point placement."""
         return (
             self.mappling.tiling.dimensions[0] + 2,
             self.mappling.tiling.dimensions[1],

@@ -91,11 +91,6 @@ class MappedTiling(Tiling):
             return True
         return False
 
-    @classmethod
-    def empty_mappling(cls) -> "MappedTiling":
-        """Returns the mappling with no parameters and base as the empty tiling"""
-        return MappedTiling(Tiling.empty_tiling(), [], [], [])
-
     # Combintatorial class stuff
 
     def has_parameters(self) -> bool:
