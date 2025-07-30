@@ -1,5 +1,6 @@
 """Point placement algorithm for MappedTiling."""
 
+from itertools import combinations
 from typing import Tuple, List, Iterator, Iterable
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.point_placements import (
@@ -10,9 +11,8 @@ from gridded_cayley_permutations.point_placements import (
     PartialMultiplexMap,
 )
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
-from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
-from itertools import combinations
+from mapplings import MappedTiling, Parameter, ParameterList
 
 
 class MTRequirementPlacement:
