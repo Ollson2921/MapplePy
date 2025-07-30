@@ -11,7 +11,6 @@ from typing import (
     Union,
 )
 from collections import defaultdict
-from comb_spec_searcher import CombinatorialClass
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 
 from .parameter import Parameter
@@ -25,25 +24,28 @@ FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
 
-class MappedTiling(CombinatorialClass):
+class MappedTiling(Tiling):
     """A mapped tiling is a tiling with avoiding and containing parameters
     which map to it by row and column maps."""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         tiling: Tiling,
         avoiding_parameters: Iterable[Parameter],
         containing_parameters: Iterable[ParameterList],
         enumerating_parameters: Iterable[ParameterList],
+        simplify: bool = False,
     ):
         self.avoiding_parameters = ParameterList(avoiding_parameters)
         self.containing_parameters = tuple(sorted(containing_parameters))
         self.enumerating_parameters = tuple(sorted(enumerating_parameters))
         self.tiling = tiling
-        self.obstructions = tiling.obstructions
-        self.requirements = tiling.requirements
-        self.dimensions = tiling.dimensions
+        super().__init__(
+            tiling.obstructions, tiling.requirements, tiling.dimensions, simplify
+        )
 
     # Containment and avoidance functions
 
@@ -162,6 +164,15 @@ class MappedTiling(CombinatorialClass):
         )
 
     # other stuff
+    def ace_parameters(
+        self,
+    ) -> tuple[ParameterList, Iterable[ParameterList], Iterable[ParameterList]]:
+        """Returns the mappling's avoiding, containing, and enumerating parameters as a tuple"""
+        return (
+            self.avoiding_parameters,
+            self.containing_parameters,
+            self.enumerating_parameters,
+        )
 
     def apply_to_all_parameters(
         self,
@@ -170,18 +181,17 @@ class MappedTiling(CombinatorialClass):
     ) -> "MappedTiling":
         """Applies func to all parameters with additional arguments.
         Parameter must be the first argument of the function"""
-        param_method = (func, additional_arguments)
         new_avoiders = ParameterList(
-            self.avoiding_parameters.apply_to_all(*param_method)
+            self.avoiding_parameters.apply_to_all(func, additional_arguments)
         )
-        new_containers = (
-            ParameterList(c_list.apply_to_all(*param_method))
+        new_containers = [
+            ParameterList(c_list.apply_to_all(func, additional_arguments))
             for c_list in self.containing_parameters
-        )
-        new_enumerators = (
-            ParameterList(e_list.apply_to_all(*param_method))
+        ]
+        new_enumerators = [
+            ParameterList(e_list.apply_to_all(func, additional_arguments))
             for e_list in self.enumerating_parameters
-        )
+        ]
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
 
     # dunder methods
@@ -207,9 +217,6 @@ class MappedTiling(CombinatorialClass):
                 self.enumerating_parameters,
             )
         )
-
-    def __bool__(self) -> bool:
-        return not bool(self.tiling)
 
     def __repr__(self) -> str:
         """The repr for the MappedTiling."""

@@ -3,6 +3,7 @@
 from typing import TypeVar, Callable, Generic, Iterable
 from itertools import chain
 from functools import partial
+from time import time
 
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from gridded_cayley_permutations.row_col_map import RowColMap
@@ -15,54 +16,109 @@ from .parameter import Parameter
 from .parameter_list import ParameterList
 from .mapped_tiling import MappedTiling
 
-T = TypeVar("T")
+T = TypeVar("T", MappedTiling, Parameter)
 Cell = tuple[int, int]
+
+DEBUG = False
 
 
 class Register(Generic[T]):
     """Used within cleaners to register core functions.
-    Can be initialized with a custom string
-    to determine the name of the attribute added to functions
+    Initialize with a string to determine the name of the index attribute added to functions.
+    Initialize with flag_name = bool to make flag_name an attribute of all registered functions.
     """
 
-    def __init__(self, attr_name: str = "index"):
-        self.registered_functions = set[Callable[[T], T]]()
-        self.map = dict[int, Callable[[T], T]]()
+    def __init__(self, attr_name: str = "index", **additional_flags: bool):
+        self.registered_functions: set[Callable[[T], T]] = set()
+        self.map: dict[int, Callable[[T], T]] = {}
+        self.flags = dict(additional_flags)
         self.attr_name = attr_name
 
     def __call__(
-        self, idx: int, update_register: bool = True
+        self, idx: int, update_register: bool = True, **flag_updates: bool
     ) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
-        """Used as the decorator to register functions. Setting update_register to False"""
+        """Used as the decorator to register functions.
+        Setting update_register to False doesn't add the function to registered functions
+        Flag updates will overwrite the register's default flag states."""
 
         def register_function(func: Callable[[T], T]) -> Callable[[T], T]:
             if update_register:
-                assert idx not in self.map.keys(), (
-                    f"{self.attr_name} {idx} is already assigned to {self[idx].__name__} "
-                    + f"and cannot be assigned to {func.__name__}"
-                )
-                self.registered_functions.add(func)
-                self.map[idx] = func
+                self.add_to_register(func, idx)
             setattr(func, self.attr_name, idx)
-
-            return func
+            return self.set_flags(func, flag_updates)
 
         return register_function
+
+    def add_to_register(self, func: Callable[[T], T], idx: int) -> None:
+        """Used to add functions to the register"""
+        assert idx not in self.map, (
+            f"{self.attr_name} {idx} is already assigned to {self[idx].__qualname__} "
+            + f"and cannot be assigned to {func.__qualname__}"
+        )
+        self.registered_functions.add(func)
+        self.map[idx] = func
+
+    def set_flags(self, func: Callable[[T], T], flag_updates: dict[str, bool]):
+        """Adds all registered flags as attributes to func.
+        Default flag values are overwritten by flag updates."""
+        known_flags = tuple(self.flags.keys())
+        adjusted_dict = self.flags.copy()
+        for key, value in flag_updates.items():
+            assert key in known_flags, (
+                f"Unknown Flag : {key} \n."
+                + f"{func.__qualname__} can be registered with the following flags : {known_flags}"
+            )
+            adjusted_dict[key] = value
+        func.__dict__.update(adjusted_dict)
+        return func
 
     def sorting_key(self, func: Callable[[T], T]) -> int:
         """Used to sort fuctions in cleaners"""
         assert hasattr(
             func, self.attr_name
-        ), f"{func.__name__} has no assigned {self.attr_name}"
+        ), f"{func.__qualname__} has no assigned {self.attr_name}"
         return getattr(func, self.attr_name)
 
     def __getitem__(self, key: int) -> Callable[[T], T]:
         return self.map[key]
 
     def __repr__(self):
-        return f"{self.attr_name} : " + repr(
-            {idx: self[idx].__name__ for idx in sorted(self.map)}
-        )
+        output = f"{self.__class__.__name__}(attr_name={self.attr_name}"
+        for key, value in self.flags.items():
+            output += f", {key}={value}"
+        return output + ")"
+
+    def __str__(self):
+        funcs = sorted(self.registered_functions, key=self.sorting_key)
+        output = f"{funcs[0].__qualname__.split('.')[0]} has registered the following functions:"
+        for func in funcs:
+            output += f"\n{getattr(func, self.attr_name)} : {func.__name__}"
+            for key, value in tuple(func.__dict__.items())[1:]:
+                output += f"\n    -{key}={value}"
+            output += "\n"
+        return output
+
+
+def debug(func: Callable[[T], T], run: bool = DEBUG):
+    """Sets the debug behavior for cleaning functions."""
+    if run:
+
+        def wrapper(clening_object: T) -> T:
+            old_object = clening_object
+            start_time = time()
+            new_object = func(old_object)
+            elapsed_time = start_time - time()
+            print(f"{func.__name__} elapsed time : {elapsed_time}")
+            if hasattr(clening_object, "initial_conditions"):
+                old_counts = old_object.initial_conditions()
+                new_counts = new_object.initial_conditions()
+                assert (
+                    old_counts == new_counts
+                ), f"Counts differ after running {func.__name__}"
+            return new_object
+
+        return wrapper
+    return func
 
 
 class Cleaner(Generic[T]):
@@ -73,11 +129,13 @@ class Cleaner(Generic[T]):
     reg = Register[T]()
 
     def __init__(self, todo_list: Iterable[Callable[[T], T]]):
-        self.todo_list = tuple(sorted(todo_list, key=self.__class__.reg.sorting_key))
+        self.todo_list: tuple[Callable[[T], T], ...] = tuple(
+            sorted(todo_list, key=self.__class__.reg.sorting_key)
+        )
 
     def __call__(self, cleaning_object: T) -> T:
         """Cleans the input cleaning_object according to the cleaner's todo_list"""
-        return self.__class__.list_cleanup(cleaning_object, self.todo_list)
+        return self.__class__.loop_cleanup(cleaning_object, self.todo_list)
 
     def __repr__(self):
         return self.__class__.__name__ + f"({self.todo_list})"
@@ -87,6 +145,22 @@ class Cleaner(Generic[T]):
             self.__class__.__name__
             + f"({dict((self.reg.sorting_key(func) , func.__name__) for func in self.todo_list)})"
         )
+
+    def __iter__(self):
+        return iter(sorted(self.todo_list, key=self.reg.sorting_key))
+
+    @classmethod
+    def loop_cleanup(
+        cls, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
+    ) -> T:
+        """Cleans the cleaning object according to the cleaning functions."""
+        new_cleaning_object = cleaning_object
+        continue_cleaning = True
+        while continue_cleaning:
+            old_cleaning_object = new_cleaning_object
+            new_cleaning_object = cls.list_cleanup(old_cleaning_object, cleaning_list)
+            continue_cleaning = old_cleaning_object != new_cleaning_object
+        return new_cleaning_object
 
     @classmethod
     def list_cleanup(
@@ -103,9 +177,9 @@ class Cleaner(Generic[T]):
         """Applies all functions in cleaning_list without reordering"""
         new_cleaning_object = cleaning_object
         for func in cleaning_list:
-            new_cleaning_object = func(new_cleaning_object)
             if not bool(new_cleaning_object):
                 return new_cleaning_object
+            new_cleaning_object = debug(func)(new_cleaning_object)
         return new_cleaning_object
 
     def tracked_cleanup(
@@ -125,10 +199,7 @@ class Cleaner(Generic[T]):
     @classmethod
     def full_cleanup(cls, cleaning_object: T) -> T:
         """Applies all cleanup functions."""
-        return cls.unordered_cleanup(
-            cleaning_object,
-            tuple(sorted(cls.reg.registered_functions, key=cls.reg.sorting_key)),
-        )
+        return cls.make_full_cleaner()(cleaning_object)
 
 
 class ParamCleaner(Cleaner[Parameter]):
@@ -136,22 +207,27 @@ class ParamCleaner(Cleaner[Parameter]):
     core functions need to be registered with @reg(index)
     where index determines cleaning order"""
 
-    reg = Register[Parameter]("param_register")
+    reg = Register[Parameter](
+        "param_register",
+        run_on_avoiders=True,
+        run_on_containers=True,
+        run_on_enumerators=True,
+    )
     # Final Methods
 
     @staticmethod
-    @reg(3)
+    @reg(3, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         return ParamCleaner._fuse_valid_rows_or_cols(
-            ParamCleaner._fuse_valid_rows_or_cols(param, False), True
+            ParamCleaner._fuse_valid_rows_or_cols(param, True), False
         )
 
     @staticmethod
     @reg(1)
     def reduce_empty_rows_and_cols(param: Parameter) -> Parameter:
         """Removes empty rows and columns in the parameter"""
-        empty_cols, empty_rows = map(set, param.ghost.find_empty_rows_and_columns())
+        empty_cols, empty_rows = map(set, param.find_empty_rows_and_columns())
         cols_to_remove, rows_to_remove = set(), set()
         col_preimages, row_preimages = param.map.preimage_map()
         for key in col_preimages.keys():
@@ -167,13 +243,13 @@ class ParamCleaner(Cleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(0)
+    @reg(0, run_on_enumerators=False)
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
-        return param.delete_rows_and_columns(*param.ghost.find_blank_columns_and_rows())
+        return param.delete_rows_and_columns(*param.find_blank_columns_and_rows())
 
     @staticmethod
-    @reg(2, update_register=False)
+    @reg(2, update_register=False, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces points wherever possible"""
         raise NotImplementedError
@@ -227,7 +303,23 @@ class MTCleaner(Cleaner[MappedTiling]):
 
         @MTCleaner.reg(5, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
-            return mappling.apply_to_all_parameters(param_cleaner)
+            new_avoiders, new_containers, new_enumerators = mappling.ace_parameters()
+            for func in param_cleaner:
+                if getattr(func, "run_on_avoiders"):
+                    new_avoiders = ParameterList(new_avoiders.apply_to_all(func))
+                if getattr(func, "run_on_containers"):
+                    new_containers = [
+                        ParameterList(c_list.apply_to_all(func))
+                        for c_list in new_containers
+                    ]
+                if getattr(func, "run_on_containers"):
+                    new_enumerators = [
+                        ParameterList(e_list.apply_to_all(func))
+                        for e_list in new_enumerators
+                    ]
+            return MappedTiling(
+                mappling.tiling, new_avoiders, new_containers, new_enumerators
+            )
 
         return _clean_parameters
 
@@ -255,31 +347,6 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling
 
     @staticmethod
-    @reg(8)
-    def insert_containers(mappling: MappedTiling) -> MappedTiling:
-        """Looks for size 1 containing parameter lists with a one-to-one row col map,
-        puts all obstructions and requirements of the ghost onto the base tiling,
-        and removes the containing parameter list"""
-        new_containers = []
-        new_tiling = mappling.tiling
-        for c_list in mappling.containing_parameters:
-            if len(c_list) == 1:
-                container = tuple(c_list)[0]
-                image_cols, image_rows = container.map.image_rows_and_cols()
-                if container.dimensions[0] == len(image_cols) and container.dimensions[
-                    1
-                ] == len(image_rows):
-                    new_tiling = MTCleaner._insert_param(new_tiling, container)
-                    continue
-            new_containers.append(c_list)
-        return MappedTiling(
-            new_tiling,
-            mappling.avoiding_parameters,
-            new_containers,
-            mappling.enumerating_parameters,
-        )
-
-    @staticmethod
     @reg(7)
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
@@ -295,40 +362,6 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.tiling,
             mappling.avoiding_parameters,
             new_containers,
-            mappling.enumerating_parameters,
-        )
-        return MTCleaner.list_cleanup(
-            new_mappling,
-            (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
-        )
-
-    @staticmethod
-    @reg(6)
-    def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
-        """Adds requirements from every avoider that is near-trivial and removes that avoider"""
-        new_avoiders = []
-        new_tiling = mappling.tiling
-        for avoider in mappling.avoiding_parameters:
-            image_cols, image_rows = avoider.map.image_rows_and_cols()
-            if avoider.dimensions[0] == len(image_cols) and avoider.dimensions[
-                1
-            ] == len(image_rows):
-                reqs = avoider.requirements
-                if reqs:
-                    if max(len(req) for req in reqs) > 1:
-                        new_avoiders.append(avoider)
-                        continue
-                inverse = Parameter(
-                    Tiling(chain(*reqs), [avoider.obstructions], avoider.dimensions),
-                    avoider.map,
-                )
-                new_tiling = MTCleaner._insert_param(new_tiling, inverse)
-                continue
-            new_avoiders.append(avoider)
-        new_mappling = MappedTiling(
-            new_tiling,
-            new_avoiders,
-            mappling.containing_parameters,
             mappling.enumerating_parameters,
         )
         return MTCleaner.list_cleanup(
@@ -374,7 +407,7 @@ class MTCleaner(Cleaner[MappedTiling]):
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
         preimage rows and cols from the parameters"""
-        empty_cols, empty_rows = mappling.tiling.find_empty_rows_and_columns()
+        empty_cols, empty_rows = mappling.find_empty_rows_and_columns()
         if (
             len(empty_cols) == mappling.dimensions[0]
             or len(empty_rows) == mappling.dimensions[1]
@@ -387,10 +420,14 @@ class MTCleaner(Cleaner[MappedTiling]):
                 [],
                 [],
             )
-        mappling.tiling = mappling.tiling.delete_rows_and_columns(
-            empty_cols, empty_rows
+        new_tiling = mappling.delete_rows_and_columns(empty_cols, empty_rows)
+        new_mappling = MappedTiling(
+            new_tiling,
+            mappling.avoiding_parameters,
+            mappling.containing_parameters,
+            mappling.enumerating_parameters,
         )
-        return mappling.apply_to_all_parameters(
+        return new_mappling.apply_to_all_parameters(
             Parameter.delete_preimage_of_rows_and_columns, (empty_cols, empty_rows)
         )
 
@@ -422,20 +459,77 @@ class MTCleaner(Cleaner[MappedTiling]):
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
-        if any(
-            not (param.ghost.not_blank_cells())
-            for param in mappling.avoiding_parameters
-        ):
+        if any(not (param.not_blank_cells()) for param in mappling.avoiding_parameters):
             return MappedTiling.empty_mappling()
         new_containeres = []
         for c_list in mappling.containing_parameters:
-            if any(not (param.ghost.not_blank_cells()) for param in c_list):
+            if any(not (param.not_blank_cells()) for param in c_list):
                 continue
             new_containeres.append(c_list)
         return MappedTiling(
             mappling.tiling,
             mappling.avoiding_parameters,
             new_containeres,
+            mappling.enumerating_parameters,
+        )
+
+    @staticmethod
+    @reg(8)
+    def insert_containers(mappling: MappedTiling) -> MappedTiling:
+        """For parameters with empty tilings, if it is the only
+        one in a list then the mappling is empty, otherwise remove the empty
+        parameter.
+        If only one parameter in a list and it maps to base tiling by the identity map
+        then map obs and reqs down and remove the parameter list.
+        Note: As we always assume a parameter maps to the whole tiling, we defined a row
+        col map as being trivial iff the dimensions of the tiling and ghost are the same.
+        """
+        new_containers = []
+        new_tiling = mappling.tiling
+        for c_list in mappling.containing_parameters:
+            if len(c_list) == 1:
+                container = tuple(c_list)[0]
+                image_cols, image_rows = container.map.image_rows_and_cols()
+                if container.dimensions[0] == len(image_cols) and container.dimensions[
+                    1
+                ] == len(image_rows):
+                    new_tiling = MTCleaner._insert_param(new_tiling, container)
+                    continue
+            new_containers.append(c_list)
+        return MappedTiling(
+            new_tiling,
+            mappling.avoiding_parameters,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
+
+    @staticmethod
+    @reg(6)
+    def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
+        """Adds requirements from every avoider that is near-trivial and removes that avoider"""
+        new_avoiders = []
+        new_tiling = mappling.tiling
+        for avoider in mappling.avoiding_parameters:
+            image_cols, image_rows = avoider.map.image_rows_and_cols()
+            if avoider.dimensions[0] == len(image_cols) and avoider.dimensions[
+                1
+            ] == len(image_rows):
+                reqs = avoider.requirements
+                if reqs:
+                    if max(len(req) for req in reqs) > 1:
+                        new_avoiders.append(avoider)
+                        continue
+                inverse = Parameter(
+                    Tiling(chain(*reqs), [avoider.obstructions], avoider.dimensions),
+                    avoider.map,
+                )
+                new_tiling = MTCleaner._insert_param(new_tiling, inverse)
+                continue
+            new_avoiders.append(avoider)
+        return MappedTiling(
+            new_tiling,
+            new_avoiders,
+            mappling.containing_parameters,
             mappling.enumerating_parameters,
         )
 

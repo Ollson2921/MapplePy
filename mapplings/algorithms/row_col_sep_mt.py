@@ -77,8 +77,8 @@ class LTRowColSeparationMT:
         """Maps each cell of the original parameter to the correct active cell
         in the new parameter."""
         cell_map = {}
-        for i in range(param.ghost.dimensions[0]):
-            for j in range(param.ghost.dimensions[1]):
+        for i in range(param.dimensions[0]):
+            for j in range(param.dimensions[1]):
                 cell_map[(i, j)] = (
                     i + total_extensions[0][param.map.col_map[i]],
                     j + total_extensions[1][param.map.row_map[j]],
@@ -144,11 +144,11 @@ class LTRowColSeparationMT:
         )
         cell_map = self.cell_map(total_extensions, param)
         new_obstructions = [
-            self.transform_gcp(cell_map, ob) for ob in param.ghost.obstructions
+            self.transform_gcp(cell_map, ob) for ob in param.obstructions
         ]
         new_requirements = [
             [self.transform_gcp(cell_map, req) for req in req_list]
-            for req_list in param.ghost.requirements
+            for req_list in param.requirements
         ]
         new_ghost = Tiling(new_obstructions, new_requirements, new_dimensions)
         new_map = RowColMap(
