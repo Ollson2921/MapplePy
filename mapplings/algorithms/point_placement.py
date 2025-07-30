@@ -9,7 +9,7 @@ from gridded_cayley_permutations.point_placements import (
 )
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling, Parameter
+from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations import GriddedCayleyPerm
 from gridded_cayley_permutations.point_placements import (
     MultiplexMap,
@@ -17,6 +17,7 @@ from gridded_cayley_permutations.point_placements import (
     PointPlacement,
 )
 from gridded_cayley_permutations.row_col_map import RowColMap
+from itertools import combinations
 
 
 class MTRequirementPlacement:
@@ -62,8 +63,8 @@ class MTRequirementPlacement:
             direction,
             cell,
         )
-        new_enumeration_parameters = self.req_placement_param_list(
-            self.mappling.enumeration_parameters,
+        new_enumerating_parameters = self.req_placement_param_list(
+            self.mappling.enumerating_parameters,
             requirement_list,
             indices,
             direction,
@@ -73,7 +74,7 @@ class MTRequirementPlacement:
             base_tiling,
             new_avoiding_parameters,
             new_containing_parameters,
-            new_enumeration_parameters,
+            new_enumerating_parameters,
         )
 
     def req_placement_param_list(
@@ -111,16 +112,13 @@ class MTRequirementPlacement:
                 if any(
                     image_cell[0] == cell[0] for image_cell in parameter.image_cells()
                 ):
-                    ## unfuse cols
-                    pass
-
+                    for new_param in self.unfuse_cols_in_param(parameter, cell):
+                        new_param_list.add(new_param)
                 if any(
                     image_cell[1] == cell[1] for image_cell in parameter.image_cells()
                 ):
-                    # unfuse rows
-                    new_map = self.map_for_param_shared_rowcol(parameter, cell)
-                    new_param = self.expand_param(parameter, cell)
-                    new_param_list.add(new_param)
+                    for new_param in self.unfuse_rows_in_param(parameter, cell):
+                        new_param_list.add(new_param)
                 else:
                     new_map = self.map_for_param_unchanged(parameter, cell)
                     new_param_list.add(Parameter(parameter.ghost, new_map))
@@ -141,29 +139,86 @@ class MTRequirementPlacement:
                     new_param_list.add(Parameter(new_ghost, new_map))
         return tuple(sorted(new_param_list))
 
+    def unfuse_cols_in_param(
+        self, parameter: Parameter, cell: tuple[int, int]
+    ) -> Iterator[Parameter]:
+        """For each column in param, if it's preimage is in the same column as the cell in the
+        base tiling that was inserted into then unfuse it by 3 columns and make the middle one a point column.
+        """
+        for col in range(parameter.dimensions[0]):
+            if parameter.map.col_map[col] == cell[0]:
+                new_ghost = self.unfuse_col(parameter, col)
+                new_col_map = self.map_for_param_expanded(
+                    new_ghost, parameter.map.col_map, (col + 1, 0), 0
+                )
+                new_row_map = self.map_for_adjust_rowcols(
+                    parameter.map.row_map, cell, 1
+                )
+                yield Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+
+    def unfuse_col(self, parameter: Parameter, col: int) -> Tiling:
+        """Unfuse the param by 3 columns at the given column index and make
+        the middle one a point column."""
+        n, m = parameter.dimensions
+        new_n = n + 2
+        row_map = {i: i for i in range(m)}
+        col_map = {i: i for i in range(col + 1)}
+        col_map.update({i: i - 2 for i in range(col + 2, new_n)})
+        col_map[col + 1] = col
+        obs, reqs = RowColMap(col_map, row_map).preimage_of_tiling(parameter.ghost)
+        col_obs = [
+            GriddedCayleyPerm(CayleyPermutation([0]), [(col + 1, i)]) for i in range(m)
+        ]
+        return Tiling(obs, reqs, (new_n, m)).add_obstructions(col_obs)
+
     def unfuse_rows_in_param(
         self, parameter: Parameter, cell: tuple[int, int]
     ) -> Iterator[Parameter]:
         """For each row in param, if it's preimage is in the same row as the cell in the
         base tiling that was inserted into then unfuse it by 3 rows and make the middle one a point row.
         Anything below the point row stays the same,
-        the point row is shifted up by one and anything above it is shifted up by 2.
-        Note: this is the same as map_for_param_placed_point in only one direction."""
-        for row in parameter.dimensions[1]:
+        the point row is shifted up by one and anything above it is shifted up by 2."""
+        for row in range(parameter.dimensions[1]):
             if parameter.map.row_map[row] == cell[1]:
                 new_ghost = self.unfuse_row(parameter, row)
                 new_row_map = self.map_for_param_expanded(
-                    new_ghost, parameter.map.row_map, (0, row), 1
+                    new_ghost, parameter.map.row_map, (0, row + 1), 1
                 )
                 new_col_map = self.map_for_adjust_rowcols(
-                    parameter.map.col_map, (0, cell, 0
+                    parameter.map.col_map, cell, 0
                 )
                 yield Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
-    def unfuse_row(self, parameter: Parameter, row: int) -> Parameter:
+    def unfuse_row(self, parameter: Parameter, row: int) -> Tiling:
         """Unfuse the param by 3 rows at the given row index and make
         the middle one a point row."""
-        pass
+        n, m = parameter.dimensions
+        new_m = m + 2
+        col_map = {i: i for i in range(n)}
+        row_map = {i: i for i in range(row + 1)}
+        row_map.update({i: i - 2 for i in range(row + 2, new_m)})
+        row_map[row + 1] = row
+        obs, reqs = RowColMap(col_map, row_map).preimage_of_tiling(parameter.ghost)
+        return Tiling(obs, reqs, (n, new_m)).add_obstructions(self.row_obs(n, row + 1))
+
+    def row_obs(self, x: int, row: int) -> List[GriddedCayleyPerm]:
+        """Returns the row observations for a given row in a parameter."""
+        row_obs: list[GriddedCayleyPerm] = []
+        for col in range(x):
+            row_obs.append(
+                GriddedCayleyPerm(CayleyPermutation([0, 1]), [(col, row), (col, row)])
+            )
+            row_obs.append(
+                GriddedCayleyPerm(CayleyPermutation([1, 0]), [(col, row), (col, row)])
+            )
+        for col1, col2 in combinations(range(x), 2):
+            row_obs.append(
+                GriddedCayleyPerm(CayleyPermutation([0, 1]), [(col1, row), (col2, row)])
+            )
+            row_obs.append(
+                GriddedCayleyPerm(CayleyPermutation([1, 0]), [(col1, row), (col2, row)])
+            )
+        return row_obs
 
     def map_for_param_unchanged(
         self, parameter: Parameter, cell: tuple[int, int]
@@ -194,10 +249,10 @@ class MTRequirementPlacement:
         cell where the point was placed in the parameter, and the cell where
         the point was placed in the tiling."""
         new_row_map = self.map_for_param_expanded(
-            new_ghost, old_rowcolmap.row_map, param_cell, 1
+            new_ghost, old_rowcolmap.row_map, (param_cell[0] + 1, param_cell[1] + 1), 1
         )
         new_col_map = self.map_for_param_expanded(
-            new_ghost, old_rowcolmap.col_map, param_cell, 0
+            new_ghost, old_rowcolmap.col_map, (param_cell[0] + 1, param_cell[1] + 1), 0
         )
         return RowColMap(new_col_map, new_row_map)
 
@@ -212,9 +267,9 @@ class MTRequirementPlacement:
         because of a point placement."""
         new_map = {}
         for idx in range(new_ghost.dimensions[row]):
-            if idx < param_cell[idx]:
+            if idx < param_cell[row]:
                 new_map[idx] = old_map[idx]
-            elif row == param_cell[1]:
+            elif idx == param_cell[row]:
                 new_map[idx] = old_map[idx - 1] + 1
             else:
                 new_map[idx] = old_map[idx - 2] + 2
@@ -252,7 +307,7 @@ class MTRequirementPlacement:
             self.mappling.containing_parameters, cell
         )
         new_enumeration_parameters = self.update_list_of_param_lists(
-            self.mappling.enumeration_parameters, cell
+            self.mappling.enumerating_parameters, cell
         )
         return MappedTiling(
             new_tiling,
@@ -261,14 +316,18 @@ class MTRequirementPlacement:
             new_enumeration_parameters,
         )
 
-    def update_list_of_param_lists(self, param_lists, cell):
+    def update_list_of_param_lists(
+        self, param_lists: list[ParameterList], cell: Tuple[int, int]
+    ) -> list[ParameterList]:
         """Doing directionless point placements in a list of parameter lists and updating maps."""
         new_param_lists = []
         for param_list in param_lists:
             new_param_lists.append(self.update_param_list(param_list, cell))
         return new_param_lists
 
-    def update_param_list(self, param_list, cell):
+    def update_param_list(
+        self, param_list: ParameterList, cell: Tuple[int, int]
+    ) -> ParameterList:
         """Doing directionless point placements in parameter list and updating maps."""
         new_param_list = []
         for parameter in param_list:
