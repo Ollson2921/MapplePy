@@ -132,8 +132,8 @@ class MTRequirementPlacement:
                 )
                 for param_cell in parameter.map.preimage_of_cell(cell):
                     new_ghost = PointPlacement(parameter.ghost).point_placement_in_cell(
-                        tuple(param_requirement_list),
-                        tuple(param_indices),
+                        param_requirement_list,
+                        param_indices,
                         direction,
                         param_cell,
                     )
@@ -297,7 +297,7 @@ class MTRequirementPlacement:
             for stretched_gcp in parameter.map.preimage_of_gridded_cperm(gcp):
                 new_requirement_list.append(stretched_gcp)
                 new_indices.append(idx)
-        return new_requirement_list, new_indices
+        return tuple(new_requirement_list), tuple(new_indices)
 
     # Directionless point placement #
 
