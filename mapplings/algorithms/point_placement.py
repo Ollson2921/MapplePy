@@ -286,7 +286,7 @@ class MTRequirementPlacement:
         requirement_list: tuple[GriddedCayleyPerm, ...],
         indices: tuple[int, ...],
         parameter: Parameter,
-    ) -> Tuple[Iterable[GriddedCayleyPerm], Iterable[int]]:
+    ) -> Tuple[Tuple[GriddedCayleyPerm, ...], Tuple[int, ...]]:
         """Maps each requirement in a requirement list to a new requirement based on
         parameter.map and creates new requirement list for the parameter. Also turns
         indices into a list length len(new_requirement_list), with one occurrence of each
