@@ -1,21 +1,16 @@
 """Point placement algorithm for MappedTiling."""
 
-from typing import Dict, Tuple, List, Iterator
+from typing import Tuple, List, Iterator, Iterable
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.point_placements import (
     PointPlacement,
     DIR_LEFT,
     DIR_RIGHT,
-)
-from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
-from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling, Parameter, ParameterList
-from gridded_cayley_permutations import GriddedCayleyPerm
-from gridded_cayley_permutations.point_placements import (
     MultiplexMap,
     PartialMultiplexMap,
-    PointPlacement,
 )
+from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
+from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
 from itertools import combinations
 
@@ -79,12 +74,12 @@ class MTRequirementPlacement:
 
     def req_placement_param_list(
         self,
-        param_lists: tuple[tuple[Parameter, ...], ...],
+        param_lists: tuple[ParameterList, ...],
         requirement_list: tuple[GriddedCayleyPerm, ...],
         indices: tuple[int, ...],
         direction: int,
         cell: tuple[int, int],
-    ) -> tuple[Parameter, ...]:
+    ) -> Iterable[ParameterList]:
         """Point placement in a list of lists of parameters."""
         return tuple(
             self.req_placement_in_list(
@@ -95,12 +90,12 @@ class MTRequirementPlacement:
 
     def req_placement_in_list(
         self,
-        param_list: tuple[Parameter, ...],
+        param_list: ParameterList,
         requirement_list: tuple[GriddedCayleyPerm, ...],
         indices: tuple[int, ...],
         direction: int,
         cell: tuple[int, int],
-    ) -> tuple[Parameter, ...]:
+    ) -> ParameterList:
         """Point placement in a single list of parameters.
         For a given list of lists of parameters, maps each individual
         parameter to a a new list of parameters with the requirement list
@@ -137,13 +132,14 @@ class MTRequirementPlacement:
                         new_ghost, param_cell, parameter.map
                     )
                     new_param_list.add(Parameter(new_ghost, new_map))
-        return tuple(sorted(new_param_list))
+        return ParameterList(tuple(sorted(new_param_list)))
 
     def unfuse_cols_in_param(
         self, parameter: Parameter, cell: tuple[int, int]
     ) -> Iterator[Parameter]:
         """For each column in param, if it's preimage is in the same column as the cell in the
-        base tiling that was inserted into then unfuse it by 3 columns and make the middle one a point column.
+        base tiling that was inserted into then unfuse it by 3 columns and make the middle
+        one a point column.
         """
         for col in range(parameter.dimensions[0]):
             if parameter.map.col_map[col] == cell[0]:
@@ -175,7 +171,8 @@ class MTRequirementPlacement:
         self, parameter: Parameter, cell: tuple[int, int]
     ) -> Iterator[Parameter]:
         """For each row in param, if it's preimage is in the same row as the cell in the
-        base tiling that was inserted into then unfuse it by 3 rows and make the middle one a point row.
+        base tiling that was inserted into then unfuse it by 3 rows and make the middle
+        one a point row.
         Anything below the point row stays the same,
         the point row is shifted up by one and anything above it is shifted up by 2."""
         for row in range(parameter.dimensions[1]):
@@ -230,7 +227,7 @@ class MTRequirementPlacement:
         return RowColMap(new_col_map, new_row_map)
 
     def map_for_adjust_rowcols(
-        self, old_map: dict[int:int], cell: tuple[int, int], row: int
+        self, old_map: dict[int, int], cell: tuple[int, int], row: int
     ) -> dict[int, int]:
         """Updates the map of a parameter which didn't have a
         point placement in, so the parameter itself is unchanged."""
@@ -259,7 +256,7 @@ class MTRequirementPlacement:
     def map_for_param_expanded(
         self,
         new_ghost: Tiling,
-        old_map: dict[int:int],
+        old_map: dict[int, int],
         param_cell: Tuple[int, int],
         row: int,
     ) -> dict[int, int]:
@@ -280,7 +277,7 @@ class MTRequirementPlacement:
         requirement_list: tuple[GriddedCayleyPerm, ...],
         indices: tuple[int, ...],
         parameter: Parameter,
-    ) -> tuple[tuple[GriddedCayleyPerm, ...], tuple[int, ...]]:
+    ) -> Tuple[Iterable[GriddedCayleyPerm], Iterable[int]]:
         """Maps each requirement in a requirement list to a new requirement based on
         parameter.map and creates new requirement list for the parameter. Also turns
         indices into a list length len(new_requirement_list), with one occurrence of each
@@ -293,7 +290,7 @@ class MTRequirementPlacement:
                 new_indices.append(idx)
         return new_requirement_list, new_indices
 
-    ### Directionless point placement ###
+    # Directionless point placement #
 
     def directionless_point_placement(self, cell: Tuple[int, int]) -> MappedTiling:
         """Place a directionless point in the tiling and all parameters and update maps."""
@@ -317,7 +314,7 @@ class MTRequirementPlacement:
         )
 
     def update_list_of_param_lists(
-        self, param_lists: list[ParameterList], cell: Tuple[int, int]
+        self, param_lists: Iterable[ParameterList], cell: Tuple[int, int]
     ) -> list[ParameterList]:
         """Doing directionless point placements in a list of parameter lists and updating maps."""
         new_param_lists = []
@@ -342,7 +339,7 @@ class MTRequirementPlacement:
                     parameter, new_ghost, new_cell
                 )
                 new_param_list.append(new_param)
-        return new_param_list
+        return ParameterList(new_param_list)
 
     def new_parameter_from_point_placed_tiling(
         self, parameter: Parameter, new_ghost: Tiling, cell: Tuple[int, int]
@@ -362,10 +359,8 @@ class MTPartialPointPlacements(MTRequirementPlacement):
     DIRECTIONS = [DIR_LEFT, DIR_RIGHT]
 
     def point_obstructions_and_requirements(
-        self, cell: Tuple[int], direction: int
-    ) -> Tuple[
-        Tuple[GriddedCayleyPerm, ...] | Tuple[Tuple[GriddedCayleyPerm, ...], ...]
-    ]:
+        self, cell: Tuple[int, int], direction: int
+    ) -> Iterable[Iterable[GriddedCayleyPerm] | Iterable[Iterable[GriddedCayleyPerm]]]:
         cell = self.placed_cell(cell)
         _, y = self.new_dimensions()
         col_obs = [
@@ -373,7 +368,7 @@ class MTPartialPointPlacements(MTRequirementPlacement):
             for i in range(y)
             if i != cell[1]
         ]
-        return [
+        return (
             [
                 GriddedCayleyPerm(CayleyPermutation((0, 1)), [cell, cell]),
                 GriddedCayleyPerm(CayleyPermutation((0, 0)), [cell, cell]),
@@ -381,12 +376,12 @@ class MTPartialPointPlacements(MTRequirementPlacement):
             ]
             + col_obs,
             [[GriddedCayleyPerm(CayleyPermutation([0]), [cell])]],
-        ]
+        )
 
-    def placed_cell(self, cell: Tuple[int]) -> Tuple[int]:
+    def placed_cell(self, cell: Tuple[int, int]) -> Tuple[int, int]:
         return (cell[0] + 1, cell[1])
 
-    def multiplex_map(self, cell: Tuple[int]) -> MultiplexMap:
+    def multiplex_map(self, cell: Tuple[int, int]) -> MultiplexMap:
         return PartialMultiplexMap(cell, self.mappling.tiling.dimensions)
 
     def new_dimensions(self):

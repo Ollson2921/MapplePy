@@ -70,6 +70,63 @@ def test_insert_containers():
     assert MTCleaner.list_cleanup(mt, cleaning_list) == cleaned_mt
 
 
+req_list = [
+    GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),
+    GriddedCayleyPerm(CayleyPermutation([0]), [(1, 0)]),
+    GriddedCayleyPerm(CayleyPermutation([0]), [(0, 1)]),
+    GriddedCayleyPerm(CayleyPermutation([0]), [(1, 1)]),
+    GriddedCayleyPerm(CayleyPermutation([0]), [(2, 0)]),
+    GriddedCayleyPerm(CayleyPermutation([0]), [(2, 1)]),
+]
+obs = [
+    GriddedCayleyPerm(CayleyPermutation([0, 1, 2]), [(0, 0), (1, 1), (1, 1)]),
+    GriddedCayleyPerm(CayleyPermutation([0, 1, 2]), [(0, 0), (1, 1), (2, 1)]),
+]
+ghost = Tiling(
+    obs,
+    [req_list],
+    (3, 2),
+)
+colmap = {0: 0, 1: 1, 2: 2}
+rowmap = {0: 0, 1: 1}
+param = Parameter(ghost, RowColMap(colmap, rowmap))
+bt = Tiling([], [], (3, 2))
+mt = MappedTiling(
+    bt,
+    ParameterList(frozenset()),
+    (ParameterList([param]),),
+    (),
+)
+print(mt)
+cleaning_list = [MTCleaner.insert_containers]
+print("=" * 20)
+print(MTCleaner.list_cleanup(mt, cleaning_list))
+cleaned_mt = MappedTiling(
+    Tiling(
+        (
+            GriddedCayleyPerm(CayleyPermutation((0, 1, 2)), ((0, 0), (1, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1, 2)), ((0, 0), (1, 1), (2, 1))),
+        ),
+        (
+            (
+                GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),
+                GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
+                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
+                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),
+                GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 0),)),
+                GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 1),)),
+            ),
+        ),
+        (3, 2),
+    ),
+    ParameterList(frozenset()),
+    (),
+    (),
+)
+print("=" * 20)
+print(cleaned_mt)
+
+
 def test_insert_containers_empty():
     """Check that parameters that don't map to the whole base tiling
     (but are still one-to-one maps) are still mapped down."""
