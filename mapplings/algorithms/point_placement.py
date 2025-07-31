@@ -115,7 +115,7 @@ class MTRequirementPlacement:
                 ):
                     for new_param in self.unfuse_cols_in_param(parameter, cell):
                         new_param_list.add(new_param)
-                if any(
+                elif any(
                     image_cell[1] == cell[1] for image_cell in parameter.image_cells()
                 ):
                     for new_param in self.unfuse_rows_in_param(parameter, cell):

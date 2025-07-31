@@ -199,6 +199,11 @@ def test_point_placement_in_mapped_tiling():
         (ParameterList([param1, param3]), ParameterList([param4])),
         (),
     )
+    print(mt)
+    for p in MTRequirementPlacement(mt).point_placement(
+        (GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),), (0,), 1
+    ):
+        print(p)
     assert list(
         MTRequirementPlacement(mt).point_placement(
             (GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),), (0,), 1
@@ -315,46 +320,6 @@ def test_point_placement_in_mapped_tiling():
                 )
             ),
             (
-                ParameterList(
-                    frozenset(
-                        {
-                            Parameter(
-                                Tiling((), (), (2, 2)),
-                                RowColMap({0: 2, 1: 2}, {0: 3, 1: 3}),
-                            ),
-                            Parameter(
-                                Tiling(
-                                    (
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((1, 0),)
-                                        ),
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((1, 1),)
-                                        ),
-                                    ),
-                                    (),
-                                    (4, 2),
-                                ),
-                                RowColMap({0: 0, 1: 1, 2: 2, 3: 2}, {0: 3, 1: 3}),
-                            ),
-                            Parameter(
-                                Tiling(
-                                    (
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((2, 0),)
-                                        ),
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((2, 1),)
-                                        ),
-                                    ),
-                                    (),
-                                    (4, 2),
-                                ),
-                                RowColMap({0: 0, 1: 0, 2: 1, 3: 2}, {0: 3, 1: 3}),
-                            ),
-                        }
-                    )
-                ),
                 ParameterList(
                     frozenset(
                         {
@@ -707,6 +672,42 @@ def test_point_placement_in_mapped_tiling():
                                     (2, 4),
                                 ),
                                 RowColMap({0: 3, 1: 3}, {0: 0, 1: 1, 2: 2, 3: 2}),
+                            ),
+                        }
+                    )
+                ),
+                ParameterList(
+                    frozenset(
+                        {
+                            Parameter(
+                                Tiling(
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((1, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((1, 1),)
+                                        ),
+                                    ),
+                                    (),
+                                    (4, 2),
+                                ),
+                                RowColMap({0: 0, 1: 1, 2: 2, 3: 2}, {0: 3, 1: 3}),
+                            ),
+                            Parameter(
+                                Tiling(
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((2, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((2, 1),)
+                                        ),
+                                    ),
+                                    (),
+                                    (4, 2),
+                                ),
+                                RowColMap({0: 0, 1: 0, 2: 1, 3: 2}, {0: 3, 1: 3}),
                             ),
                         }
                     )
