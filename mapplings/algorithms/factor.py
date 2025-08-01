@@ -34,7 +34,9 @@ class Factor(Factors):
 
     def combine_cells_from_parameters(self) -> None:
         """Uses the parameter regions to combine cells."""
-        for region in self.get_parameter_regions():
+        for region in self.get_parameter_regions().intersection(
+            self.mappling.active_cells
+        ):
             for cell1, cell2 in combinations(region, 2):
                 self.combine_cells(cell1, cell2)
 

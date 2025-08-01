@@ -248,11 +248,11 @@ class ParamCleaner(Cleaner[Parameter]):
         """Deletes all rows and cols which have no obs or reqs"""
         return param.delete_rows_and_columns(*param.find_blank_columns_and_rows())
 
-    @staticmethod
-    @reg(2, update_register=False, run_on_enumerators=False)
-    def unplace_points(param: Parameter) -> Parameter:
-        """Unplaces points wherever possible"""
-        raise NotImplementedError
+    # @staticmethod
+    # @reg(2, update_register=False, run_on_enumerators=False)
+    # def unplace_points(param: Parameter) -> Parameter:
+    #     """Unplaces points wherever possible"""
+    #     raise NotImplementedError
 
     # Internal Methods
 
@@ -346,28 +346,28 @@ class MTCleaner(Cleaner[MappedTiling]):
             )
         return mappling
 
-    @staticmethod
-    @reg(7)
-    def factor_containters(mappling: MappedTiling) -> MappedTiling:
-        """Factors out the intersection factors of a containing parameter list"""
-        new_containers = list(
-            chain(
-                *(
-                    MTCleaner._find_intersection(c_list)
-                    for c_list in mappling.containing_parameters
-                )
-            )
-        )
-        new_mappling = MappedTiling(
-            mappling.tiling,
-            mappling.avoiding_parameters,
-            new_containers,
-            mappling.enumerating_parameters,
-        )
-        return MTCleaner.list_cleanup(
-            new_mappling,
-            (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
-        )
+    # @staticmethod
+    # @reg(7)
+    # def factor_containters(mappling: MappedTiling) -> MappedTiling:
+    #     """Factors out the intersection factors of a containing parameter list"""
+    #     new_containers = list(
+    #         chain(
+    #             *(
+    #                 MTCleaner._find_intersection(c_list)
+    #                 for c_list in mappling.containing_parameters
+    #             )
+    #         )
+    #     )
+    #     new_mappling = MappedTiling(
+    #         mappling.tiling,
+    #         mappling.avoiding_parameters,
+    #         new_containers,
+    #         mappling.enumerating_parameters,
+    #     )
+    #     return MTCleaner.list_cleanup(
+    #         new_mappling,
+    #         (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
+    #     )
 
     @staticmethod
     @reg(9, update_register=False)
@@ -447,12 +447,12 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-    @staticmethod
-    @reg(3)
-    def reduce_all_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
-        """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
-        param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
-        return mappling.apply_to_all_parameters(param_reducer)
+    # @staticmethod
+    # @reg(3)
+    # def reduce_all_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
+    #     """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
+    #     param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
+    #     return mappling.apply_to_all_parameters(param_reducer)
 
     @staticmethod
     @reg(4)
@@ -473,35 +473,35 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-    @staticmethod
-    @reg(8)
-    def insert_containers(mappling: MappedTiling) -> MappedTiling:
-        """For parameters with empty tilings, if it is the only
-        one in a list then the mappling is empty, otherwise remove the empty
-        parameter.
-        If only one parameter in a list and it maps to base tiling by the identity map
-        then map obs and reqs down and remove the parameter list.
-        Note: As we always assume a parameter maps to the whole tiling, we defined a row
-        col map as being trivial iff the dimensions of the tiling and ghost are the same.
-        """
-        new_containers = []
-        new_tiling = mappling.tiling
-        for c_list in mappling.containing_parameters:
-            if len(c_list) == 1:
-                container = tuple(c_list)[0]
-                image_cols, image_rows = container.map.image_rows_and_cols()
-                if container.dimensions[0] == len(image_cols) and container.dimensions[
-                    1
-                ] == len(image_rows):
-                    new_tiling = MTCleaner._insert_param(new_tiling, container)
-                    continue
-            new_containers.append(c_list)
-        return MappedTiling(
-            new_tiling,
-            mappling.avoiding_parameters,
-            new_containers,
-            mappling.enumerating_parameters,
-        )
+    # @staticmethod
+    # @reg(8)
+    # def insert_containers(mappling: MappedTiling) -> MappedTiling:
+    #     """For parameters with empty tilings, if it is the only
+    #     one in a list then the mappling is empty, otherwise remove the empty
+    #     parameter.
+    #     If only one parameter in a list and it maps to base tiling by the identity map
+    #     then map obs and reqs down and remove the parameter list.
+    #     Note: As we always assume a parameter maps to the whole tiling, we defined a row
+    #     col map as being trivial iff the dimensions of the tiling and ghost are the same.
+    #     """
+    #     new_containers = []
+    #     new_tiling = mappling.tiling
+    #     for c_list in mappling.containing_parameters:
+    #         if len(c_list) == 1:
+    #             container = tuple(c_list)[0]
+    #             image_cols, image_rows = container.map.image_rows_and_cols()
+    #             if container.dimensions[0] == len(image_cols) and container.dimensions[
+    #                 1
+    #             ] == len(image_rows):
+    #                 new_tiling = MTCleaner._insert_param(new_tiling, container)
+    #                 continue
+    #         new_containers.append(c_list)
+    #     return MappedTiling(
+    #         new_tiling,
+    #         mappling.avoiding_parameters,
+    #         new_containers,
+    #         mappling.enumerating_parameters,
+    #     )
 
     @staticmethod
     @reg(6)
