@@ -130,17 +130,21 @@ class MTRequirementPlacement:
                 ) = self.map_requirement_list_to_parameter(
                     requirement_list, indices, parameter
                 )
+
                 for param_cell in parameter.map.preimage_of_cell(cell):
-                    new_ghost = PointPlacement(parameter.ghost).point_placement_in_cell(
-                        param_requirement_list,
-                        param_indices,
-                        direction,
-                        param_cell,
-                    )
-                    new_map = self.map_for_param_placed_point(
-                        new_ghost, param_cell, parameter.map
-                    )
-                    new_param_list.add(Parameter(new_ghost, new_map))
+                    if param_cell in parameter.ghost.active_cells:
+                        new_ghost = PointPlacement(
+                            parameter.ghost
+                        ).point_placement_in_cell(
+                            param_requirement_list,
+                            param_indices,
+                            direction,
+                            param_cell,
+                        )
+                        new_map = self.map_for_param_placed_point(
+                            new_ghost, param_cell, parameter.map
+                        )
+                        new_param_list.add(Parameter(new_ghost, new_map))
         return ParameterList(tuple(sorted(new_param_list)))
 
     def unfuse_cols_in_param(
