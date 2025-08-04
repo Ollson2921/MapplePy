@@ -143,6 +143,8 @@ class LTRowColSeparationMT:
             param.ghost.dimensions[1] + total_extensions[1][-1],
         )
         cell_map = self.cell_map(total_extensions, param)
+        if not self.check_valid_map(cell_map, param):
+            return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
         new_obstructions = [
             self.transform_gcp(cell_map, ob) for ob in param.obstructions
         ]
@@ -157,6 +159,29 @@ class LTRowColSeparationMT:
         )
 
         return Parameter(new_ghost, new_map)
+
+    def check_valid_map(cell_map: dict[tuple[int, int], tuple[int, int]], param: Parameter) -> bool:
+        """Checks that the cell map doesn't change the 
+        relative order of the positive cells in the parameter."""
+        for pos_cell in param.ghost.positive_cells():
+            for pos_cell2 in param.ghost.positive_cells():
+                if pos_cell == pos_cell2:
+                    continue
+                print(pos_cell, pos_cell2, cell_map[pos_cell], cell_map[pos_cell2])
+                print( pos_cell < pos_cell2)
+                print( pos_cell > pos_cell2)
+                print(cell_map[pos_cell], cell_map[pos_cell2])
+                print(cell_map[pos_cell] > cell_map[pos_cell2])
+                if (
+                    cell_map[pos_cell] > cell_map[pos_cell2]
+                    and pos_cell < pos_cell2
+                ) or (
+                    cell_map[pos_cell] < cell_map[pos_cell2]
+                    and pos_cell > pos_cell2
+                ):
+                    return False
+        return True
+
 
     def separate(self) -> Iterator[MappedTiling]:
         """Returns the row/col seperated mappling"""
