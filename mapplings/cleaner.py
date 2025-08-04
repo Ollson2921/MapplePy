@@ -103,18 +103,19 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
     """Sets the debug behavior for cleaning functions."""
     if run:
 
-        def wrapper(clening_object: T) -> T:
-            old_object = clening_object
+        def wrapper(cleaning_object: T) -> T:
+            old_object = cleaning_object
             start_time = time()
             new_object = func(old_object)
-            elapsed_time = start_time - time()
+            elapsed_time = time() - start_time
             print(f"{func.__name__} elapsed time : {elapsed_time}")
-            if hasattr(clening_object, "initial_conditions"):
-                old_counts = old_object.initial_conditions()
-                new_counts = new_object.initial_conditions()
-                assert (
-                    old_counts == new_counts
-                ), f"Counts differ after running {func.__name__}"
+            if hasattr(cleaning_object, "initial_conditions"):
+                old_counts = old_object.initial_conditions(check=3)
+                new_counts = new_object.initial_conditions(check=3)
+                assert old_counts == new_counts, (
+                    f"Counts differ after running {func.__name__}\n"
+                    + f"Input:\n{old_object}\n\nOutput:\n{new_object}\n\n{repr(old_object)}"
+                )
             return new_object
 
         return wrapper
@@ -549,6 +550,8 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
         new_obs = []
         new_reqs = []
+
+        # note: we can't forward map requirements!
         for ob in param.obstructions:
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)

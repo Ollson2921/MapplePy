@@ -140,13 +140,17 @@ class Parameter(Tiling):
         """Returns True if the parameter is contradictory.
         Is contradictory if any of the requirements in the ghost map to a gcp
         containing an obstruction in the tiling
+
+        Ideal world, we would backmap the obs and reqs from parent to the ghost
+        and check if it is empty, however this is probably really slow!
         """
-        simplify = SimplifyObstructionsAndRequirements(
-            tiling.obstructions, tiling.requirements, tiling.dimensions
-        )
         if any(
-            simplify.implied_by_requirements(self.map.map_gridded_cperm(ob))
-            for ob in self.obstructions
+            all(
+                not self.ghost.satisfies_obstructions(gcp)
+                for req in req_list
+                for gcp in self.map.preimage_of_gridded_cperm(req)
+            )
+            for req_list in tiling.requirements
         ):
             return True
         for req_list in self.ghost.requirements:
@@ -156,6 +160,11 @@ class Parameter(Tiling):
             ):
                 return True
         return False
+
+    def strong_is_contradictory(self, tiling: Tiling) -> bool:
+        """backmap the obs and reqs from parent to the ghost
+        and check if it is empty"""
+        return self.backmap_all_from_tiling(tiling).is_empty()
 
     # dunder methods
 
