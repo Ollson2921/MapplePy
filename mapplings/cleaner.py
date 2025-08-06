@@ -2,7 +2,8 @@
 
 from typing import TypeVar, Callable, Generic, Iterable
 from itertools import chain
-from functools import partial
+
+# from functools import partial
 from time import time
 
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
