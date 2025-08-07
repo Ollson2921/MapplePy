@@ -8,7 +8,7 @@ from time import time
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
-    SimplifyObstructionsAndRequirements as simplify,
+    SimplifyObstructionsAndRequirements,
 )
 from cayley_permutations import CayleyPermutation
 
@@ -543,7 +543,11 @@ class MTCleaner(Cleaner[MappedTiling]):
     @staticmethod
     def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
         """Removes all obs and reqs from param that are implied by mappling"""
-        backmapped_reqs = param.map.preimage_of_requirements(mappling.requirements)
+        simplify = SimplifyObstructionsAndRequirements(
+            mappling.obstructions,
+            param.map.preimage_of_requirements(mappling.requirements),
+            mappling.dimensions,
+        )
         new_obs = []
         for ob in param.obstructions:
             if any(
@@ -556,7 +560,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             req_list
             for req_list in param.requirements
             if not simplify.requirement_implied_by_some_requirement(
-                req_list, backmapped_reqs
+                req_list, simplify.requirements
             )
         ]
         new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
