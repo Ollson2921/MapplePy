@@ -142,9 +142,7 @@ class Parameter(Tiling):
         Returns False if any of these requirements contradict tiling's obstructions."""
 
         positive_cells = self.positive_cells()
-        positive_cols = set(cell[0] for cell in positive_cells), set(
-            cell[1] for cell in positive_cells
-        )
+        positive_cols = set(cell[0] for cell in positive_cells)
         by_cols = {
             i: {cell for cell in positive_cells if cell[0] == i} for i in positive_cols
         }
