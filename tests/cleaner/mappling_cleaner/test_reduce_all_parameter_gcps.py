@@ -10,7 +10,6 @@ from cayley_permutations import CayleyPermutation
 from mapplings import MTCleaner, MappedTiling, Parameter, ParameterList
 
 
-@pytest.mark.skip(reason="strategy not working yet")
 def test_reduce_all_parameter_gcps():
     """Test reduce_all_parameter_gcps with multiple obstructions
     and requirements and containing and avoiding parameters."""
@@ -108,7 +107,6 @@ def test_reduce_all_parameter_gcps():
     assert MTCleaner.reduce_all_parameter_gcps(mt) == cleaned
 
 
-@pytest.mark.skip(reason="strategy not working yet")
 def test_reduce_all_parameter_gcps_identical_params():
     """Test reduce_all_parameter_gcps when the parameters are identical
     to the base tiling."""
