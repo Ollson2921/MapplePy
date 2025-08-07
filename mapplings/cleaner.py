@@ -301,7 +301,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         To apply to a mappling, can be run as MTCleaner.make_param_cleaner(param_cleaner)(mappling)
         """
 
-        @MTCleaner.reg(5, update_register=False)
+        @MTCleaner.reg(6, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             new_avoiders, new_containers, new_enumerators = mappling.ace_parameters()
             for func in param_cleaner:
@@ -324,7 +324,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return _clean_parameters
 
     @staticmethod
-    @reg(5)
+    @reg(6)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
         return MTCleaner.clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
@@ -347,7 +347,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling
 
     @staticmethod
-    @reg(7)
+    @reg(8)
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
         new_containers = list(
@@ -370,7 +370,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(9, update_register=False)
+    @reg(10, update_register=False)
     def backmap_points(mappling: MappedTiling) -> MappedTiling:
         """Backmaps point obstructions to all parameters"""
         point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
@@ -404,6 +404,32 @@ class MTCleaner(Cleaner[MappedTiling]):
 
     @staticmethod
     @reg(2)
+    def reap_contradictions_from_positive_cells(mappling: MappedTiling) -> MappedTiling:
+        """Removes parameters if there is a contradiction coming from the ghost's positive cells"""
+        new_avoiders = ParameterList(
+            avoider
+            for avoider in mappling.avoiding_parameters
+            if avoider.positive_cells_are_valid(mappling)
+        )
+        new_containers = []
+        for container_list in mappling.containing_parameters:
+            new_c_list = ParameterList(
+                container
+                for container in container_list
+                if container.positive_cells_are_valid(mappling)
+            )
+            if not new_c_list:
+                return MappedTiling.empty_mappling()
+            new_containers.append(new_c_list)
+        return MappedTiling(
+            mappling.tiling,
+            new_avoiders,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
+
+    @staticmethod
+    @reg(3)
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
         preimage rows and cols from the parameters"""
@@ -432,7 +458,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(10)
+    @reg(11)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
@@ -448,14 +474,14 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(3)
+    @reg(4)
     def reduce_all_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
         """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
         param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
         return mappling.apply_to_all_parameters(param_reducer)
 
     @staticmethod
-    @reg(4)
+    @reg(5)
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
@@ -474,7 +500,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(8)
+    @reg(9)
     def insert_containers(mappling: MappedTiling) -> MappedTiling:
         """For parameters with empty tilings, if it is the only
         one in a list then the mappling is empty, otherwise remove the empty
@@ -504,7 +530,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(6)
+    @reg(7)
     def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         new_avoiders = []
