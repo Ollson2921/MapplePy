@@ -141,7 +141,7 @@ class Parameter(Tiling):
         """Creates a set of requirements implied by the ghost's positive cells.
         Returns False if any of these requirements contradict tiling's obstructions."""
 
-        positive_cells = {cell for cell in self.positive_cells()}
+        positive_cells = self.positive_cells()
         positive_cols = set(cell[0] for cell in positive_cells), set(
             cell[1] for cell in positive_cells
         )
