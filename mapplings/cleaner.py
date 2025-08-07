@@ -347,7 +347,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling
 
     @staticmethod
-    @reg(8)
+    @reg(8, False)  # Broken
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
         new_containers = list(
@@ -500,7 +500,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(9)
+    @reg(9, False)  # Broken
     def insert_containers(mappling: MappedTiling) -> MappedTiling:
         """For parameters with empty tilings, if it is the only
         one in a list then the mappling is empty, otherwise remove the empty
@@ -530,7 +530,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(7)
+    @reg(7, False)  # Broken
     def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         new_avoiders = []
