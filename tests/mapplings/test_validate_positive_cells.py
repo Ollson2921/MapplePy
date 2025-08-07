@@ -6,8 +6,8 @@ from mapplings import Parameter
 
 
 def test_positive_cell_validation():
-    """Test less than row col separation for mapplings."""
-    T1 = Tiling(
+    """Test that we're validating the positive cells correctly."""
+    t1 = Tiling(
         [],
         [
             [GriddedCayleyPerm((0, 1), ((0, 0), (1, 1)))],
@@ -16,9 +16,9 @@ def test_positive_cell_validation():
         ],
         (4, 4),
     )
-    T2 = Tiling([GriddedCayleyPerm((1, 0), [(0, 1), (0, 0)])], [], (1, 2))
+    t2 = Tiling([GriddedCayleyPerm((1, 0), [(0, 1), (0, 0)])], [], (1, 2))
 
-    P1 = Parameter(T1, RowColMap({0: 0, 1: 0, 2: 0, 3: 0}, {0: 0, 1: 0, 2: 1, 3: 1}))
-    P2 = Parameter(T1, RowColMap({0: 0, 1: 0, 2: 0, 3: 0}, {0: 0, 1: 1, 2: 1, 3: 1}))
-    assert not P1.positive_cells_are_valid(T2)
-    assert P2.positive_cells_are_valid(T2)
+    p1 = Parameter(t1, RowColMap({0: 0, 1: 0, 2: 0, 3: 0}, {0: 0, 1: 0, 2: 1, 3: 1}))
+    p2 = Parameter(t1, RowColMap({0: 0, 1: 0, 2: 0, 3: 0}, {0: 0, 1: 1, 2: 1, 3: 1}))
+    assert not p1.positive_cells_are_valid(t2)
+    assert p2.positive_cells_are_valid(t2)
