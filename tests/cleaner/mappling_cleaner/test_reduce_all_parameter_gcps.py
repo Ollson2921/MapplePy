@@ -1,9 +1,6 @@
 """Testing the reduce_all_parameter_gcps cleaning function on
-MTCleaner for MappedTiling.
-TODO: this cleaning function isn't working properly yet! Put tests
-back in when it is."""
+MTCleaner for MappedTiling."""
 
-import pytest
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
