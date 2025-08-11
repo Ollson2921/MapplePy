@@ -19,7 +19,7 @@ from .mapped_tiling import MappedTiling
 T = TypeVar("T", MappedTiling, Parameter)
 Cell = tuple[int, int]
 
-DEBUG = False
+DEBUG = True
 
 
 class Register(Generic[T]):
