@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from typing import Iterator, Iterable
-from itertools import product
+from itertools import chain, product
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -180,6 +180,10 @@ class Parameter(Tiling):
                 for gcp in self.map.preimage_of_gridded_cperm(req)
             )
             for req_list in tiling.requirements
+            if all(
+                cell in self.image_cells()
+                for cell in chain.from_iterable(req.positions for req in req_list)
+            )
         ):
             return True
         for req_list in self.ghost.requirements:

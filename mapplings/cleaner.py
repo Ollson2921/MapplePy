@@ -106,10 +106,10 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
         def wrapper(cleaning_object: T) -> T:
             start_time = time()
             new_object = func(cleaning_object)
-            elapsed_time = start_time - time()
+            elapsed_time = time() - start_time
             print(f"{func.__name__} elapsed time : {elapsed_time}")
-            old_counts = cleaning_object.initial_conditions()
-            new_counts = new_object.initial_conditions()
+            old_counts = cleaning_object.initial_conditions(check=3)
+            new_counts = new_object.initial_conditions(check=3)
             assert (
                 old_counts == new_counts
             ), f"Counts differ after running {func.__name__}"
@@ -570,7 +570,18 @@ class MTCleaner(Cleaner[MappedTiling]):
         """Removes all obs and reqs from param that are implied by mappling"""
         simplify = SimplifyObstructionsAndRequirements(
             param.obstructions,
-            param.map.preimage_of_requirements(mappling.requirements),
+            param.map.preimage_of_requirements(
+                [
+                    req_list
+                    for req_list in mappling.requirements
+                    if all(
+                        cell in param.image_cells()
+                        for cell in chain.from_iterable(
+                            req.positions for req in req_list
+                        )
+                    )
+                ]
+            ),
             mappling.dimensions,
         )
         simplify.remove_factors_from_obstructions()
