@@ -110,10 +110,10 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
             print(f"{func.__name__} elapsed time : {elapsed_time}")
             old_counts = cleaning_object.initial_conditions()
             new_counts = new_object.initial_conditions()
-            assert old_counts == new_counts, (
-                    f"Counts differ after running {func.__name__}\n"
-                    + f"Input:\n{cleaning_object}\n\nOutput:\n{new_object}\n\n{repr(cleaning_object)}"
-                )
+            assert (
+                old_counts == new_counts
+            ), f"Counts differ after running {func.__name__}"
+            return new_object
 
         return wrapper
     return func
