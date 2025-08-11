@@ -9,6 +9,6 @@ __all__ = [
     "Factor",
     "LTRowColSeparationMT",
     "LTORERowColSeparationMT",
-    "PointPlacement",
+    "MTRequirementPlacement",
 ]
 __version__ = "0.1.0"

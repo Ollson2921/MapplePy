@@ -104,18 +104,15 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
     if run:
 
         def wrapper(cleaning_object: T) -> T:
-            old_object = cleaning_object
             start_time = time()
-            new_object = func(old_object)
-            elapsed_time = time() - start_time
+            new_object = func(cleaning_object)
+            elapsed_time = start_time - time()
             print(f"{func.__name__} elapsed time : {elapsed_time}")
-            if hasattr(cleaning_object, "initial_conditions"):
-                old_counts = old_object.initial_conditions(check=3)
-                new_counts = new_object.initial_conditions(check=3)
-                assert old_counts == new_counts, (
-                    f"Counts differ after running {func.__name__}\n"
-                    + f"Input:\n{old_object}\n\nOutput:\n{new_object}\n\n{repr(old_object)}"
-                )
+            old_counts = cleaning_object.initial_conditions()
+            new_counts = new_object.initial_conditions()
+            assert (
+                old_counts == new_counts
+            ), f"Counts differ after running {func.__name__}"
             return new_object
 
         return wrapper
@@ -302,7 +299,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         To apply to a mappling, can be run as MTCleaner.make_param_cleaner(param_cleaner)(mappling)
         """
 
-        @MTCleaner.reg(5, update_register=False)
+        @MTCleaner.reg(6, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             new_avoiders, new_containers, new_enumerators = mappling.ace_parameters()
             for func in param_cleaner:
@@ -325,7 +322,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return _clean_parameters
 
     @staticmethod
-    @reg(5)
+    @reg(6)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
         return MTCleaner.clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
@@ -347,31 +344,31 @@ class MTCleaner(Cleaner[MappedTiling]):
             )
         return mappling
 
-    # @staticmethod
-    # @reg(7)
-    # def factor_containters(mappling: MappedTiling) -> MappedTiling:
-    #     """Factors out the intersection factors of a containing parameter list"""
-    #     new_containers = list(
-    #         chain(
-    #             *(
-    #                 MTCleaner._find_intersection(c_list)
-    #                 for c_list in mappling.containing_parameters
-    #             )
-    #         )
-    #     )
-    #     new_mappling = MappedTiling(
-    #         mappling.tiling,
-    #         mappling.avoiding_parameters,
-    #         new_containers,
-    #         mappling.enumerating_parameters,
-    #     )
-    #     return MTCleaner.list_cleanup(
-    #         new_mappling,
-    #         (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
-    #     )
+    @staticmethod
+    @reg(8, False)  # Broken
+    def factor_containters(mappling: MappedTiling) -> MappedTiling:
+        """Factors out the intersection factors of a containing parameter list"""
+        new_containers = list(
+            chain(
+                *(
+                    MTCleaner._find_intersection(c_list)
+                    for c_list in mappling.containing_parameters
+                )
+            )
+        )
+        new_mappling = MappedTiling(
+            mappling.tiling,
+            mappling.avoiding_parameters,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
+        return MTCleaner.list_cleanup(
+            new_mappling,
+            (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
+        )
 
     @staticmethod
-    @reg(9, update_register=False)
+    @reg(10, update_register=False)
     def backmap_points(mappling: MappedTiling) -> MappedTiling:
         """Backmaps point obstructions to all parameters"""
         point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
@@ -405,6 +402,32 @@ class MTCleaner(Cleaner[MappedTiling]):
 
     @staticmethod
     @reg(2)
+    def reap_contradictions_from_positive_cells(mappling: MappedTiling) -> MappedTiling:
+        """Removes parameters if there is a contradiction coming from the ghost's positive cells"""
+        new_avoiders = ParameterList(
+            avoider
+            for avoider in mappling.avoiding_parameters
+            if avoider.positive_cells_are_valid(mappling)
+        )
+        new_containers = []
+        for container_list in mappling.containing_parameters:
+            new_c_list = ParameterList(
+                container
+                for container in container_list
+                if container.positive_cells_are_valid(mappling)
+            )
+            if not new_c_list:
+                return MappedTiling.empty_mappling()
+            new_containers.append(new_c_list)
+        return MappedTiling(
+            mappling.tiling,
+            new_avoiders,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
+
+    @staticmethod
+    @reg(3)
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
         preimage rows and cols from the parameters"""
@@ -433,7 +456,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(10)
+    @reg(11)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
@@ -448,15 +471,15 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-    # @staticmethod
-    # @reg(3)
-    # def reduce_all_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
-    #     """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
-    #     param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
-    #     return mappling.apply_to_all_parameters(param_reducer)
-
     @staticmethod
     @reg(4)
+    def reduce_all_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
+        """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
+        param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
+        return mappling.apply_to_all_parameters(param_reducer)
+
+    @staticmethod
+    @reg(5)
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
@@ -474,38 +497,38 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-    # @staticmethod
-    # @reg(8)
-    # def insert_containers(mappling: MappedTiling) -> MappedTiling:
-    #     """For parameters with empty tilings, if it is the only
-    #     one in a list then the mappling is empty, otherwise remove the empty
-    #     parameter.
-    #     If only one parameter in a list and it maps to base tiling by the identity map
-    #     then map obs and reqs down and remove the parameter list.
-    #     Note: As we always assume a parameter maps to the whole tiling, we defined a row
-    #     col map as being trivial iff the dimensions of the tiling and ghost are the same.
-    #     """
-    #     new_containers = []
-    #     new_tiling = mappling.tiling
-    #     for c_list in mappling.containing_parameters:
-    #         if len(c_list) == 1:
-    #             container = tuple(c_list)[0]
-    #             image_cols, image_rows = container.map.image_rows_and_cols()
-    #             if container.dimensions[0] == len(image_cols) and container.dimensions[
-    #                 1
-    #             ] == len(image_rows):
-    #                 new_tiling = MTCleaner._insert_param(new_tiling, container)
-    #                 continue
-    #         new_containers.append(c_list)
-    #     return MappedTiling(
-    #         new_tiling,
-    #         mappling.avoiding_parameters,
-    #         new_containers,
-    #         mappling.enumerating_parameters,
-    #     )
+    @staticmethod
+    @reg(9, False)  # Broken
+    def insert_containers(mappling: MappedTiling) -> MappedTiling:
+        """For parameters with empty tilings, if it is the only
+        one in a list then the mappling is empty, otherwise remove the empty
+        parameter.
+        If only one parameter in a list and it maps to base tiling by the identity map
+        then map obs and reqs down and remove the parameter list.
+        Note: As we always assume a parameter maps to the whole tiling, we defined a row
+        col map as being trivial iff the dimensions of the tiling and ghost are the same.
+        """
+        new_containers = []
+        new_tiling = mappling.tiling
+        for c_list in mappling.containing_parameters:
+            if len(c_list) == 1:
+                container = tuple(c_list)[0]
+                image_cols, image_rows = container.map.image_rows_and_cols()
+                if container.dimensions[0] == len(image_cols) and container.dimensions[
+                    1
+                ] == len(image_rows):
+                    new_tiling = MTCleaner._insert_param(new_tiling, container)
+                    continue
+            new_containers.append(c_list)
+        return MappedTiling(
+            new_tiling,
+            mappling.avoiding_parameters,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
 
     @staticmethod
-    @reg(6)
+    @reg(7, False)  # Broken
     def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
         """Adds requirements from every avoider that is near-trivial and removes that avoider"""
         new_avoiders = []
@@ -546,29 +569,27 @@ class MTCleaner(Cleaner[MappedTiling]):
     def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
         """Removes all obs and reqs from param that are implied by mappling"""
         simplify = SimplifyObstructionsAndRequirements(
-            mappling.obstructions, mappling.requirements, mappling.dimensions
+            param.obstructions,
+            param.map.preimage_of_requirements(mappling.requirements),
+            mappling.dimensions,
         )
+        simplify.remove_factors_from_obstructions()
+        simplify.remove_redundant_obstructions()
         new_obs = []
-        new_reqs = []
-
-        # note: we can't forward map requirements!
-        for ob in param.obstructions:
+        for ob in simplify.obstructions:
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
                 for mt_ob in mappling.obstructions
             ):
                 continue
             new_obs.append(ob)
-        for req_list in param.requirements:
-            new_req_list = [
-                req
-                for req in req_list
-                if not simplify.implied_by_requirements(
-                    param.map.map_gridded_cperm(req)
-                )
-            ]
-            if new_req_list:
-                new_reqs.append(tuple(new_req_list))
+        new_reqs = [
+            req_list
+            for req_list in param.requirements
+            if not simplify.requirement_implied_by_some_requirement(
+                req_list, simplify.requirements
+            )
+        ]
         new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
         return Parameter(new_ghost, param.map)
 
