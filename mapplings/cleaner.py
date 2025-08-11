@@ -104,12 +104,11 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
     if run:
 
         def wrapper(cleaning_object: T) -> T:
-            old_object = cleaning_object
             start_time = time()
-            new_object = func(old_object)
+            new_object = func(cleaning_object)
             elapsed_time = start_time - time()
             print(f"{func.__name__} elapsed time : {elapsed_time}")
-            old_counts = old_object.initial_conditions()
+            old_counts = cleaning_object.initial_conditions()
             new_counts = new_object.initial_conditions()
             assert (
                 old_counts == new_counts
@@ -544,12 +543,14 @@ class MTCleaner(Cleaner[MappedTiling]):
     def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
         """Removes all obs and reqs from param that are implied by mappling"""
         simplify = SimplifyObstructionsAndRequirements(
-            mappling.obstructions,
+            param.obstructions,
             param.map.preimage_of_requirements(mappling.requirements),
             mappling.dimensions,
         )
+        simplify.remove_factors_from_obstructions()
+        simplify.remove_redundant_obstructions()
         new_obs = []
-        for ob in param.obstructions:
+        for ob in simplify.obstructions:
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
                 for mt_ob in mappling.obstructions
