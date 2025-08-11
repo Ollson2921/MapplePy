@@ -176,6 +176,9 @@ class LTRowColSeparationMT:
             if pos_cell[direction] > pos_cell2[direction]:
                 if cell_map[pos_cell][direction] < cell_map[pos_cell2][direction]:
                     return False
+            if pos_cell[direction] < pos_cell2[direction]:
+                if cell_map[pos_cell][direction] > cell_map[pos_cell2][direction]:
+                    return False
         return True
 
     def separate(self) -> Iterator[MappedTiling]:
