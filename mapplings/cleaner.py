@@ -246,11 +246,11 @@ class ParamCleaner(Cleaner[Parameter]):
         """Deletes all rows and cols which have no obs or reqs"""
         return param.delete_rows_and_columns(*param.find_blank_columns_and_rows())
 
-    @staticmethod
-    @reg(2, update_register=False, run_on_enumerators=False)
-    def unplace_points(param: Parameter) -> Parameter:
-        """Unplaces points wherever possible"""
-        raise NotImplementedError
+    # @staticmethod
+    # @reg(2, update_register=False, run_on_enumerators=False)
+    # def unplace_points(param: Parameter) -> Parameter:
+    #     """Unplaces points wherever possible"""
+    #     raise NotImplementedError
 
     # Internal Methods
 

@@ -163,6 +163,24 @@ class MappedTiling(Tiling):
             ],
         )
 
+    # requirement insertion functions
+
+    def add_obstructions(self, gcps) -> "MappedTiling":
+        return MappedTiling(
+            self.tiling.add_obstructions(gcps),
+            self.avoiding_parameters,
+            self.containing_parameters,
+            self.enumerating_parameters,
+        )
+
+    def add_requirement_list(self, requirement_list) -> "MappedTiling":
+        return MappedTiling(
+            self.tiling.add_requirement_list(requirement_list),
+            self.avoiding_parameters,
+            self.containing_parameters,
+            self.enumerating_parameters,
+        )
+
     # other stuff
     def ace_parameters(
         self,
