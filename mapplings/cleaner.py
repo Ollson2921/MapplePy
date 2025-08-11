@@ -103,18 +103,16 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
     """Sets the debug behavior for cleaning functions."""
     if run:
 
-        def wrapper(clening_object: T) -> T:
-            old_object = clening_object
+        def wrapper(cleaning_object: T) -> T:
             start_time = time()
-            new_object = func(old_object)
+            new_object = func(cleaning_object)
             elapsed_time = start_time - time()
             print(f"{func.__name__} elapsed time : {elapsed_time}")
-            if hasattr(clening_object, "initial_conditions"):
-                old_counts = old_object.initial_conditions()
-                new_counts = new_object.initial_conditions()
-                assert (
-                    old_counts == new_counts
-                ), f"Counts differ after running {func.__name__}"
+            old_counts = cleaning_object.initial_conditions()
+            new_counts = new_object.initial_conditions()
+            assert (
+                old_counts == new_counts
+            ), f"Counts differ after running {func.__name__}"
             return new_object
 
         return wrapper
@@ -571,27 +569,27 @@ class MTCleaner(Cleaner[MappedTiling]):
     def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
         """Removes all obs and reqs from param that are implied by mappling"""
         simplify = SimplifyObstructionsAndRequirements(
-            mappling.obstructions, mappling.requirements, mappling.dimensions
+            param.obstructions,
+            param.map.preimage_of_requirements(mappling.requirements),
+            mappling.dimensions,
         )
+        simplify.remove_factors_from_obstructions()
+        simplify.remove_redundant_obstructions()
         new_obs = []
-        new_reqs = []
-        for ob in param.obstructions:
+        for ob in simplify.obstructions:
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
                 for mt_ob in mappling.obstructions
             ):
                 continue
             new_obs.append(ob)
-        for req_list in param.requirements:
-            new_req_list = [
-                req
-                for req in req_list
-                if not simplify.implied_by_requirements(
-                    param.map.map_gridded_cperm(req)
-                )
-            ]
-            if new_req_list:
-                new_reqs.append(tuple(new_req_list))
+        new_reqs = [
+            req_list
+            for req_list in param.requirements
+            if not simplify.requirement_implied_by_some_requirement(
+                req_list, simplify.requirements
+            )
+        ]
         new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
         return Parameter(new_ghost, param.map)
 
