@@ -1,5 +1,6 @@
 """Module with the parameter class."""
 
+from collections import defaultdict
 from typing import Iterator, Iterable
 from itertools import product
 
@@ -142,21 +143,17 @@ class Parameter(Tiling):
         Returns False if any of these requirements contradict tiling's obstructions."""
 
         positive_cells = self.positive_cells()
-        positive_cols = set(cell[0] for cell in positive_cells)
-        by_cols = {
-            i: {cell for cell in positive_cells if cell[0] == i} for i in positive_cols
-        }
+        by_cols, by_rows = defaultdict(set), defaultdict(set)
+        for cell in positive_cells:
+            by_cols[cell[0]].add(cell)
+            by_rows[cell[1]].add(cell)
         final_cells = list[tuple[tuple[int, int], ...]]()
         for cell_list in set(
             product(*by_cols.values())
         ):  # each cell list has one positive cell from each col
             used_rows = set(cell[1] for cell in cell_list)
-            by_rows = {
-                i: {cell for cell in cell_list if cell[1] == i} for i in used_rows
-            }
-            final_cells += list(
-                product(*by_rows.values())
-            )  # now we have lists of cells that don't overlap in rows/cols
+            final_cells.extend(product(*(by_rows[i] for i in used_rows)))
+            # now we have lists of cells that don't overlap in rows/cols
 
         def make_mapped_gcp(cells: Iterable[tuple[int, int]]) -> GriddedCayleyPerm:
             cells = sorted(cells)
