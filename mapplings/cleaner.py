@@ -344,6 +344,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             )
         return mappling
 
+    @staticmethod
     @reg(8, False)  # Broken
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
@@ -496,7 +497,6 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-
     @staticmethod
     @reg(9, False)  # Broken
     def insert_containers(mappling: MappedTiling) -> MappedTiling:
@@ -526,7 +526,6 @@ class MTCleaner(Cleaner[MappedTiling]):
             new_containers,
             mappling.enumerating_parameters,
         )
-
 
     @staticmethod
     @reg(7, False)  # Broken
