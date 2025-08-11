@@ -2,8 +2,7 @@
 
 from typing import TypeVar, Callable, Generic, Iterable
 from itertools import chain
-
-# from functools import partial
+from functools import partial
 from time import time
 
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
@@ -347,28 +346,28 @@ class MTCleaner(Cleaner[MappedTiling]):
             )
         return mappling
 
-    # @staticmethod
-    # @reg(7)
-    # def factor_containters(mappling: MappedTiling) -> MappedTiling:
-    #     """Factors out the intersection factors of a containing parameter list"""
-    #     new_containers = list(
-    #         chain(
-    #             *(
-    #                 MTCleaner._find_intersection(c_list)
-    #                 for c_list in mappling.containing_parameters
-    #             )
-    #         )
-    #     )
-    #     new_mappling = MappedTiling(
-    #         mappling.tiling,
-    #         mappling.avoiding_parameters,
-    #         new_containers,
-    #         mappling.enumerating_parameters,
-    #     )
-    #     return MTCleaner.list_cleanup(
-    #         new_mappling,
-    #         (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
-    #     )
+    @staticmethod
+    @reg(7, update_register = False)
+    def factor_containters(mappling: MappedTiling) -> MappedTiling:
+        """Factors out the intersection factors of a containing parameter list"""
+        new_containers = list(
+            chain(
+                *(
+                    MTCleaner._find_intersection(c_list)
+                    for c_list in mappling.containing_parameters
+                )
+            )
+        )
+        new_mappling = MappedTiling(
+            mappling.tiling,
+            mappling.avoiding_parameters,
+            new_containers,
+            mappling.enumerating_parameters,
+        )
+        return MTCleaner.list_cleanup(
+            new_mappling,
+            (MTCleaner.reap_all_contradictions, MTCleaner.reduce_all_parameter_gcps),
+        )
 
     @staticmethod
     @reg(9, update_register=False)

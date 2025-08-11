@@ -1,5 +1,6 @@
 """Module for row and column separating mapped tilings and related strategies."""
 
+from itertools import combinations
 from functools import cached_property
 from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -171,11 +172,10 @@ class LTRowColSeparationMT:
         """Checks that the cell map doesn't change the
         relative order of the positive cells in the parameter
         for the given direction (0 = cols, 1 = rows)."""
-        for pos_cell in param.ghost.positive_cells():
-            for pos_cell2 in param.ghost.positive_cells():
-                if pos_cell[direction] > pos_cell2[direction]:
-                    if cell_map[pos_cell][direction] < cell_map[pos_cell2][direction]:
-                        return False
+        for pos_cell, pos_cell2 in combinations(param.ghost.positive_cells(), 2):
+            if pos_cell[direction] > pos_cell2[direction]:
+                if cell_map[pos_cell][direction] < cell_map[pos_cell2][direction]:
+                    return False
         return True
 
     def separate(self) -> Iterator[MappedTiling]:
