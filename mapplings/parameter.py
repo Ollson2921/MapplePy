@@ -1,8 +1,10 @@
 """Module with the parameter class."""
 
+from collections import defaultdict
 from typing import Iterator, Iterable
 from itertools import product
 
+from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
@@ -135,6 +137,33 @@ class Parameter(Tiling):
         }
         for factor in factors:
             yield self.sub_parameter(factor)
+
+    def positive_cells_are_valid(self, tiling: Tiling) -> bool:
+        """Creates a set of requirements implied by the ghost's positive cells.
+        Returns False if any of these requirements contradict tiling's obstructions."""
+
+        positive_cells = self.positive_cells()
+        by_cols, by_rows = defaultdict(set), defaultdict(set)
+        for cell in positive_cells:
+            by_cols[cell[0]].add(cell)
+            by_rows[cell[1]].add(cell)
+        final_cells = list[tuple[tuple[int, int], ...]]()
+        for cell_list in set(
+            product(*by_cols.values())
+        ):  # each cell list has one positive cell from each col
+            used_rows = set(cell[1] for cell in cell_list)
+            final_cells.extend(product(*(by_rows[i] for i in used_rows)))
+            # now we have lists of cells that don't overlap in rows/cols
+
+        def make_mapped_gcp(cells: Iterable[tuple[int, int]]) -> GriddedCayleyPerm:
+            cells = sorted(cells)
+            perm = CayleyPermutation.standardise((cell[1] for cell in cells))
+            return GriddedCayleyPerm(
+                perm, ((self.col_map[cell[0]], self.row_map[cell[1]]) for cell in cells)
+            )
+
+        reqs_to_check = set(make_mapped_gcp(cells) for cells in set(final_cells))
+        return not any(req.contains(tiling.obstructions) for req in reqs_to_check)
 
     def is_contradictory(self, tiling: Tiling) -> bool:
         """Returns True if the parameter is contradictory.
