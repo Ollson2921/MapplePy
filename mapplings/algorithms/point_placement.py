@@ -172,6 +172,7 @@ class MTRequirementPlacement:
     ) -> dict[int, int]:
         """Creates a new row map for a parameter which was expanded
         because of a point placement."""
+        row += 1
         new_map = {}
         for idx in range(new_ghost.dimensions[1]):
             if idx < row:
@@ -195,7 +196,7 @@ class MTRequirementPlacement:
             if idx <= col:
                 new_map[idx] = old_map[idx]
             else:
-                new_map[idx] = old_map[idx - 2] + 2
+                new_map[idx] = old_map[idx - 1] + 2
         return new_map
 
     # Directionless point placement #
