@@ -88,7 +88,7 @@ class MTRequirementPlacement:
         parameter to a a new list of parameters with the requirement list
         placed in the cell given (where cell, requirement_list, etc have
         been mapped to the parameter)."""
-        new_param_list = set()
+        new_param_list: set[Parameter] = set()
         for parameter in param_list:
             all_params = [parameter]
             image_row_cols = parameter.map.image_rows_and_cols()
