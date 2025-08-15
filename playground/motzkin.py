@@ -113,6 +113,8 @@ print(mappling)
 # for i in range(10):
 #     print(mappling.get_terms(i))
 
-searcher = CombinatorialSpecificationSearcher(mappling, PointPlacementsPack, debug=True)
+searcher = CombinatorialSpecificationSearcher(
+    mappling, PointPlacementsPack, debug=False
+)
 
 spec = searcher.auto_search(status_update=30)

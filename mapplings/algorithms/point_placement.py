@@ -18,6 +18,7 @@ class MTRequirementPlacement:
     # pylint: disable=too-many-arguments
     def __init__(self, mappling: MappedTiling) -> None:
         self.mappling = mappling
+        self.directionless_point_placements: dict[Cell, MappedTiling] = dict()
 
     def point_placement(
         self,
@@ -31,26 +32,25 @@ class MTRequirementPlacement:
             cells.append(gcp.positions[idx])
         cells = sorted(set(cells))
         return tuple(
-            self.force_direction(
-                self.directionless_point_placement_in_cell(cell),
+            self.point_placement_in_cell(
+                cell,
                 requirement_list,
                 indices,
                 direction,
-                cell,
             )
             for cell in cells
         )
 
-    def force_direction(
+    def point_placement_in_cell(
         self,
-        directionless_placement: MappedTiling,
+        cell: Cell,
         requirement_list: tuple[GriddedCayleyPerm, ...],
         indices: tuple[int, ...],
         direction: int,
-        cell: tuple[int, int],
     ) -> MappedTiling:
         """Adds the neccecary obstructions to turn a directionless point placement
         into a direction-ed point placement"""
+        directionless_placement = self.directionless_point_placement_in_cell(cell)
         forced = PointPlacement(self.mappling.tiling).forced_obstructions(
             cell, requirement_list, indices, direction
         )
@@ -62,34 +62,38 @@ class MTRequirementPlacement:
         cell: Cell,
     ) -> MappedTiling:
         """Directionless point placement in a specific cell of the mapped tiling."""
-        avoiders, containers, enumerators = self.mappling.ace_parameters()
-        new_base_tiling = PointPlacement(
-            self.mappling.tiling
-        ).directionless_point_placement(cell)
-        new_avoiders = ParameterList(
-            chain.from_iterable(
-                self.all_param_expansions(avoider, cell) for avoider in avoiders
-            )
-        )
-        new_containers = tuple(
-            ParameterList(
+        if cell not in self.directionless_point_placements:
+            avoiders, containers, enumerators = self.mappling.ace_parameters()
+            new_base_tiling = PointPlacement(
+                self.mappling.tiling
+            ).directionless_point_placement(cell)
+            new_avoiders = ParameterList(
                 chain.from_iterable(
-                    self.all_param_expansions(container, cell) for container in c_list
+                    self.all_param_expansions(avoider, cell) for avoider in avoiders
                 )
             )
-            for c_list in containers
-        )
-        new_enumerators = tuple(
-            ParameterList(
-                chain.from_iterable(
-                    self.all_param_expansions(enumerator, cell) for enumerator in e_list
+            new_containers = tuple(
+                ParameterList(
+                    chain.from_iterable(
+                        self.all_param_expansions(container, cell)
+                        for container in c_list
+                    )
                 )
+                for c_list in containers
             )
-            for e_list in enumerators
-        )
-        return MappedTiling(
-            new_base_tiling, new_avoiders, new_containers, new_enumerators
-        )
+            new_enumerators = tuple(
+                ParameterList(
+                    chain.from_iterable(
+                        self.all_param_expansions(enumerator, cell)
+                        for enumerator in e_list
+                    )
+                )
+                for e_list in enumerators
+            )
+            self.directionless_point_placements[cell] = MappedTiling(
+                new_base_tiling, new_avoiders, new_containers, new_enumerators
+            )
+        return self.directionless_point_placements[cell]
 
     @staticmethod
     def parameter_row_plex_and_ghost_maps(
