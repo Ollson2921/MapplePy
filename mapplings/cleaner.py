@@ -338,19 +338,19 @@ class MTCleaner(Cleaner[MappedTiling]):
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             new_avoiders, new_containers, new_enumerators = (
                 mappling.apply_to_all_parameters(
-                    Parameter.update_active_cells
+                    Parameter.update_active_cells, (mappling.tiling,)
                 ).ace_parameters()
             )
             for func in param_cleaner:
                 if getattr(func, "run_on_avoiders"):
                     new_avoiders = ParameterList(
-                        param.update_active_cells()
+                        param.update_active_cells(mappling.tiling)
                         for param in new_avoiders.apply_to_all(func)
                     )
                 if getattr(func, "run_on_containers"):
                     new_containers = [
                         ParameterList(
-                            param.update_active_cells()
+                            param.update_active_cells(mappling.tiling)
                             for param in c_list.apply_to_all(func)
                         )
                         for c_list in new_containers
@@ -358,7 +358,7 @@ class MTCleaner(Cleaner[MappedTiling]):
                 if getattr(func, "run_on_containers"):
                     new_enumerators = [
                         ParameterList(
-                            param.update_active_cells()
+                            param.update_active_cells(mappling.tiling)
                             for param in e_list.apply_to_all(func)
                         )
                         for e_list in new_enumerators
