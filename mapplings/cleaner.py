@@ -7,6 +7,7 @@ from time import time
 
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from gridded_cayley_permutations.row_col_map import RowColMap
+from gridded_cayley_permutations.unplacement import PointUnplacement
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
     SimplifyObstructionsAndRequirements,
 )
@@ -246,11 +247,45 @@ class ParamCleaner(Cleaner[Parameter]):
         """Deletes all rows and cols which have no obs or reqs"""
         return param.delete_rows_and_columns(*param.find_blank_columns_and_rows())
 
-    # @staticmethod
-    # @reg(2, update_register=False, run_on_enumerators=False)
-    # def unplace_points(param: Parameter) -> Parameter:
-    #     """Unplaces points wherever possible"""
-    #     raise NotImplementedError
+    @staticmethod
+    @reg(2, run_on_enumerators=False)
+    def unplace_points(param: Parameter) -> Parameter:
+        """Unplaces all possible points in the parameter"""
+        found = True
+        new_param = Parameter(param.ghost, param.map)
+        while found:
+            found = False
+            for cell in new_param.point_cells():
+                if any(
+                    (
+                        cell[0] == 0,
+                        cell[1] == 0,
+                        cell[0] == new_param.dimensions[0],
+                        cell[1] == new_param.dimensions[1],
+                    )
+                ):
+                    continue
+                if (
+                    not new_param.col_map[cell[0] - 1]
+                    == new_param.col_map[cell[0]]
+                    == new_param.col_map[cell[0] + 1]
+                ):
+                    continue
+                if (
+                    not new_param.row_map[cell[1] - 1]
+                    == new_param.row_map[cell[1]]
+                    == new_param.row_map[cell[1] + 1]
+                ):
+                    continue
+                algo = PointUnplacement(new_param.ghost, cell)
+                check_reqs = algo.intersecting_req_list()
+                if PointUnplacement(new_param.ghost, cell).point_can_be_unplaced(
+                    check_reqs
+                ):
+                    new_param = new_param.unplace_point(cell)
+                    found = True
+                    break
+        return new_param
 
     # Internal Methods
 

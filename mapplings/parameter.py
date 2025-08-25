@@ -6,6 +6,7 @@ from itertools import product
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from gridded_cayley_permutations.unplacement import PointUnplacement
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
     SimplifyObstructionsAndRequirements,
@@ -150,6 +151,16 @@ class Parameter(Tiling):
         }
         for factor in factors:
             yield self.sub_parameter(factor)
+
+    def unplace_point(self, cell: Cell) -> "Parameter":
+        """index is the index of the point to be unplaced in self.point_cells"""
+        new_ghost = PointUnplacement(self.ghost, cell).unplace_point()
+        temp_col_map, temp_row_map = self.col_map, self.row_map
+        del temp_col_map[cell[0] + 1], temp_col_map[cell[0] + 2]
+        del temp_row_map[cell[1] + 1], temp_row_map[cell[1] + 2]
+        new_col_map = dict(enumerate(temp_col_map.values()))
+        new_row_map = dict(enumerate(temp_row_map.values()))
+        return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
     def positive_cells_are_valid(self, tiling: Tiling) -> bool:
         """Creates a set of requirements implied by the ghost's positive cells.
