@@ -301,18 +301,31 @@ class MTCleaner(Cleaner[MappedTiling]):
 
         @MTCleaner.reg(6, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
-            new_avoiders, new_containers, new_enumerators = mappling.ace_parameters()
+            new_avoiders, new_containers, new_enumerators = (
+                mappling.apply_to_all_parameters(
+                    Parameter.update_active_cells
+                ).ace_parameters()
+            )
             for func in param_cleaner:
                 if getattr(func, "run_on_avoiders"):
-                    new_avoiders = ParameterList(new_avoiders.apply_to_all(func))
+                    new_avoiders = ParameterList(
+                        param.update_active_cells()
+                        for param in new_avoiders.apply_to_all(func)
+                    )
                 if getattr(func, "run_on_containers"):
                     new_containers = [
-                        ParameterList(c_list.apply_to_all(func))
+                        ParameterList(
+                            param.update_active_cells()
+                            for param in c_list.apply_to_all(func)
+                        )
                         for c_list in new_containers
                     ]
                 if getattr(func, "run_on_containers"):
                     new_enumerators = [
-                        ParameterList(e_list.apply_to_all(func))
+                        ParameterList(
+                            param.update_active_cells()
+                            for param in e_list.apply_to_all(func)
+                        )
                         for e_list in new_enumerators
                     ]
             return MappedTiling(

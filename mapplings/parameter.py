@@ -75,6 +75,19 @@ class Parameter(Tiling):
             self.map,
         )
 
+    def update_active_cells(self, tiling: Tiling) -> "Parameter":
+        """Makes self.active_cells account for point obs in the base tiling"""
+        self.active_cells = self.active_cells & set(
+            self.map.preimage_of_cells(tiling.active_cells)
+        )
+        return self
+
+    def find_empty_rows_and_columns(self):
+        active_cols, active_rows = map(set, zip(*self.active_cells))
+        empty_cols = set(range(self.dimensions[0])) - active_cols
+        empty_rows = set(range(self.dimensions[1])) - active_rows
+        return tuple(empty_cols), tuple(empty_rows)
+
     def delete_rows_and_columns(
         self, cols: Iterable[int], rows: Iterable[int]
     ) -> "Parameter":
