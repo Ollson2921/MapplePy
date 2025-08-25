@@ -527,6 +527,66 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling.apply_to_all_parameters(param_reducer)
 
     @staticmethod
+    @reg(20)
+    def forward_map_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
+        """Takes gcps with 1-1 map from a parameter into a tiling"""
+        new_base = mappling.tiling
+        avoiders, containers, enumerators = mappling.ace_parameters()
+        new_avoiders = []
+        for avoider in avoiders:
+            injective_cells = avoider.injective_cells()
+            new_reqs = tuple[tuple[GriddedCayleyPerm, ...], ...]()
+            for req_list in avoider.requirements:
+                if not set(
+                    chain.from_iterable((req.positions for req in req_list))
+                ).issubset(injective_cells):
+                    new_reqs += (req_list,)
+                    continue
+                new_base = new_base.add_obstructions(req_list)
+            new_avoiders.append(
+                Parameter(
+                    Tiling(avoider.obstructions, new_reqs, avoider.dimensions),
+                    avoider.map,
+                )
+            )
+        new_containers = []
+        for c_list in containers:
+            if len(c_list) > 1:
+                new_containers.append(c_list)
+                continue
+            container = list(c_list)[0]
+            injective_cells = container.injective_cells()
+            new_obs, add_obs = (
+                tuple[GriddedCayleyPerm, ...](),
+                tuple[GriddedCayleyPerm, ...](),
+            )
+            for ob in container.obstructions:
+                if not set(ob.positions).issubset(injective_cells):
+                    new_obs += (ob,)
+                    continue
+                add_obs += (ob,)
+            new_base = new_base.add_obstructions(add_obs)
+            new_reqs = ()
+            for req_list in container.requirements:
+                if not set(
+                    chain.from_iterable((req.positions for req in req_list))
+                ).issubset(injective_cells):
+                    new_reqs += (req_list,)
+                    continue
+                new_base = new_base.add_requirement_list(req_list)
+            new_containers.append(
+                ParameterList(
+                    (
+                        Parameter(
+                            Tiling(new_obs, new_reqs, container.dimensions),
+                            container.map,
+                        ),
+                    )
+                )
+            )
+        return MappedTiling(new_base, new_avoiders, new_containers, enumerators)
+
+    @staticmethod
     @reg(5)
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,

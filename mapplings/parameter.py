@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from typing import Iterator, Iterable
-from itertools import product
+from itertools import product, chain
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
@@ -33,6 +33,17 @@ class Parameter(Tiling):
     def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
         return self.map.image_cells
+
+    def injective_cells(self) -> set[Cell]:
+        """Returns the set of cells that have a unique image under the row col map"""
+        preimage_cols, preimage_rows = self.map.preimage_map()
+        inj_cols = chain.from_iterable(
+            (value for value in preimage_cols.values() if len(value) == 1)
+        )
+        inj_rows = chain.from_iterable(
+            (value for value in preimage_rows.values() if len(value) == 1)
+        )
+        return set(product(inj_cols, inj_rows))
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
