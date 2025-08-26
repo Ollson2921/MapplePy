@@ -528,6 +528,40 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling.apply_to_all_parameters(param_reducer)
 
     @staticmethod
+    @reg(15)
+    def small_ob_inferral(mappling: MappedTiling) -> MappedTiling:
+        """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
+        look_for = (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
+        small_obs = set(
+            ob
+            for ob in mappling.obstructions
+            if (ob in look_for) and len(set(ob.positions)) > 1
+        )
+        new_mappling = MappedTiling(mappling.tiling, *mappling.ace_parameters())
+        for ob in small_obs:
+
+            def adjust_param(param: Parameter) -> Parameter:
+                new_ghost = Tiling(
+                    param.obstructions, param.requirements, param.dimensions
+                )
+                first_preimages = set(param.map.preimage_of_cell(ob.positions[0]))
+                second_preimages = set(param.map.preimage_of_cell(ob.positions[1]))
+                if first_preimages & second_preimages:
+                    return param
+                if first_preimages & param.positive_cells():
+                    new_ghost = new_ghost.add_obstructions(
+                        [GriddedCayleyPerm((0,), [cell]) for cell in second_preimages]
+                    )
+                if second_preimages & param.positive_cells():
+                    new_ghost = new_ghost.add_obstructions(
+                        [GriddedCayleyPerm((0,), [cell]) for cell in first_preimages]
+                    )
+                return Parameter(new_ghost, param.map)
+
+            new_mappling = new_mappling.apply_to_all_parameters(adjust_param)
+        return new_mappling
+
+    @staticmethod
     @reg(20)
     def forward_map_parameter_gcps_from_avoiders(
         mappling: MappedTiling,
