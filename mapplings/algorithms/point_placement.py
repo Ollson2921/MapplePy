@@ -59,7 +59,6 @@ class MTRequirementPlacement:
                 direction,
                 cell,
             )
-            if avoider.not_blank_cells()
         )
         new_containing_parameters = self.req_placement_param_list(
             self.mappling.containing_parameters,

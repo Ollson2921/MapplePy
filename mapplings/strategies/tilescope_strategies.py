@@ -30,7 +30,7 @@ class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
 class MapplingPointPlacementFactory(PointPlacementFactory):
     def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
         for cell in comb_class.positive_cells():
-            for direction in [0, 2]:
+            for direction in Directions:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), (cell,)),)
                 indices = (0,)
                 yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
