@@ -176,9 +176,11 @@ class Cleaner(Generic[T]):
         """Applies all functions in cleaning_list without reordering"""
         new_cleaning_object = cleaning_object
         for func in cleaning_list:
+            # print(func.__name__)
             if not bool(new_cleaning_object):
                 return new_cleaning_object
             new_cleaning_object = debug(func)(new_cleaning_object)
+            # print(new_cleaning_object)
         return new_cleaning_object
 
     def tracked_cleanup(
@@ -223,7 +225,7 @@ class ParamCleaner(Cleaner[Parameter]):
         )
 
     @staticmethod
-    @reg(1)
+    @reg(0)
     def reduce_empty_rows_and_cols(param: Parameter) -> Parameter:
         """Removes empty rows and columns in the parameter"""
         empty_cols, empty_rows = map(set, param.find_empty_rows_and_columns())
@@ -242,7 +244,7 @@ class ParamCleaner(Cleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(0, run_on_enumerators=False)
+    @reg(1, run_on_enumerators=False)
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
         return param.delete_rows_and_columns(*param.find_blank_columns_and_rows())
@@ -260,8 +262,8 @@ class ParamCleaner(Cleaner[Parameter]):
                     (
                         cell[0] == 0,
                         cell[1] == 0,
-                        cell[0] == new_param.dimensions[0],
-                        cell[1] == new_param.dimensions[1],
+                        cell[0] == new_param.dimensions[0] - 1,
+                        cell[1] == new_param.dimensions[1] - 1,
                     )
                 ):
                     continue
@@ -543,12 +545,13 @@ class MTCleaner(Cleaner[MappedTiling]):
                     new_reqs += (req_list,)
                     continue
                 new_base = new_base.add_obstructions(req_list)
-            new_avoiders.append(
-                Parameter(
-                    Tiling(avoider.obstructions, new_reqs, avoider.dimensions),
-                    avoider.map,
+            if avoider.obstructions or new_reqs:
+                new_avoiders.append(
+                    Parameter(
+                        Tiling(avoider.obstructions, new_reqs, avoider.dimensions),
+                        avoider.map,
+                    )
                 )
-            )
         new_containers = []
         for c_list in containers:
             if len(c_list) > 1:
@@ -591,8 +594,10 @@ class MTCleaner(Cleaner[MappedTiling]):
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
-        if any(not (param.not_blank_cells()) for param in mappling.avoiding_parameters):
-            return MappedTiling.empty_mappling()
+        new_avoiders = []
+        for param in mappling.avoiding_parameters:
+            if param.not_blank_cells():
+                new_avoiders.append(param)
         new_containeres = []
         for c_list in mappling.containing_parameters:
             if any(not (param.not_blank_cells()) for param in c_list):
@@ -600,7 +605,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             new_containeres.append(c_list)
         return MappedTiling(
             mappling.tiling,
-            mappling.avoiding_parameters,
+            new_avoiders,
             new_containeres,
             mappling.enumerating_parameters,
         )
@@ -681,10 +686,14 @@ class MTCleaner(Cleaner[MappedTiling]):
             param.map.preimage_of_requirements(mappling.requirements),
             mappling.dimensions,
         )
+        point_cells = param.point_cells()
         simplify.remove_factors_from_obstructions()
         simplify.remove_redundant_obstructions()
         new_obs = []
         for ob in simplify.obstructions:
+            if all(cell in point_cells for cell in ob.positions):
+                new_obs.append(ob)
+                continue
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
                 for mt_ob in mappling.obstructions

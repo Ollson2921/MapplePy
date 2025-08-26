@@ -50,12 +50,16 @@ class MTRequirementPlacement:
         base_tiling = PointPlacement(self.mappling.tiling).point_placement_in_cell(
             requirement_list, indices, direction, cell
         )
-        new_avoiding_parameters = self.req_placement_in_list(
-            self.mappling.avoiding_parameters,
-            requirement_list,
-            indices,
-            direction,
-            cell,
+        new_avoiding_parameters = (
+            avoider
+            for avoider in self.req_placement_in_list(
+                self.mappling.avoiding_parameters,
+                requirement_list,
+                indices,
+                direction,
+                cell,
+            )
+            if avoider.not_blank_cells()
         )
         new_containing_parameters = self.req_placement_param_list(
             self.mappling.containing_parameters,
