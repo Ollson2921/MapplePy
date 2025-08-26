@@ -338,11 +338,10 @@ class MTCleaner(Cleaner[MappedTiling]):
 
         @MTCleaner.reg(6, update_register=False)
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
-            new_avoiders, new_containers, new_enumerators = (
-                mappling.apply_to_all_parameters(
-                    Parameter.update_active_cells, (mappling.tiling,)
-                ).ace_parameters()
+            temp = mappling.apply_to_all_parameters(
+                Parameter.update_active_cells, (mappling.tiling,)
             )
+            new_avoiders, new_containers, new_enumerators = temp.ace_parameters()
             for func in param_cleaner:
                 if getattr(func, "run_on_avoiders"):
                     new_avoiders = ParameterList(
@@ -530,19 +529,21 @@ class MTCleaner(Cleaner[MappedTiling]):
 
     @staticmethod
     @reg(20)
-    def forward_map_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
-        """Takes gcps with 1-1 map from a parameter into a tiling"""
+    def forward_map_parameter_gcps_from_avoiders(
+        mappling: MappedTiling,
+    ) -> MappedTiling:
+        """Takes gcps with 1-1 map from an avoiding parameter into a tiling"""
         new_base = mappling.tiling
         avoiders, containers, enumerators = mappling.ace_parameters()
         new_avoiders = []
         for avoider in avoiders:
             injective_cells = avoider.injective_cells()
-            new_reqs = tuple[tuple[GriddedCayleyPerm, ...], ...]()
+            new_reqs = []
             for req_list in avoider.requirements:
                 if not set(
                     chain.from_iterable((req.positions for req in req_list))
                 ).issubset(injective_cells):
-                    new_reqs += (req_list,)
+                    new_reqs.append(req_list)
                     continue
                 new_base = new_base.add_obstructions(req_list)
             if avoider.obstructions or new_reqs:
@@ -552,6 +553,16 @@ class MTCleaner(Cleaner[MappedTiling]):
                         avoider.map,
                     )
                 )
+        return MappedTiling(new_base, new_avoiders, containers, enumerators)
+
+    @staticmethod
+    @reg(21)
+    def forward_map_parameter_gcps_from_containers(
+        mappling: MappedTiling,
+    ) -> MappedTiling:
+        """Takes gcps with 1-1 map from a containing parameter into a tiling"""
+        new_base = mappling.tiling
+        avoiders, containers, enumerators = mappling.ace_parameters()
         new_containers = []
         for c_list in containers:
             if len(c_list) > 1:
@@ -569,12 +580,12 @@ class MTCleaner(Cleaner[MappedTiling]):
                     continue
                 add_obs += (ob,)
             new_base = new_base.add_obstructions(add_obs)
-            new_reqs = ()
+            new_reqs = []
             for req_list in container.requirements:
                 if not set(
                     chain.from_iterable((req.positions for req in req_list))
                 ).issubset(injective_cells):
-                    new_reqs += (req_list,)
+                    new_reqs.append(req_list)
                     continue
                 new_base = new_base.add_requirement_list(req_list)
             new_containers.append(
@@ -587,7 +598,7 @@ class MTCleaner(Cleaner[MappedTiling]):
                     )
                 )
             )
-        return MappedTiling(new_base, new_avoiders, new_containers, enumerators)
+        return MappedTiling(new_base, avoiders, new_containers, enumerators)
 
     @staticmethod
     @reg(5)
