@@ -1504,3 +1504,84 @@ def test_double_expansion_param():
     ]
 
     assert list(LTRowColSeparationMT(mt).separate()) == separation
+
+
+def test_expand_3_rows():
+    """Test expanding 3 rows of a MappedTiling"""
+    til = Tiling(
+        (
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 1), (0, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 1), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 0), (1, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (1, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 2), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 1), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((1, 1), (1, 2))),
+        ),
+        (),
+        (2, 3),
+    )
+
+    param = Parameter(
+        Tiling([], [], (6, 7)),
+        RowColMap(
+            {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1},
+            {0: 0, 1: 0, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2},
+        ),
+    )
+    mt = MappedTiling(til, [param], [], [])
+
+    separated = [
+        MappedTiling(
+            Tiling(
+                (
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 5),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 3),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 4),)),
+                    GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 3), (0, 4))),
+                    GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 3), (1, 5))),
+                    GriddedCayleyPerm(CayleyPermutation((0, 1)), ((1, 2), (1, 5))),
+                ),
+                (),
+                (2, 6),
+            ),
+            ParameterList(
+                frozenset(
+                    {
+                        Parameter(
+                            Tiling((), (), (6, 14)),
+                            RowColMap(
+                                {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1},
+                                {
+                                    0: 0,
+                                    1: 0,
+                                    2: 1,
+                                    3: 1,
+                                    4: 2,
+                                    5: 2,
+                                    6: 2,
+                                    7: 3,
+                                    8: 3,
+                                    9: 3,
+                                    10: 4,
+                                    11: 4,
+                                    12: 5,
+                                    13: 5,
+                                },
+                            ),
+                        )
+                    }
+                )
+            ),
+            (),
+            (),
+        )
+    ]
+
+    assert list(LTRowColSeparationMT(mt).separate()) == separated
