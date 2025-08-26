@@ -8,9 +8,6 @@ from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.unplacement import PointUnplacement
 from gridded_cayley_permutations.row_col_map import RowColMap
-from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
-    SimplifyObstructionsAndRequirements,
-)
 from gridded_cayley_permutations.factors import Factors
 
 Cell = tuple[int, int]
@@ -106,11 +103,11 @@ class Parameter(Tiling):
                 if all(cell in self.active_cells for cell in req.positions)
             )
             if not new_req_list:
-                return Parameter(Tiling.empty_tiling(), RowColMap(dict(), dict()))
+                return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
             new_reqs.append(new_req_list)
-        P = Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
-        P.active_cells = self.active_cells
-        return P
+        temp = Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
+        temp.active_cells = self.active_cells
+        return temp
 
     def find_empty_rows_and_columns(self):
         if not self.active_cells:
