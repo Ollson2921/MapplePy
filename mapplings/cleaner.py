@@ -530,7 +530,7 @@ class MTCleaner(Cleaner[MappedTiling]):
     @staticmethod
     @reg(15)
     def small_ob_inferral(mappling: MappedTiling) -> MappedTiling:
-        """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
+        """Adds point obstructions implied by param point cells and small base tiling obstructions"""
         look_for = (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
         small_obs = set(
             ob
@@ -539,24 +539,26 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
         new_mappling = MappedTiling(mappling.tiling, *mappling.ace_parameters())
         for ob in small_obs:
+            first_cell, second_cell = ob.positions
+            increasing = ob.pattern[0] < ob.pattern[1]
 
             def adjust_param(param: Parameter) -> Parameter:
                 new_ghost = Tiling(
                     param.obstructions, param.requirements, param.dimensions
                 )
-                first_preimages = set(param.map.preimage_of_cell(ob.positions[0]))
-                second_preimages = set(param.map.preimage_of_cell(ob.positions[1]))
-                if first_preimages & second_preimages:
-                    return param
-                if first_preimages & param.positive_cells():
-                    new_ghost = new_ghost.add_obstructions(
-                        [GriddedCayleyPerm((0,), [cell]) for cell in second_preimages]
-                    )
-                if second_preimages & param.positive_cells():
-                    new_ghost = new_ghost.add_obstructions(
-                        [GriddedCayleyPerm((0,), [cell]) for cell in first_preimages]
-                    )
-                return Parameter(new_ghost, param.map)
+                point_cells = param.point_cells()
+                first_preimages = set(param.map.preimage_of_cell(first_cell))
+                second_preimages = set(param.map.preimage_of_cell(second_cell))
+                add_obs = []
+                for point in first_preimages & point_cells:
+                    for cell in second_preimages:
+                        if point[0] < cell[0] and (point[1] < cell[1] == increasing):
+                            add_obs.append(GriddedCayleyPerm((0,), [cell]))
+                for point in second_preimages & point_cells:
+                    for cell in first_preimages:
+                        if cell[0] < point[0] and (cell[1] < point[1] == increasing):
+                            add_obs.append(GriddedCayleyPerm((0,), [cell]))
+                return Parameter(new_ghost.add_obstructions(add_obs), param.map)
 
             new_mappling = new_mappling.apply_to_all_parameters(adjust_param)
         return new_mappling
