@@ -666,14 +666,9 @@ class MTCleaner(Cleaner[MappedTiling]):
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
-        new_avoiders = []
         for param in mappling.avoiding_parameters:
-            if param.not_blank_cells():
-                new_avoiders.append(param)
-                continue
-            if mappling.active_cells.issubset(param.image_cells()):
+            if not param.not_blank_cells():
                 return MappedTiling.empty_mappling()
-
         new_containeres = []
         for c_list in mappling.containing_parameters:
             if any(not (param.not_blank_cells()) for param in c_list):
@@ -681,7 +676,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             new_containeres.append(c_list)
         return MappedTiling(
             mappling.tiling,
-            new_avoiders,
+            mappling.avoiding_parameters,
             new_containeres,
             mappling.enumerating_parameters,
         )
