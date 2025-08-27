@@ -513,7 +513,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(14)
+    @reg(12)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
@@ -541,11 +541,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         """Adds point obstructions implied by param point cells
         and small base tiling obstructions"""
         look_for = (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
-        small_obs = set(
-            ob
-            for ob in mappling.obstructions
-            if (ob.pattern in look_for) and len(set(ob.positions)) > 1
-        )
+        small_obs = set(ob for ob in mappling.obstructions if ob.pattern in look_for)
         new_mappling = MappedTiling(mappling.tiling, *mappling.ace_parameters())
 
         def adjust_param(param: Parameter, input_ob: GriddedCayleyPerm) -> Parameter:
@@ -557,11 +553,15 @@ class MTCleaner(Cleaner[MappedTiling]):
             add_obs = []
             for point in first_preimages & point_cells:
                 for cell in second_preimages:
-                    if point[0] < cell[0] and ((point[1] < cell[1]) == increasing):
+                    if not point[0] < cell[0]:
+                        continue
+                    if (point[1] < cell[1]) == increasing:
                         add_obs.append(GriddedCayleyPerm((0,), [cell]))
             for point in second_preimages & point_cells:
                 for cell in first_preimages:
-                    if cell[0] < point[0] and ((cell[1] < point[1]) == increasing):
+                    if not cell[0] < point[0]:
+                        continue
+                    if (cell[1] < point[1]) == increasing:
                         add_obs.append(GriddedCayleyPerm((0,), [cell]))
             return Parameter(new_ghost.add_obstructions(add_obs), param.map)
 
@@ -570,7 +570,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return new_mappling
 
     @staticmethod
-    @reg(12)
+    @reg(7)
     def forward_map_parameter_gcps_from_avoiders(
         mappling: MappedTiling,
     ) -> MappedTiling:
@@ -601,12 +601,6 @@ class MTCleaner(Cleaner[MappedTiling]):
                     avoider.map.map_gridded_cperms(req_list)
                 )
             new_obs = avoider.obstructions
-            # if len(new_obs) == 1:
-            #     if all(cell in injective_cells for cell in new_obs[0].positions):
-            #         new_base = new_base.add_requirement_list(
-            #             [avoider.map.map_gridded_cperm(new_obs[0])]
-            #         )
-            #         new_obs = []
             if new_obs or new_reqs:
                 new_avoiders.append(
                     Parameter(
@@ -617,7 +611,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         return MappedTiling(new_base, new_avoiders, containers, enumerators)
 
     @staticmethod
-    @reg(13)
+    @reg(9)
     def forward_map_parameter_gcps_from_containers(
         mappling: MappedTiling,
     ) -> MappedTiling:
@@ -640,7 +634,9 @@ class MTCleaner(Cleaner[MappedTiling]):
                     new_obs += (ob,)
                     continue
                 add_obs += (ob,)
-            new_base = new_base.add_obstructions(add_obs)
+            new_base = new_base.add_obstructions(
+                container.map.map_gridded_cperms(add_obs)
+            )
             new_reqs = []
             for req_list in container.requirements:
                 if not set(
@@ -648,17 +644,20 @@ class MTCleaner(Cleaner[MappedTiling]):
                 ).issubset(injective_cells):
                     new_reqs.append(req_list)
                     continue
-                new_base = new_base.add_requirement_list(req_list)
-            new_containers.append(
-                ParameterList(
-                    (
-                        Parameter(
-                            Tiling(new_obs, new_reqs, container.dimensions),
-                            container.map,
-                        ),
+                new_base = new_base.add_requirement_list(
+                    container.map.map_requirements([req_list])
+                )
+            if new_obs or new_reqs:
+                new_containers.append(
+                    ParameterList(
+                        (
+                            Parameter(
+                                Tiling(new_obs, new_reqs, container.dimensions),
+                                container.map,
+                            ),
+                        )
                     )
                 )
-            )
         return MappedTiling(new_base, avoiders, new_containers, enumerators)
 
     @staticmethod
@@ -678,66 +677,6 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.tiling,
             mappling.avoiding_parameters,
             new_containeres,
-            mappling.enumerating_parameters,
-        )
-
-    @staticmethod
-    @reg(9, False)  # Broken
-    def insert_containers(mappling: MappedTiling) -> MappedTiling:
-        """For parameters with empty tilings, if it is the only
-        one in a list then the mappling is empty, otherwise remove the empty
-        parameter.
-        If only one parameter in a list and it maps to base tiling by the identity map
-        then map obs and reqs down and remove the parameter list.
-        Note: As we always assume a parameter maps to the whole tiling, we defined a row
-        col map as being trivial iff the dimensions of the tiling and ghost are the same.
-        """
-        new_containers = []
-        new_tiling = mappling.tiling
-        for c_list in mappling.containing_parameters:
-            if len(c_list) == 1:
-                container = tuple(c_list)[0]
-                image_cols, image_rows = container.map.image_rows_and_cols()
-                if container.dimensions[0] == len(image_cols) and container.dimensions[
-                    1
-                ] == len(image_rows):
-                    new_tiling = MTCleaner._insert_param(new_tiling, container)
-                    continue
-            new_containers.append(c_list)
-        return MappedTiling(
-            new_tiling,
-            mappling.avoiding_parameters,
-            new_containers,
-            mappling.enumerating_parameters,
-        )
-
-    @staticmethod
-    @reg(7, False)  # Broken
-    def insert_avoiders(mappling: MappedTiling) -> MappedTiling:
-        """Adds requirements from every avoider that is near-trivial and removes that avoider"""
-        new_avoiders = []
-        new_tiling = mappling.tiling
-        for avoider in mappling.avoiding_parameters:
-            image_cols, image_rows = avoider.map.image_rows_and_cols()
-            if avoider.dimensions[0] == len(image_cols) and avoider.dimensions[
-                1
-            ] == len(image_rows):
-                reqs = avoider.requirements
-                if reqs:
-                    if max(len(req) for req in reqs) > 1:
-                        new_avoiders.append(avoider)
-                        continue
-                inverse = Parameter(
-                    Tiling(chain(*reqs), [avoider.obstructions], avoider.dimensions),
-                    avoider.map,
-                )
-                new_tiling = MTCleaner._insert_param(new_tiling, inverse)
-                continue
-            new_avoiders.append(avoider)
-        return MappedTiling(
-            new_tiling,
-            new_avoiders,
-            mappling.containing_parameters,
             mappling.enumerating_parameters,
         )
 
