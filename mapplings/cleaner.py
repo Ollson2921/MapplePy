@@ -645,7 +645,7 @@ class MTCleaner(Cleaner[MappedTiling]):
                     new_reqs.append(req_list)
                     continue
                 new_base = new_base.add_requirement_list(
-                    container.map.map_requirements([req_list])
+                    container.map.map_gridded_cperms(req_list)
                 )
             if new_obs or new_reqs:
                 new_containers.append(
