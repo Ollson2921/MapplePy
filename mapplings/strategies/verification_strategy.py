@@ -1,4 +1,4 @@
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, Any
 from comb_spec_searcher import VerificationStrategy
 from mapplings import MappedTiling
 
@@ -17,7 +17,9 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         rootmt: Optional[MappedTiling] = None,
         ignore_parent: bool = False,
     ):
-        self._rootmt = rootmt if rootmt is not None else tuple()
+        self._rootmt: MappedTiling | tuple[Any, ...] = (
+            rootmt if rootmt is not None else tuple()
+        )
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(
@@ -31,7 +33,7 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         return self.__class__(mapped_tiling, self.ignore_parent)
 
     @property
-    def rootmt(self) -> MappedTiling:
+    def rootmt(self) -> MappedTiling | tuple[Any, ...]:
         return self._rootmt
 
     def pack(self, comb_class):
@@ -41,7 +43,7 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         if (
             comb_class.avoiding_parameters
             or comb_class.containing_parameters
-            or comb_class.enumeration_parameters
+            or comb_class.enumerating_parameters
         ):
             return False
         if comb_class == self.rootmt:
