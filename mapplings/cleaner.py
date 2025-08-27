@@ -1,7 +1,7 @@
 """Module with the cleaner classes"""
 
 from typing import TypeVar, Callable, Generic, Iterable
-from itertools import chain
+from itertools import chain, product
 from functools import partial
 from time import time
 
@@ -107,13 +107,13 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
         def wrapper(cleaning_object: T) -> T:
             start_time = time()
             new_object = func(cleaning_object)
-            elapsed_time = start_time - time()
+            elapsed_time = time() - start_time
             print(f"{func.__name__} elapsed time : {elapsed_time}")
-            old_counts = cleaning_object.initial_conditions()
-            new_counts = new_object.initial_conditions()
+            old_counts = cleaning_object.initial_conditions(2)
+            new_counts = new_object.initial_conditions(2)
             assert (
                 old_counts == new_counts
-            ), f"Counts differ after running {func.__name__}"
+            ), f"Counts differ after running {func.__name__} \n {old_counts} : {new_counts}\n {cleaning_object}\n {new_object}"
             return new_object
 
         return wrapper
@@ -383,6 +383,11 @@ class MTCleaner(Cleaner[MappedTiling]):
         if mappling.is_empty():
             return MappedTiling.empty_mappling()
         if not mappling.tiling.active_cells:
+            if any(
+                not avoider.ghost.active_cells
+                for avoider in mappling.avoiding_parameters
+            ):
+                return MappedTiling.empty_mappling()
             return MappedTiling(
                 Tiling(
                     [GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),))], [], (1, 1)
@@ -480,6 +485,8 @@ class MTCleaner(Cleaner[MappedTiling]):
     def remove_empty_rows_and_cols(mappling: MappedTiling) -> MappedTiling:
         """Removes empty rows and cols in the base tiling and removes
         preimage rows and cols from the parameters"""
+        if mappling == MappedTiling.empty_mappling():
+            return mappling
         empty_cols, empty_rows = mappling.find_empty_rows_and_columns()
         if (
             len(empty_cols) == mappling.dimensions[0]
@@ -505,7 +512,7 @@ class MTCleaner(Cleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(11)
+    @reg(14)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
@@ -528,43 +535,40 @@ class MTCleaner(Cleaner[MappedTiling]):
         return mappling.apply_to_all_parameters(param_reducer)
 
     @staticmethod
-    @reg(15)
+    @reg(11)
     def small_ob_inferral(mappling: MappedTiling) -> MappedTiling:
         """Adds point obstructions implied by param point cells and small base tiling obstructions"""
         look_for = (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
         small_obs = set(
             ob
             for ob in mappling.obstructions
-            if (ob in look_for) and len(set(ob.positions)) > 1
+            if (ob.pattern in look_for) and len(set(ob.positions)) > 1
         )
         new_mappling = MappedTiling(mappling.tiling, *mappling.ace_parameters())
+
+        def adjust_param(param: Parameter, input_ob: GriddedCayleyPerm) -> Parameter:
+            new_ghost = Tiling(param.obstructions, param.requirements, param.dimensions)
+            increasing = input_ob.pattern[0] < input_ob.pattern[1]
+            point_cells = param.point_cells()
+            first_preimages = set(param.map.preimage_of_cell(input_ob.positions[0]))
+            second_preimages = set(param.map.preimage_of_cell(input_ob.positions[1]))
+            add_obs = []
+            for point in first_preimages & point_cells:
+                for cell in second_preimages:
+                    if point[0] < cell[0] and ((point[1] < cell[1]) == increasing):
+                        add_obs.append(GriddedCayleyPerm((0,), [cell]))
+            for point in second_preimages & point_cells:
+                for cell in first_preimages:
+                    if cell[0] < point[0] and ((cell[1] < point[1]) == increasing):
+                        add_obs.append(GriddedCayleyPerm((0,), [cell]))
+            return Parameter(new_ghost.add_obstructions(add_obs), param.map)
+
         for ob in small_obs:
-            first_cell, second_cell = ob.positions
-            increasing = ob.pattern[0] < ob.pattern[1]
-
-            def adjust_param(param: Parameter) -> Parameter:
-                new_ghost = Tiling(
-                    param.obstructions, param.requirements, param.dimensions
-                )
-                point_cells = param.point_cells()
-                first_preimages = set(param.map.preimage_of_cell(first_cell))
-                second_preimages = set(param.map.preimage_of_cell(second_cell))
-                add_obs = []
-                for point in first_preimages & point_cells:
-                    for cell in second_preimages:
-                        if point[0] < cell[0] and (point[1] < cell[1] == increasing):
-                            add_obs.append(GriddedCayleyPerm((0,), [cell]))
-                for point in second_preimages & point_cells:
-                    for cell in first_preimages:
-                        if cell[0] < point[0] and (cell[1] < point[1] == increasing):
-                            add_obs.append(GriddedCayleyPerm((0,), [cell]))
-                return Parameter(new_ghost.add_obstructions(add_obs), param.map)
-
-            new_mappling = new_mappling.apply_to_all_parameters(adjust_param)
+            new_mappling = new_mappling.apply_to_all_parameters(adjust_param, (ob,))
         return new_mappling
 
     @staticmethod
-    @reg(20)
+    @reg(12)
     def forward_map_parameter_gcps_from_avoiders(
         mappling: MappedTiling,
     ) -> MappedTiling:
@@ -573,26 +577,45 @@ class MTCleaner(Cleaner[MappedTiling]):
         avoiders, containers, enumerators = mappling.ace_parameters()
         new_avoiders = []
         for avoider in avoiders:
-            injective_cells = avoider.injective_cells()
+            empty_cells = (
+                set(product(range(avoider.dimensions[0]), range(avoider.dimensions[1])))
+                - avoider.active_cells
+            )
+            injective_cells = avoider.active_cells & (
+                avoider.injective_cells() - avoider.point_cells()
+            )
+            if injective_cells == avoider.active_cells and empty_cells:
+                new_avoiders.append(avoider)
+                continue
             new_reqs = []
             for req_list in avoider.requirements:
-                if not set(
+                req_list_positions = set(
                     chain.from_iterable((req.positions for req in req_list))
-                ).issubset(injective_cells):
+                )
+                if not req_list_positions.issubset(injective_cells):
                     new_reqs.append(req_list)
                     continue
-                new_base = new_base.add_obstructions(req_list)
-            if avoider.obstructions or new_reqs:
+                new_base = new_base.add_obstructions(
+                    avoider.map.map_gridded_cperms(req_list)
+                )
+            new_obs = avoider.obstructions
+            # if len(new_obs) == 1:
+            #     if all(cell in injective_cells for cell in new_obs[0].positions):
+            #         new_base = new_base.add_requirement_list(
+            #             [avoider.map.map_gridded_cperm(new_obs[0])]
+            #         )
+            #         new_obs = []
+            if new_obs or new_reqs:
                 new_avoiders.append(
                     Parameter(
-                        Tiling(avoider.obstructions, new_reqs, avoider.dimensions),
+                        Tiling(new_obs, new_reqs, avoider.dimensions),
                         avoider.map,
                     )
                 )
         return MappedTiling(new_base, new_avoiders, containers, enumerators)
 
     @staticmethod
-    @reg(21)
+    @reg(13)
     def forward_map_parameter_gcps_from_containers(
         mappling: MappedTiling,
     ) -> MappedTiling:
@@ -641,9 +664,14 @@ class MTCleaner(Cleaner[MappedTiling]):
     def reap_blank(mappling: MappedTiling) -> MappedTiling:
         """Kills mappling if any avoiders are blank,
         and removes any c_lists with blank containers"""
+        new_avoiders = []
         for param in mappling.avoiding_parameters:
-            if not param.not_blank_cells():
+            if param.not_blank_cells():
+                new_avoiders.append(param)
+                continue
+            if mappling.active_cells.issubset(param.image_cells()):
                 return MappedTiling.empty_mappling()
+
         new_containeres = []
         for c_list in mappling.containing_parameters:
             if any(not (param.not_blank_cells()) for param in c_list):
@@ -651,7 +679,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             new_containeres.append(c_list)
         return MappedTiling(
             mappling.tiling,
-            mappling.avoiding_parameters,
+            new_avoiders,
             new_containeres,
             mappling.enumerating_parameters,
         )
@@ -733,13 +761,20 @@ class MTCleaner(Cleaner[MappedTiling]):
             mappling.dimensions,
         )
         point_cells = param.point_cells()
+        mappling_point_cells = mappling.point_cells()
         simplify.remove_factors_from_obstructions()
         simplify.remove_redundant_obstructions()
         new_obs = []
         for ob in simplify.obstructions:
-            if all(cell in point_cells for cell in ob.positions):
-                new_obs.append(ob)
-                continue
+            if len(set(ob.positions)) == 1:
+                cell = ob.positions[0]
+                if (
+                    cell in point_cells
+                    and (param.col_map[cell[0]], param.row_map[cell[1]])
+                    not in mappling_point_cells
+                ):
+                    new_obs.append(ob)
+                    continue
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
                 for mt_ob in mappling.obstructions

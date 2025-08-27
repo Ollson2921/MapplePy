@@ -112,24 +112,18 @@ print(mappling)
 
 # for i in range(10):
 #     print(mappling.get_terms(i))
+M0 = MTCleaner.full_cleanup(mappling)
+# searcher = CombinatorialSpecificationSearcher(M0, PointPlacementsPack, debug=False)
 
-# searcher = CombinatorialSpecificationSearcher(
-#     mappling, PointPlacementsPack, debug=False
-# )
-
-# spec = searcher.auto_search(status_update=30)
-
+# spec = searcher.auto_search(status_update=10)
 cleaner = MTCleaner.make_full_cleaner()
-M0 = cleaner(mappling)
 
-# print(M0)
-print(M0.active_cells)
 
+print(M0)
 
 print("------------------ Cell Insertion ------------------")
 M1 = list(list(CellInsertionFactory()(M0))[0].decomposition_function(M0))[1]
 print(M1)
-
 
 print("------------------ Placed Rightmost ------------------")
 M2 = list(list(MapplingPointPlacementFactory()(M1))[0].decomposition_function(M1))[1]
@@ -156,7 +150,13 @@ print(M8)
 
 print("------------------ Placed Top-Rightmost ------------------")
 M9 = list(list(MapplingPointPlacementFactory()(M8))[1].decomposition_function(M8))[1]
-print(cleaner(M9))
+M10 = cleaner(M9)
+print(cleaner(M10))
+print("------------------ Factored ------------------")
+M11 = list(MapplingFactorStrategy().decomposition_function(M10))[1]
+M12 = cleaner(M11)
+print(M12)
+print(M12 == M0)
 
 
 MM = MappedTiling(
@@ -602,5 +602,3 @@ P = Parameter(
     ),
     RowColMap({0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 1, 2: 1, 3: 1, 4: 1}),
 )
-print(P)
-print(P.positive_cells_are_valid(MM.tiling))
