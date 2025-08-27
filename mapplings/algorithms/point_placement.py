@@ -1,15 +1,7 @@
 """Point placement algorithm for MappedTiling."""
 
-from itertools import combinations
-from typing import Tuple, List, Iterator, Iterable
-from cayley_permutations import CayleyPermutation
-from gridded_cayley_permutations.point_placements import (
-    PointPlacement,
-    DIR_LEFT,
-    DIR_RIGHT,
-    MultiplexMap,
-    PartialMultiplexMap,
-)
+from typing import Tuple, Iterator, Iterable
+from gridded_cayley_permutations.point_placements import PointPlacement
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings import MappedTiling, Parameter, ParameterList
@@ -74,7 +66,7 @@ class MTRequirementPlacement:
                     new_ghost, parameter.map.col_map, (col + 1, 0), 0
                 )
                 new_row_map = self.map_for_adjust_rowcols(
-                    parameter.map.row_map, cell, 1
+                    parameter.map.row_map, cell, True
                 )
                 yield Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
@@ -103,7 +95,7 @@ class MTRequirementPlacement:
                     new_ghost, parameter.map.row_map, (0, row + 1), 1
                 )
                 new_col_map = self.map_for_adjust_rowcols(
-                    parameter.map.col_map, cell, 0
+                    parameter.map.col_map, cell, False
                 )
                 yield Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
