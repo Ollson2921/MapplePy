@@ -111,9 +111,10 @@ def debug(func: Callable[[T], T], run: bool = DEBUG):
             print(f"{func.__name__} elapsed time : {elapsed_time}")
             old_counts = cleaning_object.initial_conditions(2)
             new_counts = new_object.initial_conditions(2)
-            assert (
-                old_counts == new_counts
-            ), f"Counts differ after running {func.__name__} \n {old_counts} : {new_counts}\n {cleaning_object}\n {new_object}"
+            assert old_counts == new_counts, (
+                f"Counts differ after running {func.__name__} \n {old_counts} : {new_counts}"
+                + f"\n {cleaning_object}\n {new_object}"
+            )
             return new_object
 
         return wrapper
@@ -537,7 +538,8 @@ class MTCleaner(Cleaner[MappedTiling]):
     @staticmethod
     @reg(11)
     def small_ob_inferral(mappling: MappedTiling) -> MappedTiling:
-        """Adds point obstructions implied by param point cells and small base tiling obstructions"""
+        """Adds point obstructions implied by param point cells
+        and small base tiling obstructions"""
         look_for = (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
         small_obs = set(
             ob
