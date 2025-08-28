@@ -122,25 +122,26 @@ class GenericCleaner(Generic[T]):
         cls, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
     ) -> T:
         """Cleans the cleaning object according to the cleaning functions."""
-        itterations = 0
+        iterations = -1
         start_time = time()
         new_cleaning_object = cleaning_object
         continue_cleaning = True
         while continue_cleaning:
-            itterations += 1
+            iterations += 1
             old_cleaning_object = new_cleaning_object
             new_cleaning_object = cls.list_cleanup(old_cleaning_object, cleaning_list)
             continue_cleaning = old_cleaning_object != new_cleaning_object
         if cls.DEBUG > 0:
             print(
-                f"Cleaned in {itterations} loops. Elapsed time : {time() - start_time}"
+                f"Cleaned in {iterations} loops. Elapsed time : {time() - start_time}"
             )
-            old_counts = cleaning_object.initial_conditions(2)
-            new_counts = new_cleaning_object.initial_conditions(2)
-            assert old_counts == new_counts, (
-                f"Counts differ: \n {old_counts} : {new_counts}"
-                + f"\n {cleaning_object}\n {new_cleaning_object}"
-            )
+            if cls.DEBUG == 1:
+                old_counts = cleaning_object.initial_conditions(2)
+                new_counts = new_cleaning_object.initial_conditions(2)
+                assert old_counts == new_counts, (
+                    f"Counts differ: \n {old_counts} : {new_counts}"
+                    + f"\n {cleaning_object}\n {new_cleaning_object}"
+                )
         return new_cleaning_object
 
     @classmethod
