@@ -90,8 +90,9 @@ class GenericCleaner(Generic[T]):
     """The class used to clean paramaters.
     Core fuctions are decorated with @reg(index)
     where index is the order of cleaning
-    DEBUG = 1 gives info once an object is cleaned
-    DEBUG = 2 gives info after each cleaning function"""
+    DEBUG = 0 skips any debugging
+    DEBUG = 1 checks counts and elapsed time after loop cleaning
+    DEBUG = 2 checks counts and elapsed time after each function"""
 
     DEBUG = 0
     reg = Register[T]()

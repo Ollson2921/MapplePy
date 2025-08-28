@@ -21,7 +21,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     core functions need to be registered with @reg(index)
     where index determines cleaning order"""
 
-    DEBUG = 1
+    DEBUG = 0
     reg = Register[MappedTiling]("mappling_register")
 
     # Final Methods
