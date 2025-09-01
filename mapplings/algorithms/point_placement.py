@@ -244,7 +244,7 @@ class MTRequirementPlacement:
         for parameter in param_list:
             if cell in parameter.image_cells():
                 algo = PointPlacement(parameter.ghost)
-                new_cells = parameter.map.preimage_of_cell(cell)
+                new_cells = set(parameter.map.preimage_of_cell(cell)) & parameter.active_cells
                 for new_cell in new_cells:
                     new_ghost = algo.directionless_point_placement(new_cell)
                     if new_ghost.is_empty():
@@ -276,6 +276,28 @@ class MTRequirementPlacement:
         Also removes the column in the param relating to the column of the
         placed point in the base tiling."""
         n, m = parameter.ghost.dimensions
-        new_n, new_m = new_ghost.dimensions
-        new_map = parameter.map.expand_at_index(new_n - n, new_m - m, cell[0], cell[1])
-        return Parameter(new_ghost, new_map).delete_rows_and_columns([cell[0] + 1], [])
+        col_map = {
+            key + 2 * int(key >= cell[0]): value + 2 * int(key >= cell[0])
+            for key, value in enumerate(parameter.col_map.values())
+        }
+        col_map.update(
+            {
+                cell[0]: parameter.col_map[cell[0]],
+                cell[0] + 1: parameter.col_map[cell[0]] + 1,
+            }
+        )
+        row_map = {
+            key + 2 * int(key >= cell[1]): value + 2 * int(key >= cell[1])
+            for key, value in enumerate(parameter.row_map.values())
+        }
+        row_map.update(
+            {
+                cell[1]: parameter.row_map[cell[1]],
+                cell[1] + 1: parameter.row_map[cell[1]] + 1,
+            }
+        )
+
+        return Parameter(
+            new_ghost, RowColMap(col_map, row_map)
+        ).delete_rows_and_columns([cell[0] + 1], [])
+
