@@ -1,3 +1,5 @@
+"""Strategy for verifying when a mappling has no parameters."""
+
 from typing import Optional, Type, TypeVar, Any
 from comb_spec_searcher import VerificationStrategy
 from mapplings import MappedTiling
@@ -34,6 +36,7 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
 
     @property
     def rootmt(self) -> MappedTiling | tuple[Any, ...]:
+        """The root mapped tiling."""
         return self._rootmt
 
     def pack(self, comb_class):

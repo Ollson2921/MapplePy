@@ -1,3 +1,5 @@
+"""Strategies for MappedTilings"""
+
 from .tilescope_strategies import MappedTileScopePack
 
 

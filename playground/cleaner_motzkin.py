@@ -24,7 +24,6 @@ mappling = MappedTiling(
     [],
 )
 
-pack = MappedTileScopePack.MTpoint_placement(mappling)
 searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 
 spec = searcher.auto_search(status_update=30)
