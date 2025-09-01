@@ -64,14 +64,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
         while found:
             found = False
             for cell in new_param.point_cells():
-                if any(
-                    (
-                        cell[0] == 0,
-                        cell[1] == 0,
-                        cell[0] == new_param.dimensions[0] - 1,
-                        cell[1] == new_param.dimensions[1] - 1,
-                    )
-                ):
+                algo = PointUnplacement(new_param.ghost, cell)
+                if not algo.cell_in_valid_region():
                     continue
                 if (
                     not new_param.col_map[cell[0] - 1]
@@ -85,7 +79,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
                     == new_param.row_map[cell[1] + 1]
                 ):
                     continue
-                algo = PointUnplacement(new_param.ghost, cell)
                 check_reqs = algo.intersecting_req_list()
                 if PointUnplacement(new_param.ghost, cell).point_can_be_unplaced(
                     check_reqs
