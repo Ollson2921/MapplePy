@@ -244,7 +244,9 @@ class MTRequirementPlacement:
         for parameter in param_list:
             if cell in parameter.image_cells():
                 algo = PointPlacement(parameter.ghost)
-                new_cells = set(parameter.map.preimage_of_cell(cell)) & parameter.active_cells
+                new_cells = (
+                    set(parameter.map.preimage_of_cell(cell)) & parameter.active_cells
+                )
                 for new_cell in new_cells:
                     new_ghost = algo.directionless_point_placement(new_cell)
                     if new_ghost.is_empty():
@@ -300,4 +302,3 @@ class MTRequirementPlacement:
         return Parameter(
             new_ghost, RowColMap(col_map, row_map)
         ).delete_rows_and_columns([cell[0] + 1], [])
-
