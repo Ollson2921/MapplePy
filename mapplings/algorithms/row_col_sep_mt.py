@@ -81,25 +81,33 @@ class LTRowColSeparationMT:
         for i in range(param.dimensions[0]):
             for j in range(param.dimensions[1]):
                 cell_map[(i, j)] = (
-                    i + total_extensions[0][param.map.col_map[i]],
-                    j + total_extensions[1][param.map.row_map[j]],
+                    i + total_extensions[0][param.map.col_map[i] + 1],
+                    j + total_extensions[1][param.map.row_map[j] + 1],
                 )
         inequalities = self.separation.column_row_inequalities()
-        cells_to_move = set(pair[1] for pair in inequalities[0])
+        cells_to_move = set(pair[0] for pair in inequalities[0])
         for base_cell in cells_to_move:
             if base_cell in param.image_cells():
                 for cell in param.map.preimage_of_cell(base_cell):
+                    diff = (
+                        total_extensions[0][base_cell[0] + 1]
+                        - total_extensions[0][base_cell[0]]
+                    )
                     cell_map[cell] = (
-                        cell_map[cell][0] + total_extensions[0][base_cell[0] + 1],
+                        cell_map[cell][0] - diff,
                         cell_map[cell][1],
                     )
-        cells_to_move = set(pair[1] for pair in inequalities[1])
+        cells_to_move = set(pair[0] for pair in inequalities[1])
         for base_cell in cells_to_move:
             if base_cell in param.image_cells():
                 for cell in param.map.preimage_of_cell(base_cell):
+                    diff = (
+                        total_extensions[1][base_cell[1] + 1]
+                        - total_extensions[1][base_cell[1]]
+                    )
                     cell_map[cell] = (
                         cell_map[cell][0],
-                        cell_map[cell][1] + total_extensions[1][base_cell[1] + 1],
+                        cell_map[cell][1] - diff,
                     )
         return cell_map
 

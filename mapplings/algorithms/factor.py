@@ -3,7 +3,8 @@
 from itertools import chain, combinations
 from gridded_cayley_permutations.factors import Factors
 
-from mapplings import MappedTiling, ParameterList, MTCleaner
+from mapplings import MappedTiling, ParameterList
+from mapplings.cleaners import MTCleaner
 
 
 Cell = tuple[int, int]
@@ -34,9 +35,8 @@ class Factor(Factors):
 
     def combine_cells_from_parameters(self) -> None:
         """Uses the parameter regions to combine cells."""
-        for region in self.get_parameter_regions().intersection(
-            self.mappling.active_cells
-        ):
+        for region in self.get_parameter_regions():
+            region = region & self.mappling.active_cells
             for cell1, cell2 in combinations(region, 2):
                 self.combine_cells(cell1, cell2)
 

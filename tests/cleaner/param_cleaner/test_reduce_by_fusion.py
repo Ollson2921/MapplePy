@@ -3,7 +3,8 @@
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
-from mapplings import MTCleaner, ParamCleaner, MappedTiling, Parameter, ParameterList
+from mapplings import MappedTiling, Parameter, ParameterList
+from mapplings.cleaners import MTCleaner, ParamCleaner
 
 
 def test_reduce_by_fusion_rows_and_cols():
