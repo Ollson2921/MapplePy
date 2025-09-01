@@ -568,7 +568,7 @@ class MTCleaner(Cleaner[MappedTiling]):
             if len(c_list) > 1:
                 new_containers.append(c_list)
                 continue
-            container = list(c_list)[0]
+            container = next(c_list)
             injective_cells = container.injective_cells()
             new_obs, add_obs = (
                 tuple[GriddedCayleyPerm, ...](),
