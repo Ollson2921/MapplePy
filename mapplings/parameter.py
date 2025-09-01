@@ -2,14 +2,12 @@
 
 from collections import defaultdict
 from typing import Iterator, Iterable
-from itertools import product
+from itertools import product, chain
 
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from gridded_cayley_permutations.unplacement import PointUnplacement
 from gridded_cayley_permutations.row_col_map import RowColMap
-from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
-    SimplifyObstructionsAndRequirements,
-)
 from gridded_cayley_permutations.factors import Factors
 
 Cell = tuple[int, int]
@@ -33,6 +31,17 @@ class Parameter(Tiling):
         """Gives the cells to which the parameter maps"""
         return self.map.image_cells
 
+    def injective_cells(self) -> set[Cell]:
+        """Returns the set of cells that have a unique image under the row col map"""
+        preimage_cols, preimage_rows = self.map.preimage_map()
+        inj_cols = chain.from_iterable(
+            (value for value in preimage_cols.values() if len(value) == 1)
+        )
+        inj_rows = chain.from_iterable(
+            (value for value in preimage_rows.values() if len(value) == 1)
+        )
+        return set(product(inj_cols, inj_rows))
+
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
@@ -43,6 +52,8 @@ class Parameter(Tiling):
         """Determines if the sub-gridding of the gcp that lives in the image region
         has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
+        if not sub_gridding.positions and not self.positive_cells():
+            return True
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.gcp_in_tiling(preimage):
                 return True
@@ -74,6 +85,39 @@ class Parameter(Tiling):
             Tiling(new_obs, self.requirements, self.dimensions),
             self.map,
         )
+
+    def update_active_cells(self, tiling: Tiling) -> "Parameter":
+        """Makes self.active_cells account for point obs in the base tiling"""
+        self.active_cells = self.active_cells & set(
+            self.map.preimage_of_cells(tiling.active_cells)
+        )
+        new_obs = tuple(
+            ob
+            for ob in self.obstructions
+            if ob.pattern == CayleyPermutation((0,))
+            or all(cell in self.active_cells for cell in ob.positions)
+        )
+        new_reqs = []
+        for req_list in self.requirements:
+            new_req_list = tuple(
+                req
+                for req in req_list
+                if all(cell in self.active_cells for cell in req.positions)
+            )
+            if not new_req_list:
+                return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
+            new_reqs.append(new_req_list)
+        temp = Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
+        temp.active_cells = self.active_cells
+        return temp
+
+    def find_empty_rows_and_columns(self):
+        if not self.active_cells:
+            return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
+        active_cols, active_rows = map(set, zip(*self.active_cells))
+        empty_cols = set(range(self.dimensions[0])) - active_cols
+        empty_rows = set(range(self.dimensions[1])) - active_rows
+        return tuple(empty_cols), tuple(empty_rows)
 
     def delete_rows_and_columns(
         self, cols: Iterable[int], rows: Iterable[int]
@@ -138,6 +182,16 @@ class Parameter(Tiling):
         for factor in factors:
             yield self.sub_parameter(factor)
 
+    def unplace_point(self, cell: Cell) -> "Parameter":
+        """index is the index of the point to be unplaced in self.point_cells"""
+        new_ghost = PointUnplacement(self.ghost, cell).unplace_point()
+        temp_col_map, temp_row_map = self.col_map, self.row_map
+        del temp_col_map[cell[0]], temp_col_map[cell[0] + 1]
+        del temp_row_map[cell[1]], temp_row_map[cell[1] + 1]
+        new_col_map = dict(enumerate(temp_col_map.values()))
+        new_row_map = dict(enumerate(temp_row_map.values()))
+        return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+
     def positive_cells_are_valid(self, tiling: Tiling) -> bool:
         """Creates a set of requirements implied by the ghost's positive cells.
         Returns False if any of these requirements contradict tiling's obstructions."""
@@ -169,13 +223,21 @@ class Parameter(Tiling):
         """Returns True if the parameter is contradictory.
         Is contradictory if any of the requirements in the ghost map to a gcp
         containing an obstruction in the tiling
+
+        Ideal world, we would backmap the obs and reqs from parent to the ghost
+        and check if it is empty, however this is probably really slow!
         """
-        simplify = SimplifyObstructionsAndRequirements(
-            tiling.obstructions, tiling.requirements, tiling.dimensions
-        )
         if any(
-            simplify.implied_by_requirements(self.map.map_gridded_cperm(ob))
-            for ob in self.obstructions
+            all(
+                not self.ghost.satisfies_obstructions(gcp)
+                for req in req_list
+                for gcp in self.map.preimage_of_gridded_cperm(req)
+            )
+            for req_list in tiling.requirements
+            if all(
+                cell in self.image_cells()
+                for cell in chain.from_iterable(req.positions for req in req_list)
+            )
         ):
             return True
         for req_list in self.ghost.requirements:
