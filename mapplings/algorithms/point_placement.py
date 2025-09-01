@@ -277,7 +277,6 @@ class MTRequirementPlacement:
         and correct map.
         Also removes the column in the param relating to the column of the
         placed point in the base tiling."""
-        n, m = parameter.ghost.dimensions
         col_map = {
             key + 2 * int(key >= cell[0]): value + 2 * int(key >= cell[0])
             for key, value in enumerate(parameter.col_map.values())
