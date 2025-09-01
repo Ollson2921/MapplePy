@@ -1,6 +1,7 @@
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
-from mapplings import Parameter, MappedTiling, MTCleaner, ParamCleaner, ParameterList
+from mapplings import Parameter, MappedTiling, ParameterList
+from mapplings.cleaners import MTCleaner, ParamCleaner
 from gridded_cayley_permutations.row_col_map import RowColMap
 from itertools import combinations_with_replacement
 from mapplings.strategies.tilescope_strategies import (
@@ -113,9 +114,9 @@ print(mappling)
 # for i in range(10):
 #     print(mappling.get_terms(i))
 M0 = MTCleaner.full_cleanup(mappling)
-# searcher = CombinatorialSpecificationSearcher(M0, PointPlacementsPack, debug=False)
+searcher = CombinatorialSpecificationSearcher(M0, PointPlacementsPack, debug=False)
 
-# spec = searcher.auto_search(status_update=10)
+spec = searcher.auto_search(status_update=10)
 cleaner = MTCleaner.make_full_cleaner()
 
 

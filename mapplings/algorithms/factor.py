@@ -3,7 +3,8 @@
 from itertools import chain, combinations
 from gridded_cayley_permutations.factors import Factors
 
-from mapplings import MappedTiling, ParameterList, MTCleaner
+from mapplings import MappedTiling, ParameterList
+from mapplings.cleaners import MTCleaner
 
 
 Cell = tuple[int, int]

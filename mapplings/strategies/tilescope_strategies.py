@@ -18,7 +18,8 @@ from comb_spec_searcher.exception import StrategyDoesNotApply
 from gridded_cayley_permutations.point_placements import Directions
 from typing import Iterator
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling, MTCleaner
+from mapplings import MappedTiling
+from mapplings.cleaners import MTCleaner
 from comb_spec_searcher import AtomStrategy
 
 
