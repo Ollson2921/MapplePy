@@ -49,7 +49,7 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         return True
 
     def formal_step(self):
-        return "the mappling is the same as the root"
+        return "Mappling is the same as the root"
 
     def to_jsonable(self) -> dict:
         d: dict = super().to_jsonable()

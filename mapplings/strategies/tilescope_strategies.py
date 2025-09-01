@@ -20,6 +20,7 @@ from typing import Iterator
 from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling, MTCleaner
 from comb_spec_searcher import AtomStrategy
+from .verification_strategy import NoParameterVerificationStrategy
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
@@ -57,7 +58,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         return (MTCleaner.full_cleanup(comb_class),)
 
     def formal_step(self) -> str:
-        return "cleaned"
+        return "Clean mappling"
 
     def forward_map(self, comb_class, obj, children=None):
         return super().forward_map(comb_class, obj, children)
@@ -92,14 +93,38 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
         return tuple(algo.separate())
 
 
-PointPlacementsPack = StrategyPack(
-    initial_strats=[
-        MapplingFactorStrategy(),
-        MapplingLessThanOrEqualRowColSeparationStrategy(),
-        MapplingPointPlacementFactory(),
-    ],
-    inferral_strats=[CleaningStrategy(), MapplingLessThanRowColSeparationStrategy()],
-    expansion_strats=[[CellInsertionFactory()]],
-    ver_strats=[AtomStrategy()],
-    name="Point placements",
-)
+# PointPlacementsPack = StrategyPack(
+#     initial_strats=[
+#         MapplingFactorStrategy(),
+#         MapplingLessThanOrEqualRowColSeparationStrategy(),
+#         MapplingPointPlacementFactory(),
+#     ],
+#     inferral_strats=[CleaningStrategy(), MapplingLessThanRowColSeparationStrategy()],
+#     expansion_strats=[[CellInsertionFactory()]],
+#     ver_strats=[AtomStrategy()],
+#     name="Point placements",
+# )
+
+
+class MappedTileScopePack(StrategyPack):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def MTpoint_placement(cls, rootmt):
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[[CellInsertionFactory()]],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
