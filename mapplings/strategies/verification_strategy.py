@@ -57,7 +57,7 @@ class NoParameterVerificationStrategy(
         return True
 
     def formal_step(self):
-        return "The mappling is the same as the root"
+        return "The mappling has no parameters"
 
     def to_jsonable(self) -> dict:
         d: dict = super().to_jsonable()
