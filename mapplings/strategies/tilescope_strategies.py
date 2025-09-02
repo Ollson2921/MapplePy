@@ -82,6 +82,9 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
     def forward_map(self, comb_class, obj, children=None):
         raise NotImplementedError
 
+    def backward_map(self, comb_class, objs, children=None):
+        raise NotImplementedError
+
 
 class MapplingFactorStrategy(FactorStrategy):
     """
