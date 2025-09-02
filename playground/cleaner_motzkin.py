@@ -28,4 +28,3 @@ searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 
 spec = searcher.auto_search(status_update=30)
 spec.show()
-spec.get_genf()

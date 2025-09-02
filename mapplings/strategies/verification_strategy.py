@@ -2,14 +2,17 @@
 
 from typing import Optional, Type, TypeVar, Any
 from comb_spec_searcher import VerificationStrategy
+from gridded_cayley_permutations import GriddedCayleyPerm
 from mapplings import MappedTiling
 
-NoParameterVerificationStrategyType = TypeVar(
-    "NoParameterVerificationStrategyType", bound="NoParameterVerificationStrategy"
+NoParameterVerificationStrategyT = TypeVar(
+    "NoParameterVerificationStrategyT", bound="NoParameterVerificationStrategy"
 )
 
 
-class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling]):
+class NoParameterVerificationStrategy(
+    VerificationStrategy[MappedTiling, GriddedCayleyPerm]
+):
     """
     A strategy for verifying if a mappling has no parameters.
     """
@@ -25,9 +28,9 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(
-        self: NoParameterVerificationStrategyType,
+        self: NoParameterVerificationStrategyT,
         mapped_tiling: MappedTiling,
-    ) -> NoParameterVerificationStrategyType:
+    ) -> NoParameterVerificationStrategyT:
         """
         Return a new version of the verification strategy with the given mappling instead
         of the current one.
@@ -63,8 +66,8 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
 
     @classmethod
     def from_dict(
-        cls: Type[NoParameterVerificationStrategyType], d: dict
-    ) -> NoParameterVerificationStrategyType:
+        cls: Type[NoParameterVerificationStrategyT], d: dict
+    ) -> NoParameterVerificationStrategyT:
         if "rootmt" in d and d["rootmt"] is not None:
             rootmt: Optional[MappedTiling] = d["rootmt"]
         else:

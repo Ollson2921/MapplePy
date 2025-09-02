@@ -31,8 +31,8 @@ class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
     A strategy for placing requirements in a mapped tiling.
     """
 
-    def algorithm(self, mappling):
-        return MTRequirementPlacement(mappling)
+    def algorithm(self, tiling):
+        return MTRequirementPlacement(tiling)
 
 
 class MapplingPointPlacementFactory(PointPlacementFactory):
@@ -77,6 +77,9 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
 
     @classmethod
     def from_dict(cls, d):
+        raise NotImplementedError
+
+    def forward_map(self, comb_class, obj, children=None):
         raise NotImplementedError
 
 
