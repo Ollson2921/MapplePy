@@ -244,7 +244,9 @@ class MTRequirementPlacement:
         for parameter in param_list:
             if cell in parameter.image_cells():
                 algo = PointPlacement(parameter.ghost)
-                new_cells = parameter.map.preimage_of_cell(cell)
+                new_cells = (
+                    set(parameter.map.preimage_of_cell(cell)) & parameter.active_cells
+                )
                 for new_cell in new_cells:
                     new_ghost = algo.directionless_point_placement(new_cell)
                     if new_ghost.is_empty():
@@ -275,7 +277,5 @@ class MTRequirementPlacement:
         and correct map.
         Also removes the column in the param relating to the column of the
         placed point in the base tiling."""
-        n, m = parameter.ghost.dimensions
-        new_n, new_m = new_ghost.dimensions
-        new_map = parameter.map.expand_at_index(new_n - n, new_m - m, cell[0], cell[1])
+        new_map = parameter.map.expand_at_index(2, 2, cell[0], cell[1])
         return Parameter(new_ghost, new_map).delete_rows_and_columns([cell[0] + 1], [])
