@@ -277,27 +277,5 @@ class MTRequirementPlacement:
         and correct map.
         Also removes the column in the param relating to the column of the
         placed point in the base tiling."""
-        col_map = {
-            key + 2 * int(key >= cell[0]): value + 2 * int(key >= cell[0])
-            for key, value in enumerate(parameter.col_map.values())
-        }
-        col_map.update(
-            {
-                cell[0]: parameter.col_map[cell[0]],
-                cell[0] + 1: parameter.col_map[cell[0]] + 1,
-            }
-        )
-        row_map = {
-            key + 2 * int(key >= cell[1]): value + 2 * int(key >= cell[1])
-            for key, value in enumerate(parameter.row_map.values())
-        }
-        row_map.update(
-            {
-                cell[1]: parameter.row_map[cell[1]],
-                cell[1] + 1: parameter.row_map[cell[1]] + 1,
-            }
-        )
-
-        return Parameter(
-            new_ghost, RowColMap(col_map, row_map)
-        ).delete_rows_and_columns([cell[0] + 1], [])
+        new_map = parameter.map.expand_at_index(2, 2, cell[0], cell[1])
+        return Parameter(new_ghost, new_map).delete_rows_and_columns([cell[0] + 1], [])
