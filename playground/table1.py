@@ -2,7 +2,7 @@ from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
-from mapplings.strategies.tilescope_strategies import PointPlacementsPack
+from mapplings.strategies.tilescope_strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 
 """Row 1"""
@@ -27,7 +27,7 @@ from comb_spec_searcher import CombinatorialSpecificationSearcher
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
@@ -55,7 +55,7 @@ from comb_spec_searcher import CombinatorialSpecificationSearcher
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
@@ -83,7 +83,7 @@ mappling = MappedTiling(
     [],
     [],
 )
-pack = PointPlacementsPack
+pack = MappedTileScopePack.point_placement(mappling)
 searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 spec = searcher.auto_search(status_update=30)
 spec.show()
@@ -111,7 +111,7 @@ spec.get_genf()
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
@@ -139,7 +139,7 @@ spec.get_genf()
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
@@ -167,7 +167,7 @@ spec.get_genf()
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
@@ -194,7 +194,7 @@ spec.get_genf()
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
@@ -222,7 +222,7 @@ spec.get_genf()
 #     [],
 #     [],
 # )
-# pack = PointPlacementsPack
+# pack = MappedTileScopePack.point_placement(mappling)
 # searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 # spec = searcher.auto_search(status_update=30)
 # spec.show()
