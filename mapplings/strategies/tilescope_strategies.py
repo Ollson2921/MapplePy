@@ -10,8 +10,18 @@ from tilescope.strategies import (
     LessThanOrEqualRowColSeparationStrategy,
     CellInsertionFactory,
     PointPlacementFactory,
+    RowInsertionFactory,
+    ColInsertionFactory,
 )
 
+from tilescope.strategies.point_placements import (
+    DIR_LEFT_BOT,
+    DIR_RIGHT_BOT,
+    DIR_LEFT_TOP,
+    DIR_RIGHT_TOP,
+    DIR_LEFT,
+    DIR_RIGHT,
+)
 from comb_spec_searcher import StrategyPack, DisjointUnionStrategy, AtomStrategy
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
@@ -48,6 +58,40 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
                 yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
                 # if direction in PartialRequirementPlacementStrategy.DIRECTIONS:
                 #     yield PartialRequirementPlacementStrategy(gcps, indices, direction)
+
+
+class MapplingRowInsertionFactory(RowInsertionFactory):
+    """Factory for having a point requirement on a row."""
+
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        not_point_rows = set(range(comb_class.dimensions[1])) - comb_class.point_rows
+        for row in not_point_rows:
+            all_gcps = []
+            for col in range(comb_class.dimensions[0]):
+                cell = (col, row)
+                gcps = GriddedCayleyPerm(CayleyPermutation([0]), (cell,))
+                all_gcps.append(gcps)
+            indices = tuple(0 for _ in all_gcps)
+            for direction in [DIR_LEFT_BOT, DIR_RIGHT_BOT, DIR_LEFT_TOP, DIR_RIGHT_TOP]:
+                yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
+
+
+class MapplingColInsertionFactory(ColInsertionFactory):
+    """Factory for having a point requirement on a column."""
+
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        not_point_cols = set(range(comb_class.dimensions[0])) - set(
+            cell[0] for cell in comb_class.point_cells()
+        )
+        for col in not_point_cols:
+            all_gcps = []
+            for row in range(comb_class.dimensions[1]):
+                cell = (col, row)
+                gcps = GriddedCayleyPerm(CayleyPermutation([0]), (cell,))
+                all_gcps.append(gcps)
+            indices = tuple(0 for _ in all_gcps)
+            for direction in [DIR_LEFT, DIR_RIGHT]:
+                yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
 
 
 class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
@@ -137,7 +181,13 @@ class MappedTileScopePack(StrategyPack):
                 CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
-            expansion_strats=[[CellInsertionFactory()]],
+            expansion_strats=[
+                [
+                    CellInsertionFactory(),
+                    MapplingRowInsertionFactory(),
+                    MapplingColInsertionFactory(),
+                ]
+            ],
             ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
             name="Point placements",
             symmetries=[],
