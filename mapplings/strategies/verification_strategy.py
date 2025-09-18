@@ -1,13 +1,18 @@
-from typing import Optional, Type, TypeVar
+"""Strategy for verifying when a mappling has no parameters."""
+
+from typing import Optional, Type, TypeVar, Any
 from comb_spec_searcher import VerificationStrategy
+from gridded_cayley_permutations import GriddedCayleyPerm
 from mapplings import MappedTiling
 
-NoParameterVerificationStrategyType = TypeVar(
-    "NoParameterVerificationStrategyType", bound="NoParameterVerificationStrategy"
+NoParameterVerificationStrategyT = TypeVar(
+    "NoParameterVerificationStrategyT", bound="NoParameterVerificationStrategy"
 )
 
 
-class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedTiling]):
+class NoParameterVerificationStrategy(
+    VerificationStrategy[MappedTiling, GriddedCayleyPerm]
+):
     """
     A strategy for verifying if a mappling has no parameters.
     """
@@ -17,13 +22,15 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         rootmt: Optional[MappedTiling] = None,
         ignore_parent: bool = False,
     ):
-        self._rootmt = rootmt if rootmt is not None else tuple()
+        self._rootmt: MappedTiling | tuple[Any, ...] = (
+            rootmt if rootmt is not None else tuple()
+        )
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(
-        self: NoParameterVerificationStrategyType,
+        self: NoParameterVerificationStrategyT,
         mapped_tiling: MappedTiling,
-    ) -> NoParameterVerificationStrategyType:
+    ) -> NoParameterVerificationStrategyT:
         """
         Return a new version of the verification strategy with the given mappling instead
         of the current one.
@@ -31,7 +38,8 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         return self.__class__(mapped_tiling, self.ignore_parent)
 
     @property
-    def rootmt(self) -> MappedTiling:
+    def rootmt(self) -> MappedTiling | tuple[Any, ...]:
+        """The root mapped tiling."""
         return self._rootmt
 
     def pack(self, comb_class):
@@ -41,7 +49,7 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         if (
             comb_class.avoiding_parameters
             or comb_class.containing_parameters
-            or comb_class.enumeration_parameters
+            or comb_class.enumerating_parameters
         ):
             return False
         if comb_class == self.rootmt:
@@ -49,7 +57,7 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
         return True
 
     def formal_step(self):
-        return "Mappling is the same as the root"
+        return "The mappling has no parameters"
 
     def to_jsonable(self) -> dict:
         d: dict = super().to_jsonable()
@@ -58,8 +66,8 @@ class NoParameterVerificationStrategy(VerificationStrategy[MappedTiling, MappedT
 
     @classmethod
     def from_dict(
-        cls: Type[NoParameterVerificationStrategyType], d: dict
-    ) -> NoParameterVerificationStrategyType:
+        cls: Type[NoParameterVerificationStrategyT], d: dict
+    ) -> NoParameterVerificationStrategyT:
         if "rootmt" in d and d["rootmt"] is not None:
             rootmt: Optional[MappedTiling] = d["rootmt"]
         else:

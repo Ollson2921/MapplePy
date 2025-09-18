@@ -1,10 +1,9 @@
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from mapplings import MappedTiling, Parameter, ParameterList
+from mapplings import MappedTiling, Parameter
 from gridded_cayley_permutations.row_col_map import RowColMap
-from mapplings.strategies.tilescope_strategies import PointPlacementsPack
+from mapplings.strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
-
 
 til = MappedTiling.from_vincular(CayleyPermutation([0, 1, 2]), [])
 ghost = til.delete_rows([4])
@@ -25,7 +24,7 @@ mappling = MappedTiling(
     [],
 )
 
-pack = PointPlacementsPack
+pack = MappedTileScopePack.point_placement(mappling)
 searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 
 spec = searcher.auto_search(status_update=30)
