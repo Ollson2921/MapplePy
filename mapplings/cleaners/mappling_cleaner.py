@@ -215,7 +215,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
         new_containers = [
-            c_list.simple_remove_redundant(True)
+            c_list.simple_remove_redundant()
             for c_list in mappling.containing_parameters
         ]
         return MappedTiling(

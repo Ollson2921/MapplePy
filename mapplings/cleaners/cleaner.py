@@ -203,6 +203,7 @@ class GenericCleaner(Generic[T]):
                     assert old_counts == new_counts, (
                         f"Counts differ: \n {old_counts} : {new_counts}"
                         + f"\n {cleaning_object}\n {new_object}"
+                        + f"\n {repr(cleaning_object)}"
                     )
                 else:
                     print(
