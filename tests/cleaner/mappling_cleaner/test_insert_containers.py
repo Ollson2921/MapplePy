@@ -8,7 +8,10 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling, Parameter, ParameterList
-from mapplings.cleaners import MTCleaner
+from mapplings.cleaners import MTCleaner, ParamCleaner
+
+MTCleaner.DEBUG = 2
+ParamCleaner.DEBUG = 2
 
 
 @pytest.mark.skip(reason="strategy not working yet")

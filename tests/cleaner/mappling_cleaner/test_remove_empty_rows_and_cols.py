@@ -113,7 +113,7 @@ def test_reduce_empty_rowcols_mapped_tiling():
 
 
 def test_empty_base_tiling():
-    """The base tiling is multiple empty rows and columns."""
+    """The base tiling has multiple empty rows and columns."""
     obs = [
         GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),
         GriddedCayleyPerm(CayleyPermutation([0]), [(0, 1)]),

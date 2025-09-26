@@ -140,8 +140,9 @@ class GenericCleaner(Generic[T]):
                 old_counts = cleaning_object.initial_conditions(2)
                 new_counts = new_cleaning_object.initial_conditions(2)
                 assert old_counts == new_counts, (
-                    f"Counts differ: \n {old_counts} : {new_counts}"
+                    f"Counts differ: \n Initial counts: {old_counts} \n Cleaned counts: {new_counts}"
                     + f"\n {cleaning_object}\n {new_cleaning_object}"
+                    + f"\n {repr(cleaning_object)}"
                 )
         return new_cleaning_object
 
@@ -201,7 +202,7 @@ class GenericCleaner(Generic[T]):
                     old_counts = cleaning_object.initial_conditions(2)
                     new_counts = new_object.initial_conditions(2)
                     assert old_counts == new_counts, (
-                        f"Counts differ: \n {old_counts} : {new_counts}"
+                        f"Counts differ: \n Initial counts: {old_counts} \n Cleaned counts: {new_counts}"
                         + f"\n {cleaning_object}\n {new_object}"
                         + f"\n {repr(cleaning_object)}"
                     )
