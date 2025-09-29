@@ -190,6 +190,11 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             len(empty_cols) == mappling.dimensions[0]
             or len(empty_rows) == mappling.dimensions[1]
         ):
+            if any(param.requirements for param in mappling.avoiding_parameters) or any(
+                all(param.requirements for param in param_list)
+                for param_list in mappling.containing_parameters
+            ):
+                return MappedTiling.empty_mappling()
             return MappedTiling(
                 Tiling(
                     [GriddedCayleyPerm(CayleyPermutation((0,)), [(0, 0)])], [], (1, 1)
