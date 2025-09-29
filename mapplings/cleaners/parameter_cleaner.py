@@ -1,5 +1,6 @@
 """Module with the parameter cleaner"""
 
+from typing import Iterable
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.unplacement import PointUnplacement
 
@@ -59,40 +60,34 @@ class ParamCleaner(GenericCleaner[Parameter]):
             positive_cols, positive_rows = map(set, zip(*param.positive_cells()))
         else:
             positive_cols, positive_rows = set(), set()
+
+        def check_for_blank(columns: Iterable[int], image: int, check_rows: bool):
+            for col in columns:
+                if check_rows:
+                    if col in rows_to_remove:
+                        break
+                    if param.row_map[col] == image and col not in positive_rows:
+                        rows_to_remove.add(col)
+                    else:
+                        break
+                else:
+                    if col in cols_to_remove:
+                        break
+                    if param.col_map[col] == image and col not in positive_cols:
+                        cols_to_remove.add(column)
+                    else:
+                        break
+
         for column in columns:
             image_col = param.map.col_map[column]
             cols_to_remove.add(column)
-            for col in range(column - 1, -1, -1):
-                if col in cols_to_remove:
-                    break
-                if param.col_map[col] == image_col and col not in positive_cols:
-                    cols_to_remove.add(column)
-                else:
-                    break
-            for col in range(column + 1, param.dimensions[0]):
-                if col in cols_to_remove:
-                    break
-                if param.col_map[col] == image_col and col not in positive_cols:
-                    cols_to_remove.add_(column)
-                else:
-                    break
+            check_for_blank(range(column - 1, -1, -1), image_col, False)
+            check_for_blank(range(column + 1, param.dimensions[0]), image_col, False)
         for blank_row in rows:
             image_row = param.row_map[blank_row]
             rows_to_remove.add(blank_row)
-            for row in range(blank_row - 1, -1, -1):
-                if row in rows_to_remove:
-                    break
-                if param.row_map[row] == image_row and row not in positive_rows:
-                    rows_to_remove.add(row)
-                else:
-                    break
-            for row in range(blank_row + 1, param.dimensions[1]):
-                if row in rows_to_remove:
-                    break
-                if param.row_map[row] == image_row and row not in positive_rows:
-                    rows_to_remove.add(row)
-                else:
-                    break
+            check_for_blank(range(blank_row - 1, -1, -1), image_row, True)
+            check_for_blank(range(blank_row + 1, param.dimensions[1]), image_row, True)
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
