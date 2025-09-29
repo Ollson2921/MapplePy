@@ -113,7 +113,7 @@ def test_reduce_empty_rowcols_mapped_tiling():
 
 
 def test_empty_base_tiling():
-    """The base tiling is multiple empty rows and columns."""
+    """The base tiling has multiple empty rows and columns."""
     obs = [
         GriddedCayleyPerm(CayleyPermutation([0]), [(0, 0)]),
         GriddedCayleyPerm(CayleyPermutation([0]), [(0, 1)]),
@@ -132,10 +132,10 @@ def test_empty_base_tiling():
         (),
     )
     cleaned_tiling = MappedTiling(
-        Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (), (1, 1)),
-        ParameterList(frozenset()),
-        (),
-        (),
+        Tiling((GriddedCayleyPerm(CayleyPermutation(tuple()), tuple()),), (), (0, 0)),
+        [],
+        [],
+        [],
     )
 
     cleaning_list = [MTCleaner.remove_empty_rows_and_cols]
