@@ -36,15 +36,11 @@ def test_remove_blank_rowcols():
                     {
                         Parameter(
                             Tiling(
-                                (
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
-                                    ),
-                                ),
                                 (),
-                                (1, 1),
+                                (),
+                                (0, 0),
                             ),
-                            RowColMap({0: 0}, {0: 0}),
+                            RowColMap({}, {}),
                         )
                     }
                 )
