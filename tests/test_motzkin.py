@@ -31,4 +31,6 @@ def test_motzkin_spec():
     pack = MappedTileScopePack.point_placement(mappling)
     searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 
-    assert searcher.auto_search()
+    spec = searcher.auto_search()
+    spec_counts = [spec.count_objects_of_size(i) for i in range(9)]
+    assert spec_counts == [1, 1, 2, 4, 9, 21, 51, 127, 323]
