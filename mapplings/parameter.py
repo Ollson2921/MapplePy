@@ -133,6 +133,8 @@ class Parameter(Tiling):
         )
         new_col_map = dict(enumerate(image_cols))
         new_row_map = dict(enumerate(image_rows))
+        if 0 in new_ghost.dimensions:
+            return Parameter(Tiling([], [], (0, 0)), RowColMap({}, {}))
         return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
     def delete_preimage_of_rows_and_columns(

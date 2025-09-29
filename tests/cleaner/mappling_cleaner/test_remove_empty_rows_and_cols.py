@@ -132,10 +132,10 @@ def test_empty_base_tiling():
         (),
     )
     cleaned_tiling = MappedTiling(
-        Tiling((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (), (1, 1)),
-        ParameterList(frozenset()),
-        (),
-        (),
+        Tiling((GriddedCayleyPerm(CayleyPermutation(tuple()), tuple()),), (), (0, 0)),
+        [],
+        [],
+        [],
     )
 
     cleaning_list = [MTCleaner.remove_empty_rows_and_cols]
