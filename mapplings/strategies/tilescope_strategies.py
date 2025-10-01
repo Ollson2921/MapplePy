@@ -10,8 +10,18 @@ from tilescope.strategies import (
     LessThanOrEqualRowColSeparationStrategy,
     CellInsertionFactory,
     PointPlacementFactory,
+    RowInsertionFactory,
+    ColInsertionFactory,
 )
 
+from tilescope.strategies.point_placements import (
+    DIR_LEFT_BOT,
+    DIR_RIGHT_BOT,
+    DIR_LEFT_TOP,
+    DIR_RIGHT_TOP,
+    DIR_LEFT,
+    DIR_RIGHT,
+)
 from comb_spec_searcher import StrategyPack, DisjointUnionStrategy, AtomStrategy
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
@@ -48,6 +58,42 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
                 yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
                 # if direction in PartialRequirementPlacementStrategy.DIRECTIONS:
                 #     yield PartialRequirementPlacementStrategy(gcps, indices, direction)
+
+
+class MapplingRowPlacementFactory(RowInsertionFactory):
+    """A factory for placing the minimum points in the rows of tilings."""
+
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        not_point_rows = set(range(comb_class.dimensions[1])) - comb_class.point_rows
+        for row in not_point_rows:
+            all_gcps = []
+            for col in range(comb_class.dimensions[0]):
+                cell = (col, row)
+                if cell in comb_class.active_cells:
+                    gcps = GriddedCayleyPerm(CayleyPermutation([0]), (cell,))
+                    all_gcps.append(gcps)
+            indices = tuple(0 for _ in all_gcps)
+            for direction in [DIR_LEFT_BOT, DIR_RIGHT_BOT, DIR_LEFT_TOP, DIR_RIGHT_TOP]:
+                yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
+
+
+class MapplingColPlacementFactory(ColInsertionFactory):
+    """A factory for placing the leftmost or rightmost points in
+    the columns of tilings."""
+
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        not_point_cols = set(range(comb_class.dimensions[0])) - set(
+            cell[0] for cell in comb_class.point_cells()
+        )
+        for col in not_point_cols:
+            all_gcps = []
+            for row in range(comb_class.dimensions[1]):
+                cell = (col, row)
+                gcps = GriddedCayleyPerm(CayleyPermutation([0]), (cell,))
+                all_gcps.append(gcps)
+            indices = tuple(0 for _ in all_gcps)
+            for direction in [DIR_LEFT, DIR_RIGHT]:
+                yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
 
 
 class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
@@ -137,7 +183,115 @@ class MappedTileScopePack(StrategyPack):
                 CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
-            expansion_strats=[[CellInsertionFactory()]],
+            expansion_strats=[
+                [
+                    CellInsertionFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def row_placement(cls, rootmt):
+        """
+        Create a row placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingRowPlacementFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Row placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def col_placement(cls, rootmt):
+        """
+        Create a column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingColPlacementFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Column placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def row_and_col_placement(cls, rootmt):
+        """
+        Create a row and column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingRowPlacementFactory(),
+                    MapplingColPlacementFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def point_row_and_col_placement(cls, rootmt):
+        """
+        Create a point, row and column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    CellInsertionFactory(),
+                    MapplingRowPlacementFactory(),
+                    MapplingColPlacementFactory(),
+                ]
+            ],
             ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
             name="Point placements",
             symmetries=[],
