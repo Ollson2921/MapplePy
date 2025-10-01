@@ -63,53 +63,6 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
                 #     yield PartialRequirementPlacementStrategy(gcps, indices, direction)
 
 
-class MapplingHorizontalInsertionEncodingRequirementInsertionFactory(
-    MapplingPointPlacementFactory
-):
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
-        for row in range(comb_class.dimensions[1]):
-            if not comb_class.row_is_positive(row):
-                gcps = tuple(
-                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
-                    for cell in comb_class.cells_in_row(row)
-                )
-                strategy = RequirementInsertionStrategy(gcps, ignore_parent=True)
-                yield strategy
-
-    @classmethod
-    def from_dict(
-        cls, d: dict
-    ) -> "MapplingHorizontalInsertionEncodingRequirementInsertionFactory":
-        return cls(**d)
-
-    def __str__(self) -> str:
-        return "Make rows positive"
-
-
-class MapplingVerticalInsertionEncodingRequirementInsertionFactory(
-    MapplingPointPlacementFactory
-):
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
-        for col in range(comb_class.dimensions[0]):
-            if not comb_class.col_is_positive(col):
-                gcps = tuple(
-                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
-                    for cell in comb_class.cells_in_col(col)
-                )
-                strategy = RequirementInsertionStrategy(gcps, ignore_parent=True)
-                yield strategy
-                return
-
-    @classmethod
-    def from_dict(
-        cls, d: dict
-    ) -> "MapplingVerticalInsertionEncodingRequirementInsertionFactory":
-        return cls(**d)
-
-    def __str__(self) -> str:
-        return "Make columns positive"
-
-
 class MapplingRowPlacementFactory(RowInsertionFactory):
     """A factory for placing the minimum points in the rows of tilings."""
 
@@ -125,24 +78,6 @@ class MapplingRowPlacementFactory(RowInsertionFactory):
             indices = tuple(0 for _ in all_gcps)
             for direction in [DIR_LEFT_BOT, DIR_RIGHT_BOT, DIR_LEFT_TOP, DIR_RIGHT_TOP]:
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
-
-
-class MapplingVerticalInsertionEncodingPlacementFactory(MapplingRowPlacementFactory):
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
-        cells = comb_class.active_cells
-        gcps = tuple(
-            GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
-        )
-        indices = tuple(0 for _ in gcps)
-        direction = DIR_LEFT_BOT
-        yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
-
-    @classmethod
-    def from_dict(cls, d: dict) -> "MapplingVerticalInsertionEncodingPlacementFactory":
-        return cls(**d)
-
-    def __str__(self) -> str:
-        return "Place next point of insertion encoding"
 
 
 class MapplingColPlacementFactory(ColInsertionFactory):
@@ -164,8 +99,81 @@ class MapplingColPlacementFactory(ColInsertionFactory):
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
 
 
-class MapplingHorizontalInsertionEncodingPlacementFactory(MapplingColPlacementFactory):
+class MapplingVerticalInsertionEncodingRequirementInsertionFactory(
+    CellInsertionFactory
+):
+    """A factory for making columns positive in mapplings for vertical insertion encoding."""
+
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
+        for col in range(comb_class.dimensions[0]):
+            if not comb_class.col_is_positive(col):
+                gcps = tuple(
+                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
+                    for cell in comb_class.cells_in_col(col)
+                )
+                yield RequirementInsertionStrategy(gcps, ignore_parent=True)
+                return
+
+    @classmethod
+    def from_dict(
+        cls, d: dict
+    ) -> "MapplingVerticalInsertionEncodingRequirementInsertionFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Make columns positive"
+
+
+class MapplingVerticalInsertionEncodingPlacementFactory(MapplingRowPlacementFactory):
+    """A factory for placing the bottom leftmost points in mapplings."""
+
     def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        cells = comb_class.active_cells
+        gcps = tuple(
+            GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
+        )
+        indices = tuple(0 for _ in gcps)
+        direction = DIR_LEFT_BOT
+        yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MapplingVerticalInsertionEncodingPlacementFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Place next point of insertion encoding"
+
+
+class MapplingHorizontalInsertionEncodingRequirementInsertionFactory(
+    CellInsertionFactory
+):
+    """A factory for making rows positive in mapplings for horizontal insertion encoding."""
+
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
+        for row in range(comb_class.dimensions[1]):
+            if not comb_class.row_is_positive(row):
+                gcps = tuple(
+                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
+                    for cell in comb_class.cells_in_row(row)
+                )
+                yield RequirementInsertionStrategy(gcps, ignore_parent=True)
+
+    @classmethod
+    def from_dict(
+        cls, d: dict
+    ) -> "MapplingHorizontalInsertionEncodingRequirementInsertionFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Make rows positive"
+
+
+class MapplingHorizontalInsertionEncodingPlacementFactory(MapplingColPlacementFactory):
+    """A factory for placing the leftmost points in mapplings."""
+
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementPlacementStrategy]:
         cells = comb_class.active_cells
         gcps = tuple(
             GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
@@ -387,7 +395,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def vertical_insertion_encoding(cls, rootmt):
+    def vertical_insertion_encoding(cls):
         """
         Create a vertical insertion encoding strategy pack for the given root mapped tiling.
         """
@@ -405,7 +413,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def horizontal_insertion_encoding(cls, rootmt):
+    def horizontal_insertion_encoding(cls):
         """
         Create a horizontal insertion encoding strategy pack for the given root mapped tiling.
         """
