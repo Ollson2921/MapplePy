@@ -157,7 +157,7 @@ class Parameter(Tiling):
         return Parameter(temp_param.ghost, RowColMap(new_col_map, new_row_map))
 
     def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
-        """Reutrns the parameter containig only the specified cells"""
+        """Returns the parameter containing only the specified cells"""
         cols, rows = zip(*cells)
         cols_to_delete = {i for i in range(self.dimensions[0]) if i not in cols}
         rows_to_delete = {i for i in range(self.dimensions[1]) if i not in rows}

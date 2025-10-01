@@ -3,7 +3,7 @@
 from typing import Iterable
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.unplacement import PointUnplacement
-
+from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
 
 from .cleaner import GenericCleaner, Register
@@ -88,6 +88,11 @@ class ParamCleaner(GenericCleaner[Parameter]):
             rows_to_remove.add(blank_row)
             check_for_blank(range(blank_row - 1, -1, -1), image_row, True)
             check_for_blank(range(blank_row + 1, param.dimensions[1]), image_row, True)
+        if (
+            len(cols_to_remove) == param.dimensions[0]
+            or len(rows_to_remove) == param.dimensions[1]
+        ):
+            return Parameter(Tiling([], [], (1, 1)), RowColMap({0: 0}, {0: 0}))
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
