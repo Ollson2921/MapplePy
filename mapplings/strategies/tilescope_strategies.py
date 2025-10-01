@@ -12,6 +12,7 @@ from tilescope.strategies import (
     PointPlacementFactory,
     RowInsertionFactory,
     ColInsertionFactory,
+    RequirementInsertionStrategy,
 )
 
 from tilescope.strategies.point_placements import (
@@ -50,7 +51,9 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
     A factory for creating point placement strategies for mapped tilings.
     """
 
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementPlacementStrategy]:
         for cell in comb_class.positive_cells():
             for direction in Directions:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), (cell,)),)
@@ -58,6 +61,53 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
                 yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
                 # if direction in PartialRequirementPlacementStrategy.DIRECTIONS:
                 #     yield PartialRequirementPlacementStrategy(gcps, indices, direction)
+
+
+class MapplingHorizontalInsertionEncodingRequirementInsertionFactory(
+    MapplingPointPlacementFactory
+):
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
+        for row in range(comb_class.dimensions[1]):
+            if not comb_class.row_is_positive(row):
+                gcps = tuple(
+                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
+                    for cell in comb_class.cells_in_row(row)
+                )
+                strategy = RequirementInsertionStrategy(gcps, ignore_parent=True)
+                yield strategy
+
+    @classmethod
+    def from_dict(
+        cls, d: dict
+    ) -> "MapplingHorizontalInsertionEncodingRequirementInsertionFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Make rows positive"
+
+
+class MapplingVerticalInsertionEncodingRequirementInsertionFactory(
+    MapplingPointPlacementFactory
+):
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
+        for col in range(comb_class.dimensions[0]):
+            if not comb_class.col_is_positive(col):
+                gcps = tuple(
+                    GriddedCayleyPerm(CayleyPermutation([0]), [cell])
+                    for cell in comb_class.cells_in_col(col)
+                )
+                strategy = RequirementInsertionStrategy(gcps, ignore_parent=True)
+                yield strategy
+                return
+
+    @classmethod
+    def from_dict(
+        cls, d: dict
+    ) -> "MapplingVerticalInsertionEncodingRequirementInsertionFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Make columns positive"
 
 
 class MapplingRowPlacementFactory(RowInsertionFactory):
@@ -77,6 +127,24 @@ class MapplingRowPlacementFactory(RowInsertionFactory):
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
 
 
+class MapplingVerticalInsertionEncodingPlacementFactory(MapplingRowPlacementFactory):
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        cells = comb_class.active_cells
+        gcps = tuple(
+            GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
+        )
+        indices = tuple(0 for _ in gcps)
+        direction = DIR_LEFT_BOT
+        yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MapplingVerticalInsertionEncodingPlacementFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Place next point of insertion encoding"
+
+
 class MapplingColPlacementFactory(ColInsertionFactory):
     """A factory for placing the leftmost or rightmost points in
     the columns of tilings."""
@@ -94,6 +162,26 @@ class MapplingColPlacementFactory(ColInsertionFactory):
             indices = tuple(0 for _ in all_gcps)
             for direction in [DIR_LEFT, DIR_RIGHT]:
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
+
+
+class MapplingHorizontalInsertionEncodingPlacementFactory(MapplingColPlacementFactory):
+    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+        cells = comb_class.active_cells
+        gcps = tuple(
+            GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
+        )
+        indices = tuple(0 for _ in gcps)
+        direction = DIR_LEFT
+        yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
+
+    @classmethod
+    def from_dict(
+        cls, d: dict
+    ) -> "MapplingHorizontalInsertionEncodingPlacementFactory":
+        return cls(**d)
+
+    def __str__(self) -> str:
+        return "Place next point of insertion encoding"
 
 
 class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
@@ -294,6 +382,42 @@ class MappedTileScopePack(StrategyPack):
             ],
             ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
             name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def vertical_insertion_encoding(cls, rootmt):
+        """
+        Create a vertical insertion encoding strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingVerticalInsertionEncodingRequirementInsertionFactory(),
+            ],
+            inferral_strats=[CleaningStrategy()],
+            expansion_strats=[[MapplingVerticalInsertionEncodingPlacementFactory()]],
+            ver_strats=[AtomStrategy()],
+            name="Vertical Insertion Encoding",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def horizontal_insertion_encoding(cls, rootmt):
+        """
+        Create a horizontal insertion encoding strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingHorizontalInsertionEncodingRequirementInsertionFactory(),
+            ],
+            inferral_strats=[CleaningStrategy()],
+            expansion_strats=[[MapplingHorizontalInsertionEncodingPlacementFactory()]],
+            ver_strats=[AtomStrategy()],
+            name="Horizontal Insertion Encoding",
             symmetries=[],
             iterative=False,
         )
