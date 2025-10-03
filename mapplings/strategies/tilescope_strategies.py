@@ -60,8 +60,8 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
                 #     yield PartialRequirementPlacementStrategy(gcps, indices, direction)
 
 
-class MapplingRowInsertionFactory(RowInsertionFactory):
-    """Factory for having a point requirement on a row."""
+class MapplingRowPlacementFactory(RowInsertionFactory):
+    """A factory for placing the minimum points in the rows of tilings."""
 
     def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
         not_point_rows = set(range(comb_class.dimensions[1])) - comb_class.point_rows
@@ -69,15 +69,17 @@ class MapplingRowInsertionFactory(RowInsertionFactory):
             all_gcps = []
             for col in range(comb_class.dimensions[0]):
                 cell = (col, row)
-                gcps = GriddedCayleyPerm(CayleyPermutation([0]), (cell,))
-                all_gcps.append(gcps)
+                if cell in comb_class.active_cells:
+                    gcps = GriddedCayleyPerm(CayleyPermutation([0]), (cell,))
+                    all_gcps.append(gcps)
             indices = tuple(0 for _ in all_gcps)
             for direction in [DIR_LEFT_BOT, DIR_RIGHT_BOT, DIR_LEFT_TOP, DIR_RIGHT_TOP]:
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
 
 
-class MapplingColInsertionFactory(ColInsertionFactory):
-    """Factory for having a point requirement on a column."""
+class MapplingColPlacementFactory(ColInsertionFactory):
+    """A factory for placing the leftmost or rightmost points in
+    the columns of tilings."""
 
     def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
         not_point_cols = set(range(comb_class.dimensions[0])) - set(
@@ -184,8 +186,110 @@ class MappedTileScopePack(StrategyPack):
             expansion_strats=[
                 [
                     CellInsertionFactory(),
-                    MapplingRowInsertionFactory(),
-                    MapplingColInsertionFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def row_placement(cls, rootmt):
+        """
+        Create a row placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingRowPlacementFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Row placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def col_placement(cls, rootmt):
+        """
+        Create a column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingColPlacementFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Column placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def row_and_col_placement(cls, rootmt):
+        """
+        Create a row and column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingRowPlacementFactory(),
+                    MapplingColPlacementFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def point_row_and_col_placement(cls, rootmt):
+        """
+        Create a point, row and column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    CellInsertionFactory(),
+                    MapplingRowPlacementFactory(),
+                    MapplingColPlacementFactory(),
                 ]
             ],
             ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
