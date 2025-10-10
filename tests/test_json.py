@@ -98,19 +98,24 @@ def test_classes_jsons(motzkin_mappling, inc_inc_mappling, containing_param, avo
     )
 
 
-def test_specs_json(motzkin_mappling, inc_inc_mappling):
-    """Test the json for the motzkin spec
-    and inc inc grid class spec."""
+def test_specs_json(motzkin_mappling):
+    """Test the json and counts for the motzkin spec."""
     pack = MappedTileScopePack.point_placement(motzkin_mappling)
     searcher = CombinatorialSpecificationSearcher(motzkin_mappling, pack, debug=False)
     spec = searcher.auto_search()
+    spec_counts = [spec.count_objects_of_size(i) for i in range(9)]
+    assert spec_counts == [1, 1, 2, 4, 9, 21, 51, 127, 323]
     json_dict = spec.to_jsonable()
     json_str = json.dumps(json_dict)
     load_dict = json.loads(json_str)
     reloaded_spec = CombinatorialSpecification.from_dict(load_dict)
     assert spec == reloaded_spec
+    spec_counts = [spec.count_objects_of_size(i) for i in range(9)]
+    assert spec_counts == [1, 1, 2, 4, 9, 21, 51, 127, 323]
 
     
+def test_specs_json(inc_inc_mappling):
+    """Test the json for the inc inc grid class spec."""
     pack = MappedTileScopePack.point_placement(inc_inc_mappling)
     searcher = CombinatorialSpecificationSearcher(inc_inc_mappling, pack, debug=False)
     spec = searcher.auto_search()
