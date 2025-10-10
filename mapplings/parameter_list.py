@@ -83,6 +83,13 @@ class ParameterList(frozenset[Parameter]):
                 exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
 
+    def to_jsonable(self) -> dict:
+        return {"params": [param.to_jsonable() for param in self]}
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(Parameter.from_dict(p) for p in d["params"])
+
     def __repr__(self):
         return self.__class__.__name__ + f"({frozenset(self)})"
 

@@ -219,7 +219,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
 
     @classmethod
     def from_dict(cls, d):
-        raise NotImplementedError
+        return cls(**d)
 
     def forward_map(self, comb_class, obj, children=None):
         raise NotImplementedError

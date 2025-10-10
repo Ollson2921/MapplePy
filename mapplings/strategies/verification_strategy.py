@@ -61,7 +61,7 @@ class NoParameterVerificationStrategy(
 
     def to_jsonable(self) -> dict:
         d: dict = super().to_jsonable()
-        d["rootmt"] = self._rootmt
+        d["rootmt"] = self._rootmt.to_jsonable()
         return d
 
     @classmethod
@@ -69,7 +69,7 @@ class NoParameterVerificationStrategy(
         cls: Type[NoParameterVerificationStrategyT], d: dict
     ) -> NoParameterVerificationStrategyT:
         if "rootmt" in d and d["rootmt"] is not None:
-            rootmt: Optional[MappedTiling] = d["rootmt"]
+            rootmt: Optional[MappedTiling] = MappedTiling.from_dict(d.pop("rootmt"))
         else:
             rootmt = d.pop("rootmt", None)
         return cls(rootmt=rootmt, **d)
