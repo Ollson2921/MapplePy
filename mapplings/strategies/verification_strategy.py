@@ -22,9 +22,7 @@ class NoParameterVerificationStrategy(
         rootmt: Optional[MappedTiling] = None,
         ignore_parent: bool = False,
     ):
-        self._rootmt: MappedTiling | tuple[Any, ...] = (
-            rootmt if rootmt is not None else tuple()
-        )
+        self._rootmt:  Optional[MappedTiling] = rootmt
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(

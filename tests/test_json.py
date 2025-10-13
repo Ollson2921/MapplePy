@@ -7,7 +7,10 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings.strategies import MappedTileScopePack
-from comb_spec_searcher import CombinatorialSpecificationSearcher, CombinatorialSpecification
+from comb_spec_searcher import (
+    CombinatorialSpecificationSearcher,
+    CombinatorialSpecification,
+)
 import json
 
 
@@ -16,20 +19,22 @@ def avoiding_parameter():
     """The avoiding parameter for motzkin mappling."""
     til = MappedTiling.from_vincular(CayleyPermutation([0, 1, 2]), [])
     ghost = til.delete_rows([4])
-    param = Parameter(ghost, RowColMap({i: 0 for i in range(7)}, {i: 0 for i in range(6)}))
+    param = Parameter(
+        ghost, RowColMap({i: 0 for i in range(7)}, {i: 0 for i in range(6)})
+    )
     return param
 
 
 @pytest.fixture
 def motzkin_mappling(avoiding_parameter):
     """The mappling for the motzkin class."""
-    avoiding_parameters = [
-        avoiding_parameter
-    ]
+    avoiding_parameters = [avoiding_parameter]
     mappling = MappedTiling(
         Tiling(
             [
-                GriddedCayleyPerm(CayleyPermutation([0, 2, 1]), ((0, 0), (0, 0), (0, 0))),
+                GriddedCayleyPerm(
+                    CayleyPermutation([0, 2, 1]), ((0, 0), (0, 0), (0, 0))
+                ),
                 GriddedCayleyPerm(CayleyPermutation((0, 0)), [(0, 0), (0, 0)]),
             ],
             [],
@@ -65,19 +70,15 @@ def inc_inc_mappling(containing_param):
     mappling = MappedTiling(
         Tiling([], [], (1, 1)),
         avoiding_parameters=[],
-        containing_parameters=[
-            ParameterList(
-                [
-                    containing_param
-                ]
-            )
-        ],
+        containing_parameters=[ParameterList([containing_param])],
         enumerating_parameters=[],
     )
     return mappling
 
 
-def test_classes_jsons(motzkin_mappling, inc_inc_mappling, containing_param, avoiding_parameter):
+def test_classes_jsons(
+    motzkin_mappling, inc_inc_mappling, containing_param, avoiding_parameter
+):
     """Test json for various classes:
     - parameters
     - parameter lists
@@ -136,7 +137,9 @@ def test_inc_inc_spec(inc_inc_mappling):
     spec_counts = [expanded_spec.count_objects_of_size(i) for i in range(10)]
     assert spec_counts == [1, 1, 3, 12, 50, 200, 764, 2816, 10120, 35744]
     spec_to_dict = json.dumps(expanded_spec.to_jsonable())
-    reloaded_expanded_spec = CombinatorialSpecification.from_dict(json.loads(spec_to_dict))
+    reloaded_expanded_spec = CombinatorialSpecification.from_dict(
+        json.loads(spec_to_dict)
+    )
     assert expanded_spec == reloaded_expanded_spec
     spec_counts = [reloaded_expanded_spec.count_objects_of_size(i) for i in range(10)]
     assert spec_counts == [1, 1, 3, 12, 50, 200, 764, 2816, 10120, 35744]
