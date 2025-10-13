@@ -84,10 +84,12 @@ class ParameterList(frozenset[Parameter]):
         return ParameterList(param for param in self if param not in exclude)
 
     def to_jsonable(self) -> dict:
+        """Dictionary version of self for json serialization."""
         return {"params": [param.to_jsonable() for param in self]}
 
     @classmethod
     def from_dict(cls, d: dict):
+        """Constructs a ParameterList from a dictionary."""
         return cls(Parameter.from_dict(p) for p in d["params"])
 
     def __repr__(self):
