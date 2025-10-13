@@ -43,7 +43,8 @@ class NoParameterVerificationStrategy(
         return self._rootmt
 
     def pack(self, comb_class):
-        raise NotImplementedError
+        from mapplings.strategies.tilescope_strategies import MappedTileScopePack
+        return MappedTileScopePack.no_param_ver_point_placement()
 
     def verified(self, comb_class: MappedTiling) -> bool:
         if (

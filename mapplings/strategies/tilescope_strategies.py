@@ -265,6 +265,32 @@ class MappedTileScopePack(StrategyPack):
         super().__init__(*args, **kwargs)
 
     @classmethod
+    def no_param_ver_point_placement(cls):
+        """
+        Create a point placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    CellInsertionFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy()],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
     def point_placement(cls, rootmt):
         """
         Create a point placement strategy pack for the given root mapped tiling.
