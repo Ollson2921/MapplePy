@@ -1,6 +1,7 @@
 """Module with the parameter class."""
 
 from collections import defaultdict
+from copy import copy
 from typing import Iterator, Iterable
 from itertools import product, chain
 
@@ -252,10 +253,18 @@ class Parameter(Tiling):
 
     # dunder methods
 
+    def to_jsonable(self) -> dict:
+        d = super().to_jsonable()
+        d["row_col_map"] = self.map.to_jsonable()
+        return d
+
     @classmethod
     def from_dict(cls, d: dict) -> "Parameter":
         """Used for constructing Parameters from a dictionary."""
-        raise NotImplementedError
+        d = copy(d)
+        row_col_map = RowColMap.from_dict(d.pop("row_col_map"))
+        tiling = Tiling.from_dict(d)
+        return cls(tiling, row_col_map)
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"({repr(self.ghost)}, {repr(self.map)})"

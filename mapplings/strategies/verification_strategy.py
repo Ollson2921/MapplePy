@@ -1,6 +1,6 @@
 """Strategy for verifying when a mappling has no parameters."""
 
-from typing import Optional, Type, TypeVar, Any
+from typing import Optional, Type, TypeVar
 from comb_spec_searcher import VerificationStrategy
 from gridded_cayley_permutations import GriddedCayleyPerm
 from mapplings import MappedTiling
@@ -22,9 +22,7 @@ class NoParameterVerificationStrategy(
         rootmt: Optional[MappedTiling] = None,
         ignore_parent: bool = False,
     ):
-        self._rootmt: MappedTiling | tuple[Any, ...] = (
-            rootmt if rootmt is not None else tuple()
-        )
+        self._rootmt: Optional[MappedTiling] = rootmt
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(
@@ -38,12 +36,16 @@ class NoParameterVerificationStrategy(
         return self.__class__(mapped_tiling, self.ignore_parent)
 
     @property
-    def rootmt(self) -> MappedTiling | tuple[Any, ...]:
+    def rootmt(self) -> Optional[MappedTiling]:
         """The root mapped tiling."""
         return self._rootmt
 
     def pack(self, comb_class):
-        raise NotImplementedError
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=cyclic-import
+        from mapplings.strategies.tilescope_strategies import MappedTileScopePack
+
+        return MappedTileScopePack.no_param_ver_point_placement()
 
     def verified(self, comb_class: MappedTiling) -> bool:
         if (
@@ -61,7 +63,8 @@ class NoParameterVerificationStrategy(
 
     def to_jsonable(self) -> dict:
         d: dict = super().to_jsonable()
-        d["rootmt"] = self._rootmt
+        if self._rootmt is not None:
+            d["rootmt"] = self._rootmt.to_jsonable()
         return d
 
     @classmethod
@@ -69,7 +72,7 @@ class NoParameterVerificationStrategy(
         cls: Type[NoParameterVerificationStrategyT], d: dict
     ) -> NoParameterVerificationStrategyT:
         if "rootmt" in d and d["rootmt"] is not None:
-            rootmt: Optional[MappedTiling] = d["rootmt"]
+            rootmt: Optional[MappedTiling] = MappedTiling.from_dict(d.pop("rootmt"))
         else:
             rootmt = d.pop("rootmt", None)
         return cls(rootmt=rootmt, **d)

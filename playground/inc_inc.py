@@ -28,11 +28,24 @@ mappling = MappedTiling(
     containing_params,
     [],
 )
-pack = PointPlacementsPack
+pack = MappedTileScopePack.point_placement(mappling)
 searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 
 spec = searcher.auto_search(status_update=30)
 spec.show()
-spec.get_genf()
+new_spec = spec.expand_verified()
+new_spec.show()
 
+# pack = MappedTileScopePack.no_param_ver_point_placement()
+# new_spec = spec.expand_comb_classes([13, 8], pack, True, True)
+# new_spec.show()
+# new_spec.get_genf()
+# from mapplings.strategies.verification_strategy import NoParameterVerificationStrategy
+# to_expand = []
+# for rule in spec:
+#     if isinstance(rule.strategy, NoParameterVerificationStrategy):
+#         to_expand.append(rule.comb_class)
 
+# new_spec = spec.expand_comb_classes(to_expand, True, True)
+# new_spec.show()
+# new_spec.get_genf()

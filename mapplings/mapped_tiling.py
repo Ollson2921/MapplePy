@@ -147,22 +147,6 @@ class MappedTiling(Tiling):
         """
         return self.tiling.is_empty() or self.parameters_are_contradictory()
 
-    @classmethod
-    def from_dict(cls, d: dict) -> "MappedTiling":
-        """Construct a MappedTiling from a dictionary."""
-        return MappedTiling(
-            Tiling.from_dict(d["tiling"]),
-            ParameterList(Parameter.from_dict(p) for p in d["avoiding_parameters"]),
-            [
-                ParameterList(Parameter.from_dict(p) for p in ps)
-                for ps in d["containing_parameters"]
-            ],
-            [
-                ParameterList(Parameter.from_dict(p) for p in ps)
-                for ps in d["enumerating_parameters"]
-            ],
-        )
-
     # requirement insertion functions
 
     def add_obstructions(self, gcps) -> "MappedTiling":
@@ -211,6 +195,32 @@ class MappedTiling(Tiling):
             for e_list in self.enumerating_parameters
         ]
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
+
+    # json methods
+
+    def to_jsonable(self) -> dict:
+        d = super().to_jsonable()
+        d["tiling"] = self.tiling.to_jsonable()
+        d["avoiding_parameters"] = [
+            param.to_jsonable() for param in self.avoiding_parameters
+        ]
+        d["containing_parameters"] = [
+            param_list.to_jsonable() for param_list in self.containing_parameters
+        ]
+        d["enumerating_parameters"] = [
+            param_list.to_jsonable() for param_list in self.enumerating_parameters
+        ]
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MappedTiling":
+        """Construct a MappedTiling from a dictionary."""
+        return MappedTiling(
+            Tiling.from_dict(d["tiling"]),
+            ParameterList(Parameter.from_dict(p) for p in d["avoiding_parameters"]),
+            [ParameterList.from_dict(p) for p in d["containing_parameters"]],
+            [ParameterList.from_dict(p) for p in d["enumerating_parameters"]],
+        )
 
     # dunder methods
 
