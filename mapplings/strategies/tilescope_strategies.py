@@ -219,7 +219,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
 
     @classmethod
     def from_dict(cls, d):
-        raise NotImplementedError
+        return cls(**d)
 
     def forward_map(self, comb_class, obj, children=None):
         raise NotImplementedError
@@ -263,6 +263,32 @@ class MappedTileScopePack(StrategyPack):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def no_param_ver_point_placement(cls):
+        """
+        Create a point placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    CellInsertionFactory(),
+                ]
+            ],
+            ver_strats=[AtomStrategy()],
+            name="Point placements",
+            symmetries=[],
+            iterative=False,
+        )
 
     @classmethod
     def point_placement(cls, rootmt):
