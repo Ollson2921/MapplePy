@@ -4,6 +4,7 @@ from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings.strategies.tilescope_strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
+import json
 
 ghost = Tiling(
     [
@@ -33,8 +34,22 @@ searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 
 spec = searcher.auto_search(status_update=30)
 spec.show()
+
+json_dict = spec.to_jsonable()
+json_str = json.dumps(json_dict)
+with open("inc_inc.json", "w") as f:
+    f.write(json_str)
+
 new_spec = spec.expand_verified()
 new_spec.show()
+
+json_dict = new_spec.to_jsonable()
+json_str = json.dumps(json_dict)
+with open("inc_inc_expanded.json", "w") as f:
+    f.write(json_str)
+
+new_spec.get_genf()
+print([new_spec.count_objects_of_size(i) for i in range(10)])
 
 # pack = MappedTileScopePack.no_param_ver_point_placement()
 # new_spec = spec.expand_comb_classes([13, 8], pack, True, True)
