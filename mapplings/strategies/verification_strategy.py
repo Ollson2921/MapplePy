@@ -1,6 +1,6 @@
 """Strategy for verifying when a mappling has no parameters."""
 
-from typing import Optional, Type, TypeVar, Any
+from typing import Optional, Type, TypeVar
 from comb_spec_searcher import VerificationStrategy
 from gridded_cayley_permutations import GriddedCayleyPerm
 from mapplings import MappedTiling
