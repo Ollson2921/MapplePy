@@ -22,7 +22,7 @@ class NoParameterVerificationStrategy(
         rootmt: Optional[MappedTiling] = None,
         ignore_parent: bool = False,
     ):
-        self._rootmt:  Optional[MappedTiling] = rootmt
+        self._rootmt: Optional[MappedTiling] = rootmt
         super().__init__(ignore_parent=ignore_parent)
 
     def change_root(
@@ -36,7 +36,7 @@ class NoParameterVerificationStrategy(
         return self.__class__(mapped_tiling, self.ignore_parent)
 
     @property
-    def rootmt(self) -> MappedTiling | tuple[Any, ...]:
+    def rootmt(self) -> Optional[MappedTiling]:
         """The root mapped tiling."""
         return self._rootmt
 
@@ -63,7 +63,8 @@ class NoParameterVerificationStrategy(
 
     def to_jsonable(self) -> dict:
         d: dict = super().to_jsonable()
-        d["rootmt"] = self._rootmt.to_jsonable()
+        if self._rootmt is not None:
+            d["rootmt"] = self._rootmt.to_jsonable()
         return d
 
     @classmethod
