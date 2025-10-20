@@ -196,8 +196,8 @@ class LTRowColSeparationMT:
             yield self.mapped_tiling
             return
         new_avoiders = ParameterList(
-                [self.make_new_parameter(param) for param in self.avoiding_parameters]
-            )
+            [self.make_new_parameter(param) for param in self.avoiding_parameters]
+        )
         new_containers = [
             ParameterList([self.make_new_parameter(param) for param in c_list])
             for c_list in self.containing_parameters
@@ -206,7 +206,7 @@ class LTRowColSeparationMT:
             ParameterList([self.make_new_parameter(param) for param in e_list])
             for e_list in self.enumeration_parameters
         ]
-        for base in self.separation.row_col_separation()
+        for base in self.separation.row_col_separation():
             yield MappedTiling(base, new_avoiders, new_containers, new_enumerators)
 
     @staticmethod
