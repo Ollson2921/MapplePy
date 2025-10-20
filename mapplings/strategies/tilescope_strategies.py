@@ -245,7 +245,7 @@ class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy)
 
     def decomposition_function(self, comb_class):
         algo = LTRowColSeparationMT(comb_class)
-        return (algo.separate(),)
+        return (next(algo.separate()),)
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
@@ -255,7 +255,7 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 
     def decomposition_function(self, comb_class):
         algo = LTORERowColSeparationMT(comb_class)
-        return (algo.separate(),)
+        return tuple(algo.separate())
 
 
 class MappedTileScopePack(StrategyPack):
