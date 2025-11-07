@@ -1,12 +1,29 @@
-"""Strategy for verifying when a mappling has no parameters."""
+"""Strategies for verifying when a mappling has no parameters,
+is horizontal insertion encodable and is vertical insertion
+encodable."""
 
 from typing import Optional, Type, TypeVar
 from comb_spec_searcher import VerificationStrategy
 from gridded_cayley_permutations import GriddedCayleyPerm
+from tilescope.strategies import (
+    HorizontalInsertionEncodableVerificationStrategy,
+    VerticalInsertionEncodableVerificationStrategy,
+)
+
 from mapplings import MappedTiling
 
 NoParameterVerificationStrategyT = TypeVar(
     "NoParameterVerificationStrategyT", bound="NoParameterVerificationStrategy"
+)
+
+HorizontalInsertionEncodableVerificationStrategyT = TypeVar(
+    "HorizontalInsertionEncodableVerificationStrategyT",
+    bound="HorizontalInsertionEncodableVerificationStrategy",
+)
+
+VerticalInsertionEncodableVerificationStrategyT = TypeVar(
+    "VerticalInsertionEncodableVerificationStrategyT",
+    bound="VerticalInsertionEncodableVerificationStrategy",
 )
 
 
@@ -85,3 +102,31 @@ class NoParameterVerificationStrategy(
             ]
         )
         return f"{self.__class__.__name__}({args})"
+
+
+class MapplingHorizontalInsertionEncodableVerificationStrategy(
+    HorizontalInsertionEncodableVerificationStrategy
+):
+    def verified(self, comb_class: MappedTiling) -> bool:
+        return comb_class.tiling.is_horizontal_insertion_encodable()
+
+    def pack(self, comb_class):
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=cyclic-import
+        from .tilescope_strategies import MappedTileScopePack
+
+        return MappedTileScopePack.horizontal_insertion_encoding()
+
+
+class MapplingVerticalInsertionEncodableVerificationStrategy(
+    VerticalInsertionEncodableVerificationStrategy
+):
+    def verified(self, comb_class: MappedTiling) -> bool:
+        return comb_class.tiling.is_vertical_insertion_encodable()
+
+    def pack(self, comb_class):
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=cyclic-import
+        from .tilescope_strategies import MappedTileScopePack
+
+        return MappedTileScopePack.vertical_insertion_encoding()
