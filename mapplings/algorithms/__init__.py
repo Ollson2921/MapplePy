@@ -8,7 +8,7 @@ from .point_placement import MTRequirementPlacement
 __all__ = [
     "Factor",
     "ILFactorNormal",
-    "ILFactorInverted"
+    "ILFactorInverted",
     "LTRowColSeparationMT",
     "LTORERowColSeparationMT",
     "MTRequirementPlacement",

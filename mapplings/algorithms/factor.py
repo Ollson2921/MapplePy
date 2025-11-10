@@ -46,7 +46,7 @@ class Factor(Factors):
     def find_factors_as_cells(self):
         """Finds the factors as cells."""
         self.combine_cells_from_parameters()
-        return super().find_factors_as_cells()
+        return super().find_factors_as_cells
 
     def find_factors(self) -> tuple[MappedTiling, ...]:
         """Creates a new mappling for each factor"""
