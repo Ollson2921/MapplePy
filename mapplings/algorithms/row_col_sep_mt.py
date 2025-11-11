@@ -18,6 +18,7 @@ class LTRowColSeparationMT:
     """
 
     def __init__(self, mapped_tiling: MappedTiling):
+        self.mapped_tiling = mapped_tiling
         self.tiling = mapped_tiling.tiling
         self.avoiding_parameters = mapped_tiling.avoiding_parameters
         self.containing_parameters = mapped_tiling.containing_parameters
@@ -191,6 +192,9 @@ class LTRowColSeparationMT:
 
     def separate(self) -> Iterator[MappedTiling]:
         """Returns the row/col separated mapping"""
+        if self.separation.row_col_map.is_identity():
+            yield self.mapped_tiling
+            return
         new_avoiders = ParameterList(
             [self.make_new_parameter(param) for param in self.avoiding_parameters]
         )
