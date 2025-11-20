@@ -89,7 +89,9 @@ class ParameterList(frozenset[Parameter]):
 
     def html_dropdown(self, label: str) -> str:
         """Makes a cute html dropdown for the parameter list"""
-        return f"<details><summary>{label}</summary><p>{self.to_html()}</p></details>"
+        return (
+            f"<details open><summary>{label}</summary><p>{self.to_html()}</p></details>"
+        )
 
     def to_jsonable(self) -> dict:
         """Dictionary version of self for json serialization."""
