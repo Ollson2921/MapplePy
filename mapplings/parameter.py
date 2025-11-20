@@ -260,7 +260,7 @@ class Parameter(Tiling):
             dim_i, dim_j = self.dimensions
             index = (dim_j - j - 1) * (3 * (dim_i + 1) + 2) + i * 3 + 2
             background_image = "background-image: linear-gradient(180deg"
-            background_image += f""",{color} {i*24}px,{color} {(i+1)*24}px"""
+            background_image += f""",{color} {i * 24}px,{color} {(i + 1) * 24}px"""
             background_image += ");"
             result[index] = f'<th style="{background_image}{style}">'
         return result
@@ -268,104 +268,18 @@ class Parameter(Tiling):
     def to_html_representation(self) -> str:
         """Returns an html representation of the tilings object
         Mimics code from original tilings"""
-        rcmap = RowColMap(
-            {i: int(i / 2) for i in range(self.dimensions[0])},
-            {i: int(i / 2) for i in range(self.dimensions[1])},
-        )
-        # pylint: disable=too-many-locals
-        # stylesheet for tiling
-        style = """
-            border: 1px solid;
-            width: 24px;
-            height: 24px;
-            text-align: center;
-            """
-        rc_style = """
-            border: 0;
-            width: 24px;
-            height: 24px;
-            text-align: center;
-            """
+        result = super().to_html_representation()
         dim_i, dim_j = self.dimensions
-        result = []
-        # Create tiling html table
-        result.append("<table> ")
-        for _ in range(dim_j):
-            result.append("<tr>")
-            for _ in range(dim_i):
-                result.append(f"<th style='{style}'>")
-                result.append(" ")
-                result.append("</th>")
-            result.append(f"<th style='{rc_style}'>")
-            result.append(" ")
-            result.append("</th>")
-            result.append("</tr>")
-        for _ in range(dim_i + 1):
-            result.append(f"<th style='{rc_style}'>")
-            result.append(" ")
-            result.append("</th>")
-        result.append("</table>")
-        labels: dict[tuple[tuple[CayleyPermutation, ...], bool], str] = {}
-
-        # Put the sets in the tiles
-
-        # How many characters are in a row in the grid
         row_width = 3 * (dim_i + 1) + 2
-        curr_label = 1
-        for cell, gridded_perms in sorted(self.cell_basis.items()):
-            obstructions, _ = gridded_perms
-            basis = list(sorted(obstructions))
-
-            # the block, is the basis and whether or not positive
-            block = (tuple(basis), cell in self.positive_cells())
-            label = labels.get(block)
-            if label is None:
-
-                match basis:
-                    case [CayleyPermutation((0,))]:
-                        label = " "
-                    case [
-                        CayleyPermutation((0, 1)),
-                        CayleyPermutation((1, 0)),
-                        CayleyPermutation((0, 0)),
-                    ]:
-                        if cell in self.positive_cells():
-                            label = "\u25cf"
-                        else:
-                            label = "\u25cb"
-                    case [
-                        CayleyPermutation((0, 1)),
-                        CayleyPermutation((1, 0)),
-                    ]:
-                        label = "=="
-                    case [CayleyPermutation((0, 1))]:
-                        label = "\\"
-                    case [CayleyPermutation((1, 0))]:
-                        label = "/"
-                    case [CayleyPermutation((0, 0))]:
-                        label = "-"
-                    case _:
-                        if cell in self.point_cells():
-                            label = "\u25cf"
-                        else:
-                            label = chr(ord("`") + curr_label)
-                            curr_label += 1
-                labels[block] = label
-            row_index_from_top = dim_j - cell[1] - 1
-            index = row_index_from_top * row_width + cell[0] * 3 + 3
-            result[index] = label
-
-        for key, value in rcmap.col_map.items():
+        for key, value in self.col_map.items():
             row_index_from_top = dim_j
             index = row_index_from_top * row_width + key * 3 + 3
             result[index] = str(value)
-        for key, value in rcmap.row_map.items():
+        for key, value in self.row_map.items():
             row_index_from_top = dim_j - key - 1
             index = row_index_from_top * row_width + dim_i * 3 + 3
             result[index] = str(value)
 
-        # adds background color to empty cells
-        result = self._html_shade_empty(result, style)
         return "".join(result)
 
     # dunder methods
