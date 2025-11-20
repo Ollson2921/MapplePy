@@ -40,7 +40,7 @@ class Factor(Factors):
             region = region & self.mappling.active_cells
             for cell1, cell2 in combinations(region, 2):
                 self.combine_cells(cell1, cell2)
-    
+
     @cached_property
     def find_factors_as_cells(self):
         """Finds the factors as cells."""
