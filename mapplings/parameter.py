@@ -251,24 +251,10 @@ class Parameter(Tiling):
                 return True
         return False
 
-    def _html_shade_empty(self, result: list[str], style) -> list[str]:
-        color = "#4747478B"
-        if not self.empty_cells():
-            return result
-        for cell in self.empty_cells():
-            i, j = cell
-            dim_i, dim_j = self.dimensions
-            index = (dim_j - j - 1) * (3 * (dim_i + 1) + 2) + i * 3 + 2
-            background_image = "background-image: linear-gradient(180deg"
-            background_image += f""",{color} {i * 24}px,{color} {(i + 1) * 24}px"""
-            background_image += ");"
-            result[index] = f'<th style="{background_image}{style}">'
-        return result
-
     def to_html_representation(self) -> str:
         """Returns an html representation of the tilings object
         Mimics code from original tilings"""
-        result = super().to_html_representation()
+        result = self._html_table()
         dim_i, dim_j = self.dimensions
         row_width = 3 * (dim_i + 1) + 2
         for key, value in self.col_map.items():
