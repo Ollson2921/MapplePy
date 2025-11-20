@@ -83,6 +83,14 @@ class ParameterList(frozenset[Parameter]):
                 exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
 
+    def to_html(self) -> str:
+        """Returns a html of all parameters in self seperated by a line"""
+        return "<br>".join((param.to_html_representation() for param in self))
+
+    def html_dropdown(self, label: str) -> str:
+        """Makes a cute html dropdown for the parameter list"""
+        return f"<details><summary>{label}</summary><p>{self.to_html()}</p></details>"
+
     def to_jsonable(self) -> dict:
         """Dictionary version of self for json serialization."""
         return {"params": [param.to_jsonable() for param in self]}

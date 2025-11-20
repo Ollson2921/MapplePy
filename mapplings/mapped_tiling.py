@@ -199,24 +199,14 @@ class MappedTiling(Tiling):
     def to_html_representation(self):
         """Create an HTML string representing the mappling"""
         base = super().to_html_representation()
-        base += "\n Avoiding Parameters:\n"
         if self.avoiding_parameters:
-            avoiders = "\n".join(
-                [param.to_html_representation() for param in self.avoiding_parameters]
+            base += (
+                f'<br>{self.avoiding_parameters.html_dropdown("Avoiding Parameters")}'
             )
-            base += avoiders
         for i, c_list in enumerate(self.containing_parameters):
-            base += f"Containing Parameters {i}\n"
-            c_list_html = "\n".join(
-                [param.to_html_representation() for param in c_list]
-            )
-            base += c_list_html
+            base += f'<br>{c_list.html_dropdown(f"Containing Parameters {i}")}'
         for i, e_list in enumerate(self.enumerating_parameters):
-            base += f"Enumerating Parameters {i}\n"
-            e_list_html = "\n".join(
-                [param.to_html_representation() for param in e_list]
-            )
-            base += e_list_html
+            base += f'<br>{e_list.html_dropdown(f"Enumerating Parameters {i}")}'
         return base
 
     # json methods
