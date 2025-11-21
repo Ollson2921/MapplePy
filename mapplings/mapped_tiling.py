@@ -200,13 +200,13 @@ class MappedTiling(Tiling):
         """Create an HTML string representing the mappling"""
         base = super().to_html_representation()
         if self.avoiding_parameters:
-            base += (
-                f'<br>{self.avoiding_parameters.html_dropdown("Avoiding Parameters")}'
-            )
+            base += f'<br>{self.avoiding_parameters.html_dropdown("Avoiding Parameters", "red")}'
         for i, c_list in enumerate(self.containing_parameters):
-            base += f'<br>{c_list.html_dropdown(f"Containing Parameters {i}")}'
+            base += f'<br>{c_list.html_dropdown(f"Containing Parameters {i}", "blue")}'
         for i, e_list in enumerate(self.enumerating_parameters):
-            base += f'<br>{e_list.html_dropdown(f"Enumerating Parameters {i}")}'
+            base += (
+                f'<br>{e_list.html_dropdown(f"Enumerating Parameters {i}", "green")}'
+            )
         return base
 
     # json methods

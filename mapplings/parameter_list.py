@@ -87,10 +87,18 @@ class ParameterList(frozenset[Parameter]):
         """Returns a html of all parameters in self seperated by a line"""
         return "<br>".join((param.to_html_representation() for param in self))
 
-    def html_dropdown(self, label: str) -> str:
+    def html_dropdown(self, label: str, border_color: str = "grey") -> str:
         """Makes a cute html dropdown for the parameter list"""
+        style = f"""
+            border : 1px solid;
+            border-color : {border_color};
+            background-color : white;
+            padding-left : 5px;
+            padding-right : 29px;
+            """
         return (
-            f"<details open><summary>{label}</summary><p>{self.to_html()}</p></details>"
+            f'<details style = "{style}"><summary>{label}</summary>'
+            + f"<br>{self.to_html()}</details>"
         )
 
     def to_jsonable(self) -> dict:
