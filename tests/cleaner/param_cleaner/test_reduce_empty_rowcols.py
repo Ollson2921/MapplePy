@@ -11,7 +11,7 @@ def test_reduce_empty_rowcols_parameter():
     """Mappling with empty 1x1 base tiling and parameter that is a
     vincular pattern avoiding 1|2|3. Removes empty rows and columns
     on the parameter."""
-    ghost = Tiling.from_vincular(CayleyPermutation([0, 1, 2]), [0, 1])
+    ghost = Tiling.create_vincular_or_bivincular(CayleyPermutation([0, 1, 2]), [0, 1])
     map_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     param = Parameter(ghost, RowColMap(map_dict, map_dict))
     bt = Tiling([], [], (1, 1))

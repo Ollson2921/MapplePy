@@ -1,6 +1,7 @@
 """Contains the Factor class"""
 
 from itertools import chain, combinations
+from functools import cached_property
 from gridded_cayley_permutations.factors import Factors
 
 from mapplings import MappedTiling, ParameterList
@@ -40,15 +41,16 @@ class Factor(Factors):
             for cell1, cell2 in combinations(region, 2):
                 self.combine_cells(cell1, cell2)
 
+    @cached_property
     def find_factors_as_cells(self):
         """Finds the factors as cells."""
         self.combine_cells_from_parameters()
-        return super().find_factors_as_cells()
+        return super().find_factors_as_cells
 
     def find_factors(self) -> tuple[MappedTiling, ...]:
         """Creates a new mappling for each factor"""
         all_factors = tuple[MappedTiling, ...]()
-        for factor in self.find_factors_as_cells():
+        for factor in self.find_factors_as_cells:
             _factor = set(factor)
 
             new_avoiders = ParameterList(
