@@ -1,12 +1,12 @@
 """Different strategy packs for MappedTileScope."""
 
-from tilescope.strategies import CellInsertionFactory,
+from tilescope.strategies import CellInsertionFactory
 from comb_spec_searcher import StrategyPack, AtomStrategy
-from mapped_tiling import MappedTiling
+from mapplings import MappedTiling
 from .verification_strategy import (
     NoParameterVerificationStrategy,
-    VerticalInsertionEncodableVerificationStrategy,
-    HorizontalInsertionEncodableVerificationStrategy,
+    MapplingVerticalInsertionEncodableVerificationStrategy,
+    MapplingHorizontalInsertionEncodableVerificationStrategy,
 )
 from .tilescope_strategies import (
     MapplingRequirementPlacementStrategy,
@@ -50,7 +50,7 @@ class MappedTileScopePack(StrategyPack):
                     CellInsertionFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Point placements, no parameterless verification strategy",
             symmetries=[],
             iterative=False,
@@ -76,7 +76,7 @@ class MappedTileScopePack(StrategyPack):
                     MapplingColPlacementFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Row and col placements, no parameterless verification strategy",
             symmetries=[],
             iterative=False,
@@ -102,7 +102,7 @@ class MappedTileScopePack(StrategyPack):
                     CellInsertionFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Point placements",
             symmetries=[],
             iterative=False,
@@ -127,7 +127,7 @@ class MappedTileScopePack(StrategyPack):
                     MapplingRowPlacementFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Row placements",
             symmetries=[],
             iterative=False,
@@ -152,7 +152,7 @@ class MappedTileScopePack(StrategyPack):
                     MapplingColPlacementFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Column placements",
             symmetries=[],
             iterative=False,
@@ -178,7 +178,7 @@ class MappedTileScopePack(StrategyPack):
                     MapplingColPlacementFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Row and col placements",
             symmetries=[],
             iterative=False,
@@ -206,7 +206,7 @@ class MappedTileScopePack(StrategyPack):
                     MapplingColPlacementFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Point, row and col placements",
             symmetries=[],
             iterative=False,
@@ -270,7 +270,7 @@ class MappedTileScopePack(StrategyPack):
                     MapplingColPlacementFactory(),
                 ]
             ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), VerticalInsertionEncodableVerificationStrategy(), HorizontalInsertionEncodableVerificationStrategy()],
+            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt), MapplingVerticalInsertionEncodableVerificationStrategy(), MapplingHorizontalInsertionEncodableVerificationStrategy()],
             name="Row and col placements",
             symmetries=[],
             iterative=False,
