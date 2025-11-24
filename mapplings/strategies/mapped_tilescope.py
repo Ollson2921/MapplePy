@@ -83,7 +83,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def point_placement(cls, rootmt):
+    def point_placement(cls, rootmt: MappedTiling):
         """
         Create a point placement strategy pack for the given root mapped tiling.
         """
@@ -109,7 +109,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def row_placement(cls, rootmt):
+    def row_placement(cls, rootmt: MappedTiling):
         """
         Create a row placement strategy pack for the given root mapped tiling.
         """
@@ -134,7 +134,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def col_placement(cls, rootmt):
+    def col_placement(cls, rootmt: MappedTiling):
         """
         Create a column placement strategy pack for the given root mapped tiling.
         """
@@ -159,7 +159,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def row_and_col_placement(cls, rootmt):
+    def row_and_col_placement(cls, rootmt: MappedTiling):
         """
         Create a row and column placement strategy pack for the given root mapped tiling.
         """
@@ -185,7 +185,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def point_row_and_col_placement(cls, rootmt):
+    def point_row_and_col_placement(cls, rootmt: MappedTiling):
         """
         Create a point, row and column placement strategy pack for the given root mapped tiling.
         """
@@ -249,7 +249,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def insertion_row_and_col_placement(cls, rootmt: Mappling):
+    def insertion_row_and_col_placement(cls, rootmt: MappedTiling):
         """
         Create a row and column placement strategy pack which initially
         makes all cells positive.
