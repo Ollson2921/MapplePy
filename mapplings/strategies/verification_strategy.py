@@ -60,7 +60,7 @@ class NoParameterVerificationStrategy(
     def pack(self, comb_class):
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        from mapplings.strategies.tilescope_strategies import MappedTileScopePack
+        from .mapped_tilescope import MappedTileScopePack
 
         return MappedTileScopePack.no_param_ver_point_placement()
 
@@ -113,7 +113,7 @@ class MapplingHorizontalInsertionEncodableVerificationStrategy(
     def pack(self, comb_class):
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        from .tilescope_strategies import MappedTileScopePack
+        from .mapped_tilescope import MappedTileScopePack
 
         return MappedTileScopePack.horizontal_insertion_encoding()
 
@@ -127,6 +127,6 @@ class MapplingVerticalInsertionEncodableVerificationStrategy(
     def pack(self, comb_class):
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        from .tilescope_strategies import MappedTileScopePack
+        from .mapped_tilescope import MappedTileScopePack
 
         return MappedTileScopePack.vertical_insertion_encoding()
