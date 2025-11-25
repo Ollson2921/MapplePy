@@ -107,7 +107,9 @@ class NoParameterVerificationStrategy(
 class MapplingHorizontalInsertionEncodableVerificationStrategy(
     HorizontalInsertionEncodableVerificationStrategy
 ):
-    def verified(self, comb_class: MappedTiling) -> bool:
+    """Verification strategy for horizontal insertion encodability of mapplings."""
+
+    def verified(self, comb_class) -> bool:
         return comb_class.tiling.is_horizontal_insertion_encodable()
 
     def pack(self, comb_class):
@@ -121,7 +123,9 @@ class MapplingHorizontalInsertionEncodableVerificationStrategy(
 class MapplingVerticalInsertionEncodableVerificationStrategy(
     VerticalInsertionEncodableVerificationStrategy
 ):
-    def verified(self, comb_class: MappedTiling) -> bool:
+    """Verification strategy for vertical insertion encodability of mapplings."""
+
+    def verified(self, comb_class) -> bool:
         return comb_class.tiling.is_vertical_insertion_encodable()
 
     def pack(self, comb_class):
