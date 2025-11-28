@@ -251,6 +251,37 @@ class Parameter(Tiling):
                 return True
         return False
 
+    def to_html_representation(self) -> str:
+        """Returns an html representation of the tilings object
+        Mimics code from original tilings"""
+        rc_style = """
+            border: 0;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            background-color : white;
+            color : grey;
+            """
+        dim_i, dim_j = self.dimensions
+        result = self._html_table()
+        result.insert(-1, "<tr>")
+        result.insert(-1, f"<th style='{rc_style}'>")
+        result.insert(-1, " ")
+        result.insert(-1, "</th>")
+        for j in range(dim_i):
+            result.insert(-1, f"<th style='{rc_style}'>")
+            result.insert(-1, str(self.col_map[j]))
+            result.insert(-1, "</th>")
+        result.insert(-1, "</tr>")
+        row_width = 3 * (dim_i) + 2
+        for i in range(dim_j):
+            index = (i) * (row_width + 3) + 2
+            result.insert(index, "</th>")
+            result.insert(index, str(self.row_map[dim_j - i - 1]))
+            result.insert(index, f"<th style='{rc_style}'>")
+
+        return "".join(result)
+
     # dunder methods
 
     def to_jsonable(self) -> dict:
