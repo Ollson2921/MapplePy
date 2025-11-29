@@ -23,7 +23,12 @@ from tilescope.strategies.point_placements import (
     DIR_LEFT,
     DIR_RIGHT,
 )
-from comb_spec_searcher import StrategyPack, DisjointUnionStrategy, AtomStrategy
+from comb_spec_searcher import (
+    StrategyPack,
+    DisjointUnionStrategy,
+    AtomStrategy,
+    CombinatorialSpecificationSearcher,
+)
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling
@@ -33,8 +38,23 @@ from mapplings.algorithms import (
     LTORERowColSeparationMT,
     LTRowColSeparationMT,
 )
-from mapplings.cleaners import MTCleaner
+from mapplings.cleaners import MTCleaner, ParamCleaner
 from .verification_strategy import NoParameterVerificationStrategy
+
+
+MTCleaner.toggle_log(1)
+temp = CombinatorialSpecificationSearcher.status
+
+
+def new_status(self, elaborate: bool) -> str:
+    """Overwrites CSS status method"""
+    output = (
+        temp(self, elaborate) + MTCleaner.display_log() + ParamCleaner.display_log()
+    )
+    return output
+
+
+CombinatorialSpecificationSearcher.status = new_status
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):

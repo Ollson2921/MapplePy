@@ -1,7 +1,9 @@
 """Module with the generic cleaner and register classes"""
 
-from typing import TypeVar, Callable, Generic, Iterable, Any
+from typing import TypeVar, Callable, Generic, Iterable
 from time import time
+from datetime import timedelta
+from tabulate import tabulate
 
 from comb_spec_searcher.combinatorial_class import CombinatorialClass
 
@@ -15,23 +17,35 @@ class Register(Generic[T]):
     Initialize with flag_name = bool to make flag_name an attribute of all registered functions.
     """
 
-    def __init__(self, attr_name: str = "index", **additional_flags: bool):
+    def __init__(self, **additional_flags: bool):
         self.registered_functions: set[Callable[[T], T]] = set()
         self.map: dict[int, Callable[[T], T]] = {}
         self.flags = dict(additional_flags)
-        self.attr_name = attr_name
 
     def __call__(
-        self, idx: int, update_register: bool = True, **flag_updates: bool
+        self,
+        idx: int,
+        update_register: bool = True,
+        log_id: str | None = None,
+        **flag_updates: bool,
     ) -> Callable[[Callable[[T], T]], Callable[[T], T]]:
         """Used as the decorator to register functions.
         Setting update_register to False doesn't add the function to registered functions
         Flag updates will overwrite the register's default flag states."""
 
         def register_function(func: Callable[[T], T]) -> Callable[[T], T]:
+            assert not hasattr(
+                func, "index"
+            ), f"{func.__name__} already has index attribute."
+            if log_id is None:
+                setattr(func, "log_id", func.__name__.replace("_", " ").title())
+            else:
+                setattr(func, "log_id", log_id)
             if update_register:
                 self.add_to_register(func, idx)
-            setattr(func, self.attr_name, idx)
+            setattr(func, "index", idx)
+            self.map[idx] = func
+
             return self.set_flags(func, flag_updates)
 
         return register_function
@@ -39,11 +53,10 @@ class Register(Generic[T]):
     def add_to_register(self, func: Callable[[T], T], idx: int) -> None:
         """Used to add functions to the register"""
         assert idx not in self.map, (
-            f"{self.attr_name} {idx} is already assigned to {self[idx].__qualname__} "
+            f"Index {idx} is already assigned to {self[idx].__qualname__} "
             + f"and cannot be assigned to {func.__qualname__}"
         )
         self.registered_functions.add(func)
-        self.map[idx] = func
 
     def set_flags(self, func: Callable[[T], T], flag_updates: dict[str, bool]):
         """Adds all registered flags as attributes to func.
@@ -61,16 +74,14 @@ class Register(Generic[T]):
 
     def sorting_key(self, func: Callable[[T], T]) -> int:
         """Used to sort fuctions in cleaners"""
-        assert hasattr(
-            func, self.attr_name
-        ), f"{func.__qualname__} has no assigned {self.attr_name}"
-        return getattr(func, self.attr_name)
+        assert hasattr(func, "index"), f"{func.__qualname__} has no assigned index"
+        return getattr(func, "index")
 
     def __getitem__(self, key: int) -> Callable[[T], T]:
         return self.map[key]
 
     def __repr__(self):
-        output = f"{self.__class__.__name__}(attr_name={self.attr_name}"
+        output = f"{self.__class__.__name__}("
         for key, value in self.flags.items():
             output += f", {key}={value}"
         return output + ")"
@@ -79,7 +90,7 @@ class Register(Generic[T]):
         funcs = sorted(self.registered_functions, key=self.sorting_key)
         output = f"{funcs[0].__qualname__.split('.')[0]} has registered the following functions:"
         for func in funcs:
-            output += f"\n{getattr(func, self.attr_name)} : {func.__name__}"
+            output += f"\n{getattr(func, "index")} : {func.__name__}"
             for key, value in tuple(func.__dict__.items())[1:]:
                 output += f"\n    -{key}={value}"
             output += "\n"
@@ -101,13 +112,14 @@ class GenericCleaner(Generic[T]):
     DEBUG = 0
     LOG = 0
     reg = Register[T]()
-    global_tracker = {
-        func.__name__: {"Attempts": 0, "Successes": 0, "Time Spent": 0.0}
-        for func in reg.registered_functions
-    }
     _currently_tracking = "Unspecified"
     _unnamed = 0
-    detailed_tracker = dict[str, dict[str, Any]]()
+    log_tracker = {
+        "Global Tracker": {
+            getattr(func, "log_id"): {"Attempts": 0, "Successes": 0, "Time Spent": 0.0}
+            for func in reg.registered_functions
+        }
+    }
 
     def __init__(
         self, todo_list: Iterable[Callable[[T], T]], tracker_id: str = "Unnamed"
@@ -121,12 +133,13 @@ class GenericCleaner(Generic[T]):
         else:
             self.id = tracker_id
 
-        if (
-            self.__class__.LOG >= 2
-            and self.id not in self.__class__.detailed_tracker.keys()
-        ):
-            self.__class__.detailed_tracker[self.id] = {
-                func.__name__: {"Attempts": 0, "Successes": 0, "Time Spent": 0.0}
+        if self.__class__.LOG >= 2 and self.id not in self.__class__.log_tracker.keys():
+            self.__class__.log_tracker[self.id] = {
+                getattr(func, "log_id"): {
+                    "Attempts": 0,
+                    "Successes": 0,
+                    "Time Spent": 0.0,
+                }
                 for func in self.todo_list
             }
         super().__init__()
@@ -142,10 +155,11 @@ class GenericCleaner(Generic[T]):
         return self.__class__.__name__ + f"({self.todo_list},{self.id})"
 
     def __str__(self):
-        return (
-            self.__class__.__name__
-            + f"({dict((self.reg.sorting_key(func) , func.__name__) for func in self.todo_list)})"
+        functions = dict(
+            (self.reg.sorting_key(func), getattr(func, "log_id"))
+            for func in self.todo_list
         )
+        return self.__class__.__name__ + f"({functions}, {self.id})"
 
     def __iter__(self):
         return iter(sorted(self.todo_list, key=self.reg.sorting_key))
@@ -234,31 +248,63 @@ class GenericCleaner(Generic[T]):
             case 2:
                 print(f"Logging {cls.__name__} Instances Seperately")
         cls.LOG = level
-        cls.global_tracker = {
-            func.__name__: {"Attempts": 0, "Successes": 0, "Time Spent": 0.0}
-            for func in cls.reg.registered_functions
+        cls.log_tracker = {
+            "Global Tracker": {
+                getattr(func, "log_id"): {
+                    "Attempts": 0,
+                    "Successes": 0,
+                    "Time Spent": 0.0,
+                }
+                for func in cls.reg.registered_functions
+            }
         }
-        cls.detailed_tracker = {"Unspecified": cls.global_tracker}
 
     @classmethod
     def display_log(cls) -> str:
         """Returns a string to display cleaner log data"""
-        if cls.LOG == 0:
-            return f"{cls.__name__} logging is disabled"
-
+        print(cls.LOG)
         if cls.LOG == 1:
-            data = {"Global Cleaner Data": cls.global_tracker}
-        if cls.LOG == 2:
-            data = cls.detailed_tracker
+            data = {
+                f"{cls.__name__} Global Data": cls.log_tracker["Global Tracker"]
+            }.items()
+        elif cls.LOG == 2:
+            data = cls.log_tracker.items()
         else:
-            return " "
-        output = ""
-        for key, value in data.items():
-            output += f"{key} :"
-            output += f"\n     Attempts   : {value['Attempts']}"
-            output += f"\n     Successes  : {value['Successes']}"
-            output += f"\n     Time Spent : {value['Time Spent']}"
-        return output
+            return f"{cls.__name__} logging is disabled"
+        all_tables = []
+        headers = [
+            "Attempts",
+            "Successes",
+            "Success\n Rate",
+            "Time Spent",
+            "Percent\n of Time",
+        ]
+        coalign = ("left", "right", "right", "right", "right", "right")
+        rows = dict[str, float]()
+        for key, value in data:
+            temp_headers = [key] + headers
+            total_time = sum(record["Time Spent"] for record in value.values())
+            table = list[tuple[str, int, int, str, timedelta, str]]()
+            for name, record in value.items():
+                ftime = record["Time Spent"]
+                rows.update(((name, ftime),))
+                attempt = int(record["Attempts"])
+                success = int(record["Successes"])
+                table.append(
+                    (
+                        name,
+                        attempt,
+                        success,
+                        f"{int((success / attempt) * 100)}%",
+                        timedelta(seconds=int(ftime)),
+                        f"{int((ftime / total_time) * 100)}%",
+                    )
+                )
+            table.sort(key=lambda row: rows[row[0]], reverse=True)
+            all_tables.append(
+                tabulate(table, headers=temp_headers, colalign=coalign) + "\n"
+            )
+        return "    " + "\n".join(all_tables) + "\n"
 
     @classmethod
     def _log(cls, func: Callable[[T], T]):
@@ -279,21 +325,24 @@ class GenericCleaner(Generic[T]):
     @classmethod
     def _update_log(cls, func: Callable[[T], T], time_spent: float, success: bool):
         """Function used to change log data"""
-        match cls.LOG:
-            case 0:
-                pass
-            case 1:
-                cls.global_tracker[func.__name__]["Time Spent"] += round(time_spent, 5)
-                cls.global_tracker[func.__name__]["Attempts"] += 1
-                cls.global_tracker[func.__name__]["Successes"] += int(success)
-            case 2:
-                cls.detailed_tracker[cls._currently_tracking][func.__name__][
-                    "Time Spent"
-                ] += round(time_spent, 5)
-                cls.detailed_tracker[cls._currently_tracking]["Attempts"] += 1
-                cls.detailed_tracker[cls._currently_tracking]["Successes"] += int(
-                    success
-                )
+        log_id = getattr(func, "log_id")
+        level = cls.LOG
+        if level == 0:
+            return
+        if level > 0:
+            cls.log_tracker["Global Tracker"][log_id]["Time Spent"] += round(
+                time_spent, 4
+            )
+            cls.log_tracker["Global Tracker"][log_id]["Attempts"] += 1
+            cls.log_tracker["Global Tracker"][log_id]["Successes"] += int(success)
+        if level > 1:
+            cls.log_tracker[cls._currently_tracking][log_id]["Time Spent"] += round(
+                time_spent, 4
+            )
+            cls.log_tracker[cls._currently_tracking][log_id]["Attempts"] += 1
+            cls.log_tracker[cls._currently_tracking][log_id]["Successes"] += int(
+                success
+            )
 
     @classmethod
     def _debug(cls, func: Callable[[T], T]):

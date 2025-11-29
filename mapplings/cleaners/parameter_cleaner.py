@@ -16,7 +16,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     DEBUG = 0
     reg = Register[Parameter](
-        "param_register",
         run_on_avoiders=True,
         run_on_containers=True,
         run_on_enumerators=True,

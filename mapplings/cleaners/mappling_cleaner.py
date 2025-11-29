@@ -22,7 +22,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     where index determines cleaning order"""
 
     DEBUG = 0
-    reg = Register[MappedTiling]("mappling_register")
+    reg = Register[MappedTiling]()
 
     # Final Methods
     @staticmethod
