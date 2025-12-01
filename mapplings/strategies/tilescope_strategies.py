@@ -25,7 +25,7 @@ from tilescope.strategies.point_placements import (
 )
 from comb_spec_searcher import (
     DisjointUnionStrategy,
-    CombinatorialSpecificationSearcher,
+    # CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
@@ -36,22 +36,21 @@ from mapplings.algorithms import (
     LTORERowColSeparationMT,
     LTRowColSeparationMT,
 )
-from mapplings.cleaners import MTCleaner, ParamCleaner
+from mapplings.cleaners import MTCleaner  # , ParamCleaner
 
 
-MTCleaner.global_log_toggle(2)
-temp = CombinatorialSpecificationSearcher.status
+# temp = CombinatorialSpecificationSearcher.status
 
 
-def new_status(self, elaborate: bool) -> str:
-    """Overwrites CSS status method"""
-    output = (
-        temp(self, elaborate) + MTCleaner.status_update() + ParamCleaner.status_update()
-    )
-    return output
+# def new_status(self, elaborate: bool) -> str:
+#     """Overwrites CSS status method"""
+#     output = (
+#         temp(self, elaborate) + MTCleaner.status_update() + ParamCleaner.status_update()
+#     )
+#     return output
 
 
-CombinatorialSpecificationSearcher.status = new_status
+# CombinatorialSpecificationSearcher.status = new_status
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):

@@ -111,7 +111,6 @@ class CleanerLog(Generic[T]):
         self.log_level = log_level
         self.debug_level = debug_level
         self.functions = logged_functions
-        print(logged_functions)
         self.tracker = {
             getattr(func, "log_id"): {
                 "Attempts": 0,
@@ -147,6 +146,7 @@ class CleanerLog(Generic[T]):
 
     def display(self) -> str:
         """Returns a string to display cleaner log data"""
+        # pylint: disable=too-many-locals
         if self.log_level == 0:
             return f"\n{self.name} logging is disabled \n"
         headers = [
@@ -305,8 +305,8 @@ class GenericCleaner(Generic[T]):
     DEBUG = 2 checks counts and elapsed time after each function
 
     LOG = 0 Skips logging
-    LOG = 1 Enables a global log
-    LOG = 2 Enables a detailed log
+    LOG = 1 Displays info per cleaner instance
+    LOG = 2 Displays info per function per cleaner instance
 
     DEBUG and LOG can be changed globally with global toggle functions
     or per instance with cleaner_instance.LOG = # or cleaner_instance.DEBUG = #
@@ -445,7 +445,6 @@ class GenericCleaner(Generic[T]):
     def global_log_toggle(cls, level: int) -> None:
         """Updates the log level of all cleaner instances and resets tracking"""
         cls.LOG = level
-        print("RESET")
         for logger in cls.all_loggers:
             logger.log_level = level
             logger.tracker = logger.reset_log()

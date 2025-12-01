@@ -7,8 +7,6 @@ from mapplings.strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 
 
-
-
 til = MappedTiling.from_vincular(CayleyPermutation([0, 1, 2]), [])
 ghost = til.delete_rows([4])
 avoiding_parameters = [
