@@ -51,51 +51,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(1, run_on_enumerators=False)
-    def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
-        """Deletes all rows and cols which have no obs or reqs"""
-        columns, rows = param.find_blank_columns_and_rows()
-        cols_to_remove, rows_to_remove = set(), set()
-        if param.positive_cells():
-            positive_cols, positive_rows = map(set, zip(*param.positive_cells()))
-        else:
-            positive_cols, positive_rows = set(), set()
-
-        def check_for_blank(columns: Iterable[int], image: int, check_rows: bool):
-            for col in columns:
-                if check_rows:
-                    if col in rows_to_remove:
-                        break
-                    if param.row_map[col] == image and col not in positive_rows:
-                        rows_to_remove.add(col)
-                    else:
-                        break
-                else:
-                    if col in cols_to_remove:
-                        break
-                    if param.col_map[col] == image and col not in positive_cols:
-                        cols_to_remove.add(column)
-                    else:
-                        break
-
-        for column in columns:
-            image_col = param.map.col_map[column]
-            cols_to_remove.add(column)
-            check_for_blank(range(column - 1, -1, -1), image_col, False)
-            check_for_blank(range(column + 1, param.dimensions[0]), image_col, False)
-        for blank_row in rows:
-            image_row = param.row_map[blank_row]
-            rows_to_remove.add(blank_row)
-            check_for_blank(range(blank_row - 1, -1, -1), image_row, True)
-            check_for_blank(range(blank_row + 1, param.dimensions[1]), image_row, True)
-        if (
-            len(cols_to_remove) == param.dimensions[0]
-            or len(rows_to_remove) == param.dimensions[1]
-        ):
-            return Parameter(Tiling([], [], (1, 1)), RowColMap({0: 0}, {0: 0}))
-        return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
-
-    @staticmethod
     @reg(2, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
