@@ -1,6 +1,6 @@
 """Strategies for MappedTilings"""
 
-from .tilescope_strategies import MappedTileScopePack
+from .mapped_tilescope import MappedTileScopePack
 
 
 __all__ = ["MappedTileScopePack"]
