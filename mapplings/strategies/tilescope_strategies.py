@@ -24,9 +24,7 @@ from tilescope.strategies.point_placements import (
     DIR_RIGHT,
 )
 from comb_spec_searcher import (
-    StrategyPack,
     DisjointUnionStrategy,
-    AtomStrategy,
     CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
@@ -39,7 +37,6 @@ from mapplings.algorithms import (
     LTRowColSeparationMT,
 )
 from mapplings.cleaners import MTCleaner, ParamCleaner
-from .verification_strategy import NoParameterVerificationStrategy
 
 
 MTCleaner.global_log_toggle(2)
