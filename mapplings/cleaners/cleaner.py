@@ -3,7 +3,7 @@
 from typing import TypeVar, Callable, Generic, Iterable
 from time import time
 from datetime import timedelta
-from tabulate import tabulate
+from tabulate import tabulate, SEPARATING_LINE
 
 from comb_spec_searcher.combinatorial_class import CombinatorialClass
 
@@ -97,58 +97,255 @@ class Register(Generic[T]):
         return output
 
 
+class CleanerLog(Generic[T]):
+    """A class for tracking cleaners"""
+
+    def __init__(
+        self,
+        logged_functions: Iterable[Callable[[T], T]],
+        log_level: int = 0,
+        debug_level: int = 0,
+        name: str = "Unspecified",
+    ):
+        self.name = name
+        self.log_level = log_level
+        self.debug_level = debug_level
+        self.functions = logged_functions
+        print(logged_functions)
+        self.tracker = {
+            getattr(func, "log_id"): {
+                "Attempts": 0,
+                "Successes": 0,
+                "Success Time": 0.0,
+                "Fail Time": 0.0,
+            }
+            for func in self.functions
+        }
+        self.global_tracker: "CleanerLog" | None = None
+        self.total_times = [0.0, 0.0]
+
+    def __call__(self, func: Callable[[T], T]):
+        return self._debug(self._log(func))
+
+    def reset_log(self) -> dict[str, dict[str, int | float]]:
+        """Using this to set LOG and reset debug tracker"""
+        return {
+            getattr(func, "log_id"): {
+                "Attempts": 0,
+                "Successes": 0,
+                "Success Time": 0.0,
+                "Fail Time": 0.0,
+            }
+            for func in self.functions
+        }
+
+    def wrap_functions(
+        self, functions: Iterable[Callable[[T], T]]
+    ) -> Iterable[Callable[[T], T]]:
+        """Applies the debug and log wrappers to each function"""
+        return (self._debug(self._log(func)) for func in functions)
+
+    def display(self) -> str:
+        """Returns a string to display cleaner log data"""
+        if self.log_level == 0:
+            return f"\n{self.name} logging is disabled \n"
+        headers = [
+            "",
+            "\nAttempts",
+            "\nSuccesses",
+            "Success\n Rate",
+            "Time Spent\n on Successes",
+            "Time Spent\n on Failures",
+            "Total\nElapsed Time",
+            "Percent of\n Total Time",
+        ]
+        coalign = (
+            "left",
+            "right",
+            "right",
+            "right",
+            "right",
+            "right",
+            "right",
+            "right",
+        )
+        table = list[tuple[str, int, int, str, timedelta, timedelta, timedelta, str]]()
+        rows = dict[str, float]()
+        total_attempt = 0
+        total_success = 0
+        total_time = sum(self.total_times)
+        if self.global_tracker is None:
+            time_ratio = 100.0
+        else:
+            global_time = sum(self.global_tracker.total_times)
+            if global_time == 0:
+                time_ratio = 100.0
+            else:
+                time_ratio = total_time / global_time * 100
+        for name, record in self.tracker.items():
+            ftime = record["Success Time"] + record["Fail Time"]
+            rows.update(((f"    {name}", ftime),))
+            attempt = int(record["Attempts"])
+            success = int(record["Successes"])
+            total_attempt += attempt
+            total_success += success
+            if self.log_level > 1:
+                if total_time == 0:
+                    ftime_ratio = 0
+                else:
+                    ftime_ratio = int((ftime / total_time) * 100)
+                table.append(
+                    (
+                        f"    {name}",
+                        attempt,
+                        success,
+                        f"{int((success / (max(attempt, attempt == 0))) * 100)}%",
+                        timedelta(seconds=int(record["Success Time"])),
+                        timedelta(seconds=int(record["Fail Time"])),
+                        timedelta(seconds=int(ftime)),
+                        f"{ftime_ratio}%",
+                    )
+                )
+        table.sort(key=lambda row: rows[row[0]], reverse=True)
+        if total_attempt == 0:
+            attempt_ratio = 0.0
+        else:
+            attempt_ratio = (total_success / total_attempt) * 100
+        table = [
+            (
+                self.name,
+                total_attempt,
+                total_success,
+                f"{int(attempt_ratio)}%",
+                timedelta(seconds=int(self.total_times[1])),
+                timedelta(seconds=int(self.total_times[0])),
+                timedelta(seconds=int(total_time)),
+                f"{int(time_ratio)}%",
+            ),
+            SEPARATING_LINE,
+        ] + table
+
+        return "\n" + tabulate(table, headers=headers, colalign=coalign)
+
+    def _log(self, func: Callable[[T], T]):
+        """Function used to log a function each time it is run"""
+        if self.debug_level > 0 or self.log_level == 0:
+            return func
+
+        def wrapper(cleaning_object: T) -> T:
+            start_time = time()
+            new_object = func(cleaning_object)
+            elapsed_time = time() - start_time
+            changed = new_object != cleaning_object
+            self._update_log(func, elapsed_time, changed)
+            return new_object
+
+        return wrapper
+
+    def _update_log(self, func: Callable[[T], T], time_spent: float, success: bool):
+        """Function used to change log data"""
+        log_id = getattr(func, "log_id")
+
+        if success:
+            key = "Success Time"
+        else:
+            key = "Fail Time"
+        if self.global_tracker is not None:
+            if self.global_tracker.log_level > 0:
+                self.global_tracker.tracker[log_id][key] += round(time_spent, 4)
+                self.global_tracker.tracker[log_id]["Attempts"] += 1
+                self.global_tracker.tracker[log_id]["Successes"] += int(success)
+            self.global_tracker.total_times[success] += time_spent
+        if self.log_level > 0:
+            self.tracker[log_id][key] += round(time_spent, 4)
+            self.tracker[log_id]["Attempts"] += 1
+            self.tracker[log_id]["Successes"] += int(success)
+            self.total_times[success] += time_spent
+
+    def _debug(self, func: Callable[[T], T]):
+        """Sets the debug behavior for cleaning functions."""
+        if self.debug_level > 0:
+
+            def wrapper(cleaning_object: T) -> T:
+                start_time = time()
+                new_object = func(cleaning_object)
+                elapsed_time = time() - start_time
+                changed = new_object != cleaning_object
+                self._update_log(func, elapsed_time, changed)
+                if changed:
+                    if self.debug_level > 1:
+                        old_counts = cleaning_object.initial_conditions(2)
+                        new_counts = new_object.initial_conditions(2)
+                        assert old_counts == new_counts, (
+                            f"Counts differ after {self.name}.{func.__name__}:"
+                            + f"\nInitial counts: {old_counts}\nClean counts: {new_counts}"
+                            + f"\n {cleaning_object}\n {new_object}"
+                            + f"\n {repr(cleaning_object)}"
+                        )
+                        print(
+                            f"++ {self.name}.{func.__name__} elapsed time : {elapsed_time} ++"
+                        )
+                elif self.debug_level > 1:
+                    print(
+                        f"-- {self.name}.{func.__name__} elapsed time : {elapsed_time} --"
+                    )
+                return new_object
+
+            return wrapper
+        return func
+
+
 class GenericCleaner(Generic[T]):
     """A class for cleaning combinatorial objects.
     Core fuctions are decorated with @reg(index)
     where index is the order of cleaning
+
     DEBUG = 0 skips any debugging
     DEBUG = 1 checks counts and elapsed time after loop cleaning
     DEBUG = 2 checks counts and elapsed time after each function
+
     LOG = 0 Skips logging
     LOG = 1 Enables a global log
     LOG = 2 Enables a detailed log
+
+    DEBUG and LOG can be changed globally with global toggle functions
+    or per instance with cleaner_instance.LOG = # or cleaner_instance.DEBUG = #
     """
 
     DEBUG = 0
     LOG = 0
     reg = Register[T]()
-    _currently_tracking = "Unspecified"
     _unnamed = 0
-    log_tracker = {
-        "Global Tracker": {
-            getattr(func, "log_id"): {"Attempts": 0, "Successes": 0, "Time Spent": 0.0}
-            for func in reg.registered_functions
-        }
-    }
+    global_tracker = CleanerLog[T](
+        set(reg.registered_functions), LOG, DEBUG, "Global Tracker"
+    )
+    all_loggers = set[CleanerLog]()
+    _currently_tracking = global_tracker
 
     def __init__(
         self, todo_list: Iterable[Callable[[T], T]], tracker_id: str = "Unnamed"
     ):
-        self.todo_list: tuple[Callable[[T], T], ...] = tuple(
-            sorted(todo_list, key=self.__class__.reg.sorting_key)
-        )
+
         if tracker_id == "Unnamed":
             self.id = f"Unnamed {self.__class__.__name__} {self.__class__._unnamed}"
             self.__class__._unnamed += 1
         else:
             self.id = tracker_id
-
-        if self.__class__.LOG >= 2 and self.id not in self.__class__.log_tracker.keys():
-            self.__class__.log_tracker[self.id] = {
-                getattr(func, "log_id"): {
-                    "Attempts": 0,
-                    "Successes": 0,
-                    "Time Spent": 0.0,
-                }
-                for func in self.todo_list
-            }
+        self.logger = CleanerLog[T](
+            todo_list, self.__class__.LOG, self.__class__.DEBUG, self.id
+        )
+        self.logger.global_tracker = self.__class__.global_tracker
+        self.todo_list: tuple[Callable[[T], T], ...] = tuple(
+            sorted(todo_list, key=self.__class__.reg.sorting_key)
+        )
+        self.__class__.all_loggers.add(self.logger)
         super().__init__()
 
     def __call__(self, cleaning_object: T) -> T:
         """Cleans the input cleaning_object according to the cleaner's todo_list"""
-        self.__class__._currently_tracking = self.id
+        self.__class__._currently_tracking = self.logger
         new_object = self.__class__.loop_cleanup(cleaning_object, self.todo_list)
-        self.__class__._currently_tracking = "Unspecified"
+        self.__class__._currently_tracking = self.__class__.global_tracker
         return new_object
 
     def __repr__(self):
@@ -163,6 +360,14 @@ class GenericCleaner(Generic[T]):
 
     def __iter__(self):
         return iter(sorted(self.todo_list, key=self.reg.sorting_key))
+
+    def __setattr__(self, name, value):
+        if name == "LOG":
+            self.logger.log_level = value
+        elif name == "DEBUG":
+            self.logger.debug_level = value
+        else:
+            super().__setattr__(name, value)
 
     @classmethod
     def loop_cleanup(
@@ -207,15 +412,16 @@ class GenericCleaner(Generic[T]):
     ) -> T:
         """Applies all functions in cleaning_list without reordering"""
         new_cleaning_object = cleaning_object
+        log = cls._currently_tracking
         for func in cleaning_list:
-            if not bool(new_cleaning_object):
+            if not bool(new_cleaning_object):  # fix this
                 return new_cleaning_object
-            new_cleaning_object = cls._debug(cls._log(func))(new_cleaning_object)
+            new_cleaning_object = log(func)(new_cleaning_object)
         return new_cleaning_object
 
     def tracked_cleanup(
         self, cleaning_object: T, cleaning_list: Iterable[Callable[[T], T]]
-    ) -> T:
+    ) -> T:  # This function is currn
         """Cleans cleaning_object according to the cleaning list,
         removes any completed cleaning functions from the cleaner's todo_list"""
         new_cleaning_object = self.list_cleanup(cleaning_object, cleaning_list)
@@ -223,11 +429,11 @@ class GenericCleaner(Generic[T]):
         return new_cleaning_object
 
     @classmethod
-    def make_full_cleaner(cls):
+    def make_full_cleaner(cls, name: str = "Full Cleaner"):
         """Returns an instance of a cleaner with all registered cleaning functions"""
         return cls(
             tuple(sorted(cls.reg.registered_functions, key=cls.reg.sorting_key)),
-            "Full Cleaner",
+            name,
         )
 
     @classmethod
@@ -236,144 +442,27 @@ class GenericCleaner(Generic[T]):
         return cls.make_full_cleaner()(cleaning_object)
 
     @classmethod
-    def toggle_log(cls, level: int) -> None:
-        """Using this to set LOG and reset debug tracker"""
-        assert level in (0, 1, 2)
-        print("toggle log")
-        match level:
-            case 0:
-                print(f"{cls.__name__} Logging Dissabled")
-            case 1:
-                print(f"Logging {cls.__name__} Functions Globally")
-            case 2:
-                print(f"Logging {cls.__name__} Instances Seperately")
+    def global_log_toggle(cls, level: int) -> None:
+        """Updates the log level of all cleaner instances and resets tracking"""
         cls.LOG = level
-        cls.log_tracker = {
-            "Global Tracker": {
-                getattr(func, "log_id"): {
-                    "Attempts": 0,
-                    "Successes": 0,
-                    "Time Spent": 0.0,
-                }
-                for func in cls.reg.registered_functions
-            }
-        }
+        print("RESET")
+        for logger in cls.all_loggers:
+            logger.log_level = level
+            logger.tracker = logger.reset_log()
 
     @classmethod
-    def display_log(cls) -> str:
-        """Returns a string to display cleaner log data"""
-        print(cls.LOG)
-        if cls.LOG == 1:
-            data = {
-                f"{cls.__name__} Global Data": cls.log_tracker["Global Tracker"]
-            }.items()
-        elif cls.LOG == 2:
-            data = cls.log_tracker.items()
-        else:
-            return f"{cls.__name__} logging is disabled"
-        all_tables = []
-        headers = [
-            "Attempts",
-            "Successes",
-            "Success\n Rate",
-            "Time Spent",
-            "Percent\n of Time",
-        ]
-        coalign = ("left", "right", "right", "right", "right", "right")
-        rows = dict[str, float]()
-        for key, value in data:
-            temp_headers = [key] + headers
-            total_time = sum(record["Time Spent"] for record in value.values())
-            table = list[tuple[str, int, int, str, timedelta, str]]()
-            for name, record in value.items():
-                ftime = record["Time Spent"]
-                rows.update(((name, ftime),))
-                attempt = int(record["Attempts"])
-                success = int(record["Successes"])
-                table.append(
-                    (
-                        name,
-                        attempt,
-                        success,
-                        f"{int((success / attempt) * 100)}%",
-                        timedelta(seconds=int(ftime)),
-                        f"{int((ftime / total_time) * 100)}%",
-                    )
-                )
-            table.sort(key=lambda row: rows[row[0]], reverse=True)
-            all_tables.append(
-                tabulate(table, headers=temp_headers, colalign=coalign) + "\n"
-            )
-        return "    " + "\n".join(all_tables) + "\n"
+    def global_debug_toggle(cls, level: int) -> None:
+        """Applies a debug level to all cleaner instances"""
+        cls.DEBUG = level
+        for logger in cls.all_loggers:
+            logger.debug_level = level
 
     @classmethod
-    def _log(cls, func: Callable[[T], T]):
-        """Function used to log a function each time it is run"""
-        if cls.DEBUG > 0:
-            return func
-
-        def wrapper(cleaning_object: T) -> T:
-            start_time = time()
-            new_object = func(cleaning_object)
-            elapsed_time = time() - start_time
-            changed = new_object != cleaning_object
-            cls._update_log(func, elapsed_time, changed)
-            return new_object
-
-        return wrapper
-
-    @classmethod
-    def _update_log(cls, func: Callable[[T], T], time_spent: float, success: bool):
-        """Function used to change log data"""
-        log_id = getattr(func, "log_id")
-        level = cls.LOG
-        if level == 0:
-            return
-        if level > 0:
-            cls.log_tracker["Global Tracker"][log_id]["Time Spent"] += round(
-                time_spent, 4
-            )
-            cls.log_tracker["Global Tracker"][log_id]["Attempts"] += 1
-            cls.log_tracker["Global Tracker"][log_id]["Successes"] += int(success)
-        if level > 1:
-            cls.log_tracker[cls._currently_tracking][log_id]["Time Spent"] += round(
-                time_spent, 4
-            )
-            cls.log_tracker[cls._currently_tracking][log_id]["Attempts"] += 1
-            cls.log_tracker[cls._currently_tracking][log_id]["Successes"] += int(
-                success
-            )
-
-    @classmethod
-    def _debug(cls, func: Callable[[T], T]):
-        """Sets the debug behavior for cleaning functions."""
-        if cls.DEBUG > 0:
-
-            def wrapper(cleaning_object: T) -> T:
-                start_time = time()
-                new_object = func(cleaning_object)
-                elapsed_time = time() - start_time
-                changed = new_object != cleaning_object
-                cls._update_log(func, elapsed_time, changed)
-                if changed:
-                    if cls.DEBUG > 1:
-
-                        print(
-                            f"++ {cls.__name__}.{func.__name__} elapsed time : {elapsed_time} ++"
-                        )
-                        old_counts = cleaning_object.initial_conditions(2)
-                        new_counts = new_object.initial_conditions(2)
-                        assert old_counts == new_counts, (
-                            f"Counts differ after {cls.__name__}.{func.__name__}:"
-                            + f"\nInitial counts: {old_counts}\nClean counts: {new_counts}"
-                            + f"\n {cleaning_object}\n {new_object}"
-                            + f"\n {repr(cleaning_object)}"
-                        )
-                elif cls.DEBUG > 1:
-                    print(
-                        f"-- {cls.__name__}.{func.__name__} elapsed time : {elapsed_time} --"
-                    )
-                return new_object
-
-            return wrapper
-        return func
+    def status_update(cls) -> str:
+        """Gives the full status update for all cleaner instances"""
+        logs = list(log for log in cls.all_loggers if log.log_level > 0)
+        if not logs:
+            return f"Logging dissabled for all \n{cls.__name__} cleaners.\n"
+        logs.sort(key=lambda log: log.total_times, reverse=True)
+        all_tables = (logger.display() for logger in logs)
+        return f"{cls.__name__} Status:\n    " + "\n".join(all_tables) + "\n"

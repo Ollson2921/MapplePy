@@ -12,8 +12,10 @@ from cayley_permutations import CayleyPermutation
 
 from mapplings import MappedTiling, Parameter, ParameterList
 
-from .cleaner import GenericCleaner, Register
+from .cleaner import GenericCleaner, Register, CleanerLog
 from .parameter_cleaner import ParamCleaner
+
+default_param_cleaner = ParamCleaner.make_full_cleaner("Param Default Cleaner")
 
 
 class MTCleaner(GenericCleaner[MappedTiling]):
@@ -23,6 +25,10 @@ class MTCleaner(GenericCleaner[MappedTiling]):
 
     DEBUG = 0
     reg = Register[MappedTiling]()
+    global_tracker = CleanerLog[MappedTiling](
+        reg.registered_functions, name="Global Tracker"
+    )
+    all_loggers = {global_tracker}
 
     # Final Methods
     @staticmethod
@@ -72,7 +78,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     @reg(6)
     def fully_clean_parameters(mappling: MappedTiling) -> MappedTiling:
         """Applies all parameter cleanning functions to all parameters"""
-        return MTCleaner.clean_parameters(ParamCleaner.make_full_cleaner())(mappling)
+        return MTCleaner.clean_parameters(default_param_cleaner)(mappling)
 
     @staticmethod
     @reg(0)

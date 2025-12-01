@@ -6,7 +6,7 @@ from gridded_cayley_permutations.unplacement import PointUnplacement
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
 
-from .cleaner import GenericCleaner, Register
+from .cleaner import GenericCleaner, Register, CleanerLog
 
 
 class ParamCleaner(GenericCleaner[Parameter]):
@@ -20,6 +20,10 @@ class ParamCleaner(GenericCleaner[Parameter]):
         run_on_containers=True,
         run_on_enumerators=True,
     )
+    global_tracker = CleanerLog[Parameter](
+        reg.registered_functions, name="Global Tracker"
+    )
+    all_loggers = {global_tracker}
     # Final Methods
 
     @staticmethod

@@ -42,14 +42,14 @@ from mapplings.cleaners import MTCleaner, ParamCleaner
 from .verification_strategy import NoParameterVerificationStrategy
 
 
-MTCleaner.toggle_log(1)
+MTCleaner.global_log_toggle(2)
 temp = CombinatorialSpecificationSearcher.status
 
 
 def new_status(self, elaborate: bool) -> str:
     """Overwrites CSS status method"""
     output = (
-        temp(self, elaborate) + MTCleaner.display_log() + ParamCleaner.display_log()
+        temp(self, elaborate) + MTCleaner.status_update() + ParamCleaner.status_update()
     )
     return output
 
@@ -62,8 +62,15 @@ class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
     A strategy for placing requirements in a mapped tiling.
     """
 
+    cleaner = MTCleaner.make_full_cleaner("Requirement Placement Cleaner")
+
     def algorithm(self, tiling):
         return MTRequirementPlacement(tiling)
+
+    def decomposition_function(self, comb_class):
+        return tuple(
+            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+        )
 
 
 class MapplingPointPlacementFactory(PointPlacementFactory):
@@ -224,6 +231,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         possibly_empty: bool = True,
         workable: bool = True,
     ):
+        self.cleaner = MTCleaner.make_full_cleaner()
         super().__init__(
             ignore_parent=ignore_parent,
             inferrable=inferrable,
@@ -232,7 +240,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         )
 
     def decomposition_function(self, comb_class):
-        return (MTCleaner.full_cleanup(comb_class),)
+        return (self.cleaner(comb_class),)
 
     def formal_step(self) -> str:
         return "Clean mappling"
@@ -253,19 +261,24 @@ class MapplingFactorStrategy(FactorStrategy):
     A strategy for finding factors in a mapped tiling.
     """
 
+    cleaner = MTCleaner.make_full_cleaner("Factoring Cleaner")
+
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
         factors = Factor(comb_class).find_factors()
         if len(factors) <= 1:
             raise StrategyDoesNotApply
+        factors = tuple(map(self.__class__.cleaner, factors))
         return factors
 
 
 class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy):
     """A strategy for separating rows and columns with less than constraints."""
 
+    cleaner = MTCleaner.make_full_cleaner("LT Separation Cleaner")
+
     def decomposition_function(self, comb_class):
         algo = LTRowColSeparationMT(comb_class)
-        return (next(algo.separate()),)
+        return (self.__class__.cleaner(next(algo.separate())),)
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
@@ -273,9 +286,11 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 ):
     """A strategy for separating rows and columns with less than or equal constraints."""
 
+    cleaner = MTCleaner.make_full_cleaner("LEQ Separation Cleaner")
+
     def decomposition_function(self, comb_class):
         algo = LTORERowColSeparationMT(comb_class)
-        return tuple(algo.separate())
+        return tuple(map(self.__class__.cleaner, algo.separate()))
 
 
 class MappedTileScopePack(StrategyPack):
@@ -322,7 +337,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingPointPlacementFactory(),
             ],
             inferral_strats=[
-                CleaningStrategy(),
+                # CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
             expansion_strats=[
@@ -347,7 +362,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingLessThanOrEqualRowColSeparationStrategy(),
             ],
             inferral_strats=[
-                CleaningStrategy(),
+                # CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
             expansion_strats=[
@@ -372,7 +387,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingLessThanOrEqualRowColSeparationStrategy(),
             ],
             inferral_strats=[
-                CleaningStrategy(),
+                # CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
             expansion_strats=[
@@ -397,7 +412,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingLessThanOrEqualRowColSeparationStrategy(),
             ],
             inferral_strats=[
-                CleaningStrategy(),
+                # CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
             expansion_strats=[
@@ -424,7 +439,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingPointPlacementFactory(),
             ],
             inferral_strats=[
-                CleaningStrategy(),
+                # CleaningStrategy(),
                 MapplingLessThanRowColSeparationStrategy(),
             ],
             expansion_strats=[
