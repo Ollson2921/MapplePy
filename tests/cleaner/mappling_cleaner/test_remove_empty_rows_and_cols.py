@@ -13,7 +13,7 @@ def test_reduce_empty_rowcols_mapped_tiling():
     is empty, 4x4 mapping onto rows 1,2,3,4 and columns 1,2,3,4.
     Removes empty rows and columns on the base tiling (also removed
     from the ghost)."""
-    bt = Tiling.from_vincular(CayleyPermutation([0, 1, 2]), [0, 1])
+    bt = Tiling.from_vincular_with_obs(CayleyPermutation([0, 1, 2]), adjacencies=[0, 1])
     ghost = Tiling([], [], (4, 4))
     map_dict = {0: 1, 1: 2, 2: 3, 3: 4}
     param = Parameter(ghost, RowColMap(map_dict, map_dict))

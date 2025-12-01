@@ -8,7 +8,7 @@ setup(
     author_email="c.n.bean@keele.ac.uk",
     packages=find_namespace_packages(),
     install_requires=[
-        "comb_spec_searcher",
+        "comb_spec_searcher @ git+https://github.com/PermutaTriangle/comb_spec_searcher",
         "cayley_perms @ git+https://github.com/Ollson2921/CayleyPerms",
     ],  # external packages as dependencies
 )
