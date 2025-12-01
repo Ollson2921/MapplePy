@@ -429,6 +429,55 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
         return Parameter(new_ghost, param.map)
 
+
+    @staticmethod
+    @reg(13)
+    def remove_blank_rows_and_cols_params(mappling: MappedTiling) -> Parameter:
+        """Deletes all rows and cols in the parameters which have no obs or reqs,
+        ignoring point rows and columns and obstructions which are already on the
+        base tiling."""
+        base_tiling = mappling.tiling
+        av_params = []
+        for param in mappling.avoiding_parameters:
+            blank_cols, blank_rows = param.find_blank_columns_and_rows(base_tiling)
+            cols_to_remove = set()
+            rows_to_remove = set()
+            for i in range(param.dimensions[0] - 1):
+                if i in blank_cols and i + 1 in blank_cols:
+                    # possibly also check here that mapping to the same place?
+                    cols_to_remove.add(i + 1)
+            for j in range(param.dimensions[1] - 1):
+                if j in blank_rows and j + 1 in blank_rows:
+                    # and here?
+                    rows_to_remove.add(j + 1)
+            av_params.append(
+                param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
+            )
+        containing_params = []
+        for c_list in mappling.containing_parameters:
+            new_c_list = []
+            for param in c_list:
+                blank_cols, blank_rows = param.find_blank_columns_and_rows(base_tiling)
+                cols_to_remove = set()
+                rows_to_remove = set()
+                for i in range(param.dimensions[0] - 1):
+                    if i in blank_cols and i + 1 in blank_cols:
+                        cols_to_remove.add(i + 1)
+                for j in range(param.dimensions[1] - 1):
+                    if j in blank_rows and j + 1 in blank_rows:
+                        rows_to_remove.add(j + 1)
+                new_c_list.append(
+                    param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
+                )
+            containing_params.append(ParameterList(new_c_list))
+        return MappedTiling(
+            mappling.tiling,
+            ParameterList(av_params),
+            containing_params,
+            mappling.enumerating_parameters,
+        )
+
+
     @staticmethod
     def _find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:
         """Returns the intersection of the factors of the container list"""
