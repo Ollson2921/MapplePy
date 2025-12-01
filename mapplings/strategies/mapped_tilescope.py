@@ -16,7 +16,7 @@ from .tilescope_strategies import (
     MapplingVerticalInsertionEncodingPlacementFactory,
     MapplingHorizontalInsertionEncodingRequirementInsertionFactory,
     MapplingHorizontalInsertionEncodingPlacementFactory,
-    # CleaningStrategy,
+    CleaningStrategy,
     MapplingFactorStrategy,
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
@@ -101,7 +101,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingPointPlacementFactory(),
             ],
             inferral_strats=[
-                # CleaningStrategy(),
+                CleaningStrategy(),  # this is here for tests
                 MapplingLessThanRowColSeparationStrategy(),
             ],
             expansion_strats=[

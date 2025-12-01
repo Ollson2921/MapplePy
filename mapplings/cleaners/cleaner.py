@@ -90,7 +90,7 @@ class Register(Generic[T]):
         funcs = sorted(self.registered_functions, key=self.sorting_key)
         output = f"{funcs[0].__qualname__.split('.')[0]} has registered the following functions:"
         for func in funcs:
-            output += f"\n{getattr(func, "index")} : {func.__name__}"
+            output += f"\n{getattr(func, 'index')} : {func.__name__}"
             for key, value in tuple(func.__dict__.items())[1:]:
                 output += f"\n    -{key}={value}"
             output += "\n"
