@@ -382,54 +382,6 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-    # Internal Methods
-
-    @staticmethod
-    def _insert_param(tiling: Tiling, param: Parameter) -> Tiling:
-        return tiling.add_obstructions(
-            param.map.map_gridded_cperms(param.obstructions)
-        ).add_requirements(param.map.map_requirements(param.requirements))
-
-    @staticmethod
-    def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
-        """Removes all obs and reqs from param that are implied by mappling"""
-        simplify = SimplifyObstructionsAndRequirements(
-            param.obstructions,
-            param.map.preimage_of_requirements(mappling.requirements),
-            mappling.dimensions,
-        )
-        point_cells = param.point_cells()
-        mappling_point_cells = mappling.point_cells()
-        simplify.remove_factors_from_obstructions()
-        simplify.remove_redundant_obstructions()
-        new_obs = []
-        for ob in simplify.obstructions:
-            if len(set(ob.positions)) == 1:
-                cell = ob.positions[0]
-                if (
-                    cell in point_cells
-                    and (param.col_map[cell[0]], param.row_map[cell[1]])
-                    not in mappling_point_cells
-                ):
-                    new_obs.append(ob)
-                    continue
-            if any(
-                param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
-                for mt_ob in mappling.obstructions
-            ):
-                continue
-            new_obs.append(ob)
-        new_reqs = [
-            req_list
-            for req_list in param.requirements
-            if not simplify.requirement_implied_by_some_requirement(
-                req_list, simplify.requirements
-            )
-        ]
-        new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
-        return Parameter(new_ghost, param.map)
-
-
     @staticmethod
     @reg(13)
     def remove_blank_rows_and_cols_params(mappling: MappedTiling) -> Parameter:
@@ -477,6 +429,52 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
+    # Internal Methods
+
+    @staticmethod
+    def _insert_param(tiling: Tiling, param: Parameter) -> Tiling:
+        return tiling.add_obstructions(
+            param.map.map_gridded_cperms(param.obstructions)
+        ).add_requirements(param.map.map_requirements(param.requirements))
+
+    @staticmethod
+    def _reduce_parameter_gcps(mappling: MappedTiling, param: Parameter) -> Parameter:
+        """Removes all obs and reqs from param that are implied by mappling"""
+        simplify = SimplifyObstructionsAndRequirements(
+            param.obstructions,
+            param.map.preimage_of_requirements(mappling.requirements),
+            mappling.dimensions,
+        )
+        point_cells = param.point_cells()
+        mappling_point_cells = mappling.point_cells()
+        simplify.remove_factors_from_obstructions()
+        simplify.remove_redundant_obstructions()
+        new_obs = []
+        for ob in simplify.obstructions:
+            if len(set(ob.positions)) == 1:
+                cell = ob.positions[0]
+                if (
+                    cell in point_cells
+                    and (param.col_map[cell[0]], param.row_map[cell[1]])
+                    not in mappling_point_cells
+                ):
+                    new_obs.append(ob)
+                    continue
+            if any(
+                param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
+                for mt_ob in mappling.obstructions
+            ):
+                continue
+            new_obs.append(ob)
+        new_reqs = [
+            req_list
+            for req_list in param.requirements
+            if not simplify.requirement_implied_by_some_requirement(
+                req_list, simplify.requirements
+            )
+        ]
+        new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
+        return Parameter(new_ghost, param.map)
 
     @staticmethod
     def _find_intersection(container_list: ParameterList) -> Iterable[ParameterList]:

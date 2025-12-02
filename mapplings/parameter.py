@@ -112,6 +112,72 @@ class Parameter(Tiling):
         temp.active_cells = self.active_cells
         return temp
 
+    def find_blank_columns_and_rows(
+        self, tiling: Tiling
+    ) -> tuple[list[int], list[int]]:
+        """Collect all obstructions and requirements. Any obs that imply point rows or cols
+        ignore. Any that are implied by the tiling ignore. Then for the cells of gcps
+        left, can't remove rows or columns that have any of these cells, remove all others.
+        """
+        if self.dimensions == (0, 0):
+            return tuple(), tuple()
+        if not self.obstructions and not self.requirements:
+            return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
+        point_obs: set[GriddedCayleyPerm] = set()
+        point_cols = set(cell[0] for cell in self.point_cells())
+        for ob in self.obstructions:
+            if ob.pattern == CayleyPermutation(
+                (0, 1)
+            ) or ob.pattern == CayleyPermutation((1, 0)):
+                if (
+                    ob.positions[0][1] in self.point_rows
+                    and ob.positions[1][1] in self.point_rows
+                ):
+                    point_obs.add(ob)
+            elif (
+                ob.pattern == CayleyPermutation((0,))
+                and ob.positions[0][0] in point_cols
+            ):
+                point_obs.add(ob)
+        not_point_obs = set(self.obstructions) - point_obs
+        gcps_to_remove = set()
+        for ob in not_point_obs:
+            mapped_ob = self.map.map_gridded_cperm(ob)
+            if mapped_ob in tiling.obstructions:
+                gcps_to_remove.add(ob)
+        final_obs_dont_ignore = not_point_obs - gcps_to_remove
+        dont_ignore_rows = set(
+            ob.positions[i][1]
+            for ob in final_obs_dont_ignore
+            for i in range(len(ob.pattern))
+        ).union(
+            set(
+                req.positions[i][0]
+                for req_list in self.requirements
+                for req in req_list
+                for i in range(len(req.pattern))
+            )
+        )
+        dont_ignore_cols = set(
+            ob.positions[i][0]
+            for ob in final_obs_dont_ignore
+            for i in range(len(ob.pattern))
+        ).union(
+            set(
+                req.positions[i][0]
+                for req_list in self.requirements
+                for req in req_list
+                for i in range(len(req.pattern))
+            )
+        )
+        blank_rows = [
+            row for row in range(self.dimensions[1]) if row not in dont_ignore_rows
+        ]
+        blank_cols = [
+            col for col in range(self.dimensions[0]) if col not in dont_ignore_cols
+        ]
+        return blank_cols, blank_rows
+
     def find_empty_rows_and_columns(self):
         if not self.active_cells:
             return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
