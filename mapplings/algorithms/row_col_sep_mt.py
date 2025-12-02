@@ -125,7 +125,6 @@ class LTRowColSeparationMT:
         direction: int,
     ) -> dict[int, int]:
         """Makes the RowColMap from a new parameter to the new base tiling"""
-        additions = 0
         mapping_to = []
         for item in self.preimage_map[direction].items():
             if direction:
@@ -133,7 +132,7 @@ class LTRowColSeparationMT:
             else:
                 preimages = param.map.preimages_of_col(item[0])
             for i in range(len(item[1])):
-                for index in preimages:
+                for _ in preimages:
                     mapping_to.append(item[1][i])
         return {n: mapping_to[n] for n in range(len(mapping_to))}
 
