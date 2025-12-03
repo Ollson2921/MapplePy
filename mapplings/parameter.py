@@ -112,7 +112,7 @@ class Parameter(Tiling):
         temp.active_cells = self.active_cells
         return temp
 
-    def find_blank_columns_and_rows(
+    def find_blank_columns_and_rows_in_param(
         self, tiling: Tiling
     ) -> tuple[list[int], list[int]]:
         """Collect all obstructions and requirements. Any obs that imply point rows or cols
