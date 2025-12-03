@@ -123,24 +123,18 @@ class LTRowColSeparationMT:
         self,
         param: Parameter,
         direction: int,
-        parameter_extensions: tuple[list[int], list[int]],
     ) -> dict[int, int]:
         """Makes the RowColMap from a new parameter to the new base tiling"""
-        new_map = {}
-        additions = 0
+        mapping_to = []
         for item in self.preimage_map[direction].items():
             if direction:
                 preimages = param.map.preimages_of_row(item[0])
             else:
                 preimages = param.map.preimages_of_col(item[0])
-            to_add = parameter_extensions[direction][item[0]]
             for i in range(len(item[1])):
-                if i:
-                    additions += to_add
-                for index in preimages:
-                    new_index = index + additions
-                    new_map[new_index] = item[1][i]
-        return new_map
+                for _ in preimages:
+                    mapping_to.append(item[1][i])
+        return {n: mapping_to[n] for n in range(len(mapping_to))}
 
     def make_new_parameter(self, param: Parameter) -> Parameter:
         """Returns the adjusted param after row/col separation"""
@@ -166,10 +160,9 @@ class LTRowColSeparationMT:
         ]
         new_ghost = Tiling(new_obstructions, new_requirements, new_dimensions)
         new_map = RowColMap(
-            self.make_new_map(param, 0, param_extensions),
-            self.make_new_map(param, 1, param_extensions),
+            self.make_new_map(param, 0),
+            self.make_new_map(param, 1),
         )
-
         return Parameter(new_ghost, new_map)
 
     def check_valid_map(
