@@ -120,9 +120,9 @@ class Parameter(Tiling):
         left, can't remove rows or columns that have any of these cells, remove all others.
         """
         if self.dimensions == (0, 0):
-            return tuple(), tuple()
+            return [], []
         if not self.obstructions and not self.requirements:
-            return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
+            return list(range(self.dimensions[0])), list(range(self.dimensions[1]))
         point_obs: set[GriddedCayleyPerm] = set()
         point_cols = set(cell[0] for cell in self.point_cells())
         for ob in self.obstructions:
