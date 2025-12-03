@@ -221,6 +221,8 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
     A strategy for cleaning a mapped tiling.
     """
 
+    cleaner = MTCleaner.make_full_cleaner("Cleaner Strategy")
+
     def __init__(
         self,
         ignore_parent: bool = True,
@@ -228,7 +230,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         possibly_empty: bool = True,
         workable: bool = True,
     ):
-        self.cleaner = MTCleaner.make_full_cleaner("Cleaner Strategy")
+
         super().__init__(
             ignore_parent=ignore_parent,
             inferrable=inferrable,
@@ -237,7 +239,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         )
 
     def decomposition_function(self, comb_class):
-        return (self.cleaner(comb_class),)
+        return (self.__class__.cleaner(comb_class),)
 
     def formal_step(self) -> str:
         return "Clean mappling"
@@ -275,7 +277,7 @@ class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy)
 
     def decomposition_function(self, comb_class):
         algo = LTRowColSeparationMT(comb_class)
-        return (self.__class__.cleaner(next(algo.separate())),)
+        return tuple(map(self.__class__.cleaner, algo.separate()))
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
@@ -287,4 +289,4 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 
     def decomposition_function(self, comb_class):
         algo = LTORERowColSeparationMT(comb_class)
-        return tuple(algo.separate())
+        return tuple(map(self.__class__.cleaner, algo.separate()))
