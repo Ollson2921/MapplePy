@@ -387,20 +387,20 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     def remove_blank_rows_and_cols_params(mappling: MappedTiling) -> MappedTiling:
         """Deletes all rows and cols in the parameters which have no obs or reqs,
         ignoring point rows and columns and obstructions which are already on the
-        base tiling. Only removes if adjacent to another row/col which is also blank."""
+        base tiling."""
         base_tiling = mappling.tiling
         av_params = []
         for param in mappling.avoiding_parameters:
-            blank_cols, blank_rows = param.find_blank_columns_and_rows_in_param(base_tiling)
+            blank_cols, blank_rows = param.find_blank_columns_and_rows_in_param(
+                base_tiling
+            )
             cols_to_remove = set()
             rows_to_remove = set()
             for i in range(param.dimensions[0] - 1):
                 if i in blank_cols and i + 1 in blank_cols:
-                    # possibly also check here that mapping to the same place?
                     cols_to_remove.add(i + 1)
             for j in range(param.dimensions[1] - 1):
                 if j in blank_rows and j + 1 in blank_rows:
-                    # and here?
                     rows_to_remove.add(j + 1)
             av_params.append(
                 param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
@@ -409,7 +409,9 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         for c_list in mappling.containing_parameters:
             new_c_list = []
             for param in c_list:
-                blank_cols, blank_rows = param.find_blank_columns_and_rows_in_param(base_tiling)
+                blank_cols, blank_rows = param.find_blank_columns_and_rows_in_param(
+                    base_tiling
+                )
                 cols_to_remove = set()
                 rows_to_remove = set()
                 for i in range(param.dimensions[0] - 1):
