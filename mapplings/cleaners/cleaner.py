@@ -100,6 +100,7 @@ class Register(Generic[T]):
 class CleanerLog(Generic[T]):
     """A class for tracking cleaners"""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         logged_functions: Iterable[Callable[[T], T]],
@@ -122,9 +123,24 @@ class CleanerLog(Generic[T]):
         }
         self.global_tracker: "CleanerLog" | None = None
         self.total_times = [0.0, 0.0]
+        self.runs = 0
+        self.changes_made = 0
 
     def __call__(self, func: Callable[[T], T]):
         return self._debug(self._log(func))
+
+    def add_function(self, func: Callable[[T], T]):
+        """Adds a function to the tracker"""
+        self.tracker.update(
+            {
+                getattr(func, "log_id"): {
+                    "Attempts": 0,
+                    "Successes": 0,
+                    "Success Time": 0.0,
+                    "Fail Time": 0.0,
+                }
+            }
+        )
 
     def reset_log(self) -> dict[str, dict[str, int | float]]:
         """Using this to set LOG and reset debug tracker"""
@@ -214,8 +230,8 @@ class CleanerLog(Generic[T]):
         table = [
             (
                 self.name,
-                total_attempt,
-                total_success,
+                self.runs,
+                self.changes_made,
                 f"{int(attempt_ratio)}%",
                 timedelta(seconds=int(self.total_times[1])),
                 timedelta(seconds=int(self.total_times[0])),
@@ -252,11 +268,15 @@ class CleanerLog(Generic[T]):
             key = "Fail Time"
         if self.global_tracker is not None:
             if self.global_tracker.log_level > 0:
+                if log_id not in self.global_tracker.tracker:
+                    self.global_tracker.add_function(func)
                 self.global_tracker.tracker[log_id][key] += round(time_spent, 4)
                 self.global_tracker.tracker[log_id]["Attempts"] += 1
                 self.global_tracker.tracker[log_id]["Successes"] += int(success)
             self.global_tracker.total_times[success] += time_spent
         if self.log_level > 0:
+            if log_id not in self.tracker:
+                self.add_function(func)
             self.tracker[log_id][key] += round(time_spent, 4)
             self.tracker[log_id]["Attempts"] += 1
             self.tracker[log_id]["Successes"] += int(success)
@@ -395,7 +415,11 @@ class GenericCleaner(Generic[T]):
                     + f"\n{cleaning_object}\n {new_cleaning_object}"
                     + f"\n{repr(cleaning_object)}"
                 )
-
+        if cls.LOG > 0:
+            cls._currently_tracking.runs += 1
+            cls._currently_tracking.changes_made += int(iterations > 0)
+            cls.global_tracker.runs += 1
+            cls.global_tracker.changes_made += int(iterations > 0)
         return new_cleaning_object
 
     @classmethod
@@ -461,7 +485,7 @@ class GenericCleaner(Generic[T]):
         """Gives the full status update for all cleaner instances"""
         logs = list(log for log in cls.all_loggers if log.log_level > 0)
         if not logs:
-            return f"Logging dissabled for all \n{cls.__name__} cleaners.\n"
+            return f"Logging dissabled for all {cls.__name__} cleaners.\n"
         logs.sort(key=lambda log: log.total_times, reverse=True)
         all_tables = (logger.display() for logger in logs)
         return f"{cls.__name__} Status:\n    " + "\n".join(all_tables) + "\n"

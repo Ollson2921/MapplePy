@@ -40,7 +40,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         To apply to a mappling, can be run as MTCleaner.make_param_cleaner(param_cleaner)(mappling)
         """
 
-        @MTCleaner.reg(6, update_register=False)
+        @MTCleaner.reg(6, update_register=False, log_id="Clean Parameters")
         def _clean_parameters(mappling: MappedTiling) -> MappedTiling:
             temp = mappling.apply_to_all_parameters(
                 Parameter.update_active_cells, (mappling.tiling,)
