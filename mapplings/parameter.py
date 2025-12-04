@@ -120,12 +120,13 @@ class Parameter(Tiling):
         ignore. Any that are implied by the tiling ignore. Then for the cells of gcps
         left, can't remove rows or columns that have any of these cells, remove all others.
         """
+        point_cells = self.point_cells()
         if self.dimensions == (0, 0):
             return [], []
         if not self.obstructions and not self.requirements:
             return list(range(self.dimensions[0])), list(range(self.dimensions[1]))
         point_obs: set[GriddedCayleyPerm] = set()
-        point_cols = set(cell[0] for cell in self.point_cells())
+        point_cols = set(cell[0] for cell in point_cells)
         for ob in self.obstructions:
             if ob.pattern == CayleyPermutation(
                 (0, 1)
@@ -135,6 +136,17 @@ class Parameter(Tiling):
                     and ob.positions[1][1] in self.point_rows
                 ):
                     point_obs.add(ob)
+                elif (
+                    ob.positions[0] in point_cells
+                    and ob.positions[1] == ob.positions[0]
+                ):
+                    point_obs.add(ob)
+            elif (
+                ob.pattern == CayleyPermutation((0, 0))
+                and ob.positions[0] == ob.positions[1]
+                and ob.positions[0] in point_cells
+            ):
+                point_obs.add(ob)
             elif (
                 ob.pattern == CayleyPermutation((0,))
                 and ob.positions[0][0] in point_cols
