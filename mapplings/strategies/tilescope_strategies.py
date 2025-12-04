@@ -1,6 +1,6 @@
 """Strategies for mapplings tilescope."""
 
-from typing import Iterator
+from typing import Iterator, cast, Callable
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.point_placements import Directions
 from tilescope.strategies import (
@@ -51,7 +51,10 @@ def new_status(self, elaborate: bool) -> str:
     return output
 
 
-CombinatorialSpecificationSearcher.status = new_status
+CombinatorialSpecificationSearcher.status = cast(
+    Callable[["CombinatorialSpecificationSearcher", bool], str],
+    new_status
+)
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
