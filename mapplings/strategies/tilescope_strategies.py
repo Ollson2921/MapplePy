@@ -49,7 +49,7 @@ def new_status(self, elaborate: bool) -> str:
 
 
 CombinatorialSpecificationSearcher.status = (  # type: ignore[method-assign]
-    cast(Callable[[Any, bool]], new_status)
+    cast(Callable[[Any, bool], str], new_status)
 )
 
 
