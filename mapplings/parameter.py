@@ -19,6 +19,7 @@ class Parameter(Tiling):
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-public-methods
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
         self.row_map = row_col_map.row_map
