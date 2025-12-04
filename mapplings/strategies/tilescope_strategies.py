@@ -50,9 +50,7 @@ def new_status(self, elaborate: bool) -> str:
     )
 
 
-CombinatorialSpecificationSearcher.status = (  # type: ignore
-    cast(Callable[[Any, bool], str], new_status)
-)
+CombinatorialSpecificationSearcher.status = new_status # type: ignore
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
