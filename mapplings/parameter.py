@@ -159,31 +159,15 @@ class Parameter(Tiling):
             if mapped_ob in tiling.obstructions:
                 gcps_to_remove.add(ob)
         final_obs_dont_ignore = not_point_obs - gcps_to_remove
-        dont_ignore_rows = set(
-            cell[1]
-            for cell in chain.from_iterable(
-                ob.positions for ob in final_obs_dont_ignore
-            )
-        ).union(
-            set(
-                cell[1]
-                for cell in chain.from_iterable(
-                    req.positions for req_list in self.requirements for req in req_list
-                )
-            )
-        )
         dont_ignore_cols = set(
             cell[0]
-            for cell in chain.from_iterable(
-                ob.positions for ob in final_obs_dont_ignore
-            )
-        ).union(
-            set(
-                cell[0]
-                for cell in chain.from_iterable(
-                    req.positions for req_list in self.requirements for req in req_list
-                )
-            )
+            for gcp in chain(final_obs_dont_ignore, *self.requirements)
+            for cell in gcp.positions
+        )
+        dont_ignore_rows = set(
+            cell[1]
+            for gcp in chain(final_obs_dont_ignore, *self.requirements)
+            for cell in gcp.positions
         )
         blank_rows = [
             row for row in range(self.dimensions[1]) if row not in dont_ignore_rows
