@@ -1,6 +1,7 @@
 """Module with the generic cleaner and register classes"""
 
 from typing import TypeVar, Callable, Generic, Iterable
+from itertools import chain
 from time import time
 from datetime import timedelta
 from tabulate import tabulate, SEPARATING_LINE
@@ -160,35 +161,16 @@ class CleanerLog(Generic[T]):
         """Applies the debug and log wrappers to each function"""
         return (self._debug(self._log(func)) for func in functions)
 
-    def display(self) -> str:
+    def display(
+        self,
+    ) -> list[tuple[str, int, int, str, timedelta, timedelta, timedelta, str]] | str:
         """Returns a string to display cleaner log data"""
         # pylint: disable=too-many-locals
         if self.log_level == 0:
             return f"\n{self.name} logging is disabled \n"
-        headers = [
-            "",
-            "\nAttempts",
-            "\nSuccesses",
-            "Success\n Rate",
-            "Time Spent\n on Successes",
-            "Time Spent\n on Failures",
-            "Total\nElapsed Time",
-            "Percent of\n Total Time",
-        ]
-        coalign = (
-            "left",
-            "right",
-            "right",
-            "right",
-            "right",
-            "right",
-            "right",
-            "right",
-        )
+
         table = list[tuple[str, int, int, str, timedelta, timedelta, timedelta, str]]()
         rows = dict[str, float]()
-        total_attempt = 0
-        total_success = 0
         total_time = sum(self.total_times)
         if self.global_tracker is None:
             time_ratio = 100.0
@@ -200,11 +182,9 @@ class CleanerLog(Generic[T]):
                 time_ratio = total_time / global_time * 100
         for name, record in self.tracker.items():
             ftime = record["Success Time"] + record["Fail Time"]
-            rows.update(((f"    {name}", ftime),))
+            rows.update(((f"++{name}", ftime),))
             attempt = int(record["Attempts"])
             success = int(record["Successes"])
-            total_attempt += attempt
-            total_success += success
             if self.log_level > 1:
                 if total_time == 0:
                     ftime_ratio = 0
@@ -212,7 +192,7 @@ class CleanerLog(Generic[T]):
                     ftime_ratio = int((ftime / total_time) * 100)
                 table.append(
                     (
-                        f"    {name}",
+                        f"++{name}",
                         attempt,
                         success,
                         f"{int((success / (max(attempt, attempt == 0))) * 100)}%",
@@ -223,11 +203,12 @@ class CleanerLog(Generic[T]):
                     )
                 )
         table.sort(key=lambda row: rows[row[0]], reverse=True)
-        if total_attempt == 0:
+        if self.runs == 0:
             attempt_ratio = 0.0
         else:
-            attempt_ratio = (total_success / total_attempt) * 100
+            attempt_ratio = (self.changes_made / self.runs) * 100
         table = [
+            SEPARATING_LINE,
             (
                 self.name,
                 self.runs,
@@ -240,8 +221,8 @@ class CleanerLog(Generic[T]):
             ),
             SEPARATING_LINE,
         ] + table
-
-        return "\n" + tabulate(table, headers=headers, colalign=coalign)
+        return table
+        # return "\n" + tabulate(table, headers=headers, colalign=coalign)
 
     def _log(self, func: Callable[[T], T]):
         """Function used to log a function each time it is run"""
@@ -483,9 +464,34 @@ class GenericCleaner(Generic[T]):
     @classmethod
     def status_update(cls) -> str:
         """Gives the full status update for all cleaner instances"""
-        logs = list(log for log in cls.all_loggers if log.log_level > 0)
+        headers = [
+            "",
+            "\nAttempts",
+            "\nSuccesses",
+            "Success\nRate",
+            "Time Spent\non Successes",
+            "Time Spent\non Failures",
+            "Total\nElapsed Time",
+            "Percent of\nTotal Time",
+        ]
+        coalign = (
+            "left",
+            "right",
+            "right",
+            "right",
+            "right",
+            "right",
+            "right",
+            "right",
+        )
+        logs = list(
+            log for log in cls.all_loggers if log.log_level > 0 and log.runs > 0
+        )
         if not logs:
             return f"Logging dissabled for all {cls.__name__} cleaners.\n"
         logs.sort(key=lambda log: log.total_times, reverse=True)
-        all_tables = (logger.display() for logger in logs)
-        return f"{cls.__name__} Status:\n    " + "\n".join(all_tables) + "\n"
+        all_tables = chain.from_iterable((logger.display() for logger in logs))
+        table_display = tabulate(all_tables, headers=headers, colalign=coalign).replace(
+            "++", "   "
+        )
+        return f"{cls.__name__} Status:\n{table_display}\n"
