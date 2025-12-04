@@ -1,6 +1,6 @@
 """Module with the generic cleaner and register classes"""
 
-from typing import TypeVar, Callable, Generic, Iterable
+from typing import TypeVar, Callable, Generic, Iterable, Sequence
 from itertools import chain
 from time import time
 from datetime import timedelta
@@ -163,12 +163,12 @@ class CleanerLog(Generic[T]):
 
     def display(
         self,
-    ) -> list[tuple[str, int, int, str, timedelta, timedelta, timedelta, str]] | str:
+    ) -> list[
+        tuple[str, int, int, str, timedelta, timedelta, timedelta, str]
+        | Sequence[str | int | timedelta]
+    ]:
         """Returns a string to display cleaner log data"""
         # pylint: disable=too-many-locals
-        if self.log_level == 0:
-            return f"\n{self.name} logging is disabled \n"
-
         table = list[tuple[str, int, int, str, timedelta, timedelta, timedelta, str]]()
         rows = dict[str, float]()
         total_time = sum(self.total_times)
@@ -207,7 +207,7 @@ class CleanerLog(Generic[T]):
             attempt_ratio = 0.0
         else:
             attempt_ratio = (self.changes_made / self.runs) * 100
-        table = [
+        final_table = [
             SEPARATING_LINE,
             (
                 self.name,
@@ -221,7 +221,7 @@ class CleanerLog(Generic[T]):
             ),
             SEPARATING_LINE,
         ] + table
-        return table
+        return final_table
         # return "\n" + tabulate(table, headers=headers, colalign=coalign)
 
     def _log(self, func: Callable[[T], T]):
@@ -254,14 +254,12 @@ class CleanerLog(Generic[T]):
                 self.global_tracker.tracker[log_id][key] += round(time_spent, 4)
                 self.global_tracker.tracker[log_id]["Attempts"] += 1
                 self.global_tracker.tracker[log_id]["Successes"] += int(success)
-            self.global_tracker.total_times[success] += time_spent
         if self.log_level > 0:
             if log_id not in self.tracker:
                 self.add_function(func)
             self.tracker[log_id][key] += round(time_spent, 4)
             self.tracker[log_id]["Attempts"] += 1
             self.tracker[log_id]["Successes"] += int(success)
-            self.total_times[success] += time_spent
 
     def _debug(self, func: Callable[[T], T]):
         """Sets the debug behavior for cleaning functions."""
@@ -384,7 +382,8 @@ class GenericCleaner(Generic[T]):
             old_cleaning_object = new_cleaning_object
             new_cleaning_object = cls.list_cleanup(old_cleaning_object, cleaning_list)
             continue_cleaning = old_cleaning_object != new_cleaning_object
-        if cls.DEBUG > 0:
+        changes_made = iterations > 0
+        if cls._currently_tracking.debug_level > 0:
             print(
                 f"Cleaned in {iterations} loops. Elapsed time : {time() - start_time}"
             )
@@ -396,11 +395,17 @@ class GenericCleaner(Generic[T]):
                     + f"\n{cleaning_object}\n {new_cleaning_object}"
                     + f"\n{repr(cleaning_object)}"
                 )
-        if cls.LOG > 0:
+        if cls._currently_tracking.log_level > 0:
             cls._currently_tracking.runs += 1
-            cls._currently_tracking.changes_made += int(iterations > 0)
+            cls._currently_tracking.changes_made += int(changes_made)
+            cls._currently_tracking.total_times[changes_made] += round(
+                time() - start_time, 4
+            )
             cls.global_tracker.runs += 1
-            cls.global_tracker.changes_made += int(iterations > 0)
+            cls.global_tracker.changes_made += int(changes_made)
+            cls.global_tracker.total_times[changes_made] += round(
+                time() - start_time, 4
+            )
         return new_cleaning_object
 
     @classmethod
