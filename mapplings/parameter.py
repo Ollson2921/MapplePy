@@ -147,27 +147,29 @@ class Parameter(Tiling):
                 gcps_to_remove.add(ob)
         final_obs_dont_ignore = not_point_obs - gcps_to_remove
         dont_ignore_rows = set(
-            ob.positions[i][1]
-            for ob in final_obs_dont_ignore
-            for i in range(len(ob.pattern))
+            cell[1]
+            for cell in chain.from_iterable(
+                ob.positions for ob in final_obs_dont_ignore
+            )
         ).union(
             set(
-                req.positions[i][0]
-                for req_list in self.requirements
-                for req in req_list
-                for i in range(len(req.pattern))
+                cell[1]
+                for cell in chain.from_iterable(
+                    req.positions for req_list in self.requirements for req in req_list
+                )
             )
         )
         dont_ignore_cols = set(
-            ob.positions[i][0]
-            for ob in final_obs_dont_ignore
-            for i in range(len(ob.pattern))
+            cell[0]
+            for cell in chain.from_iterable(
+                ob.positions for ob in final_obs_dont_ignore
+            )
         ).union(
             set(
-                req.positions[i][0]
-                for req_list in self.requirements
-                for req in req_list
-                for i in range(len(req.pattern))
+                cell[0]
+                for cell in chain.from_iterable(
+                    req.positions for req_list in self.requirements for req in req_list
+                )
             )
         )
         blank_rows = [
@@ -177,6 +179,19 @@ class Parameter(Tiling):
             col for col in range(self.dimensions[0]) if col not in dont_ignore_cols
         ]
         return blank_cols, blank_rows
+
+    def delete_blank_row_cols_in_param(self, base_tiling: Tiling) -> "Parameter":
+        """Deletes all blank rows and columns in the parameter."""
+        blank_cols, blank_rows = self.find_blank_columns_and_rows_in_param(base_tiling)
+        cols_to_remove = set()
+        rows_to_remove = set()
+        for i in range(self.dimensions[0] - 1):
+            if i in blank_cols and i + 1 in blank_cols:
+                cols_to_remove.add(i + 1)
+        for j in range(self.dimensions[1] - 1):
+            if j in blank_rows and j + 1 in blank_rows:
+                rows_to_remove.add(j + 1)
+        return self.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     def find_empty_rows_and_columns(self):
         if not self.active_cells:
