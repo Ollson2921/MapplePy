@@ -28,6 +28,7 @@ from comb_spec_searcher import (
     CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
+from comb_spec_searcher.typing import CombinatorialClassType
 from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling
 from mapplings.algorithms import (
@@ -52,7 +53,7 @@ def new_status(self, elaborate: bool) -> str:
 
 
 CombinatorialSpecificationSearcher.status = cast(
-    Callable[["CombinatorialSpecificationSearcher", bool], str],
+    Callable[[CombinatorialSpecificationSearcher[CombinatorialClassType], bool], str], 
     new_status
 )
 
