@@ -391,38 +391,12 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         base_tiling = mappling.tiling
         av_params = []
         for param in mappling.avoiding_parameters:
-            blank_cols, blank_rows = param.find_blank_columns_and_rows_in_param(
-                base_tiling
-            )
-            cols_to_remove = set()
-            rows_to_remove = set()
-            for i in range(param.dimensions[0] - 1):
-                if i in blank_cols and i + 1 in blank_cols:
-                    cols_to_remove.add(i + 1)
-            for j in range(param.dimensions[1] - 1):
-                if j in blank_rows and j + 1 in blank_rows:
-                    rows_to_remove.add(j + 1)
-            av_params.append(
-                param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
-            )
+            av_params.append(param.delete_blank_row_cols_in_param(base_tiling))
         containing_params = []
         for c_list in mappling.containing_parameters:
             new_c_list = []
             for param in c_list:
-                blank_cols, blank_rows = param.find_blank_columns_and_rows_in_param(
-                    base_tiling
-                )
-                cols_to_remove = set()
-                rows_to_remove = set()
-                for i in range(param.dimensions[0] - 1):
-                    if i in blank_cols and i + 1 in blank_cols:
-                        cols_to_remove.add(i + 1)
-                for j in range(param.dimensions[1] - 1):
-                    if j in blank_rows and j + 1 in blank_rows:
-                        rows_to_remove.add(j + 1)
-                new_c_list.append(
-                    param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
-                )
+                new_c_list.append(param.delete_blank_row_cols_in_param(base_tiling))
             containing_params.append(ParameterList(new_c_list))
         return MappedTiling(
             mappling.tiling,
