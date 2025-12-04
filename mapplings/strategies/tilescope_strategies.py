@@ -172,7 +172,7 @@ class ParameterPlacementStrategy(DisjointUnionStrategy):
             + f"{self.c_list_index}, {self.index}, {self.direction}"
             + f"ignore_parent={self.ignore_parent})"
         )
-    
+
     def __str__(self):
         return "Placed a parameter"
 
@@ -193,7 +193,7 @@ class ParamPlacementFactory(StrategyFactory[MappedTiling]):
             for i in range(len(points)):
                 for direction in Directions:
                     yield ParameterPlacementStrategy(c_index, i, direction)
-                    
+
     @classmethod
     def from_dict(cls, d: dict) -> "ParamPlacementFactory":
         return cls(**d)
@@ -270,7 +270,7 @@ class AvoiderExorcismStrategy(ParameterInsertionStrategy):
     def __init__(self, params, ignore_parent=False):
         assert len(params) == 1
         super().__init__(params, ignore_parent)
-        
+
     def __call__(
         self,
         comb_class: MappedTiling,
@@ -343,9 +343,13 @@ class AvoiderExorcismFactory(StrategyFactory[MappedTiling]):
 
     def __call__(self, comb_class):
         for avoider in comb_class.avoiding_parameters:
-            if len(set(avoider.col_map.values())) == len(set(avoider.row_map.values())) == 1:
+            if (
+                len(set(avoider.col_map.values()))
+                == len(set(avoider.row_map.values()))
+                == 1
+            ):
                 yield AvoiderExorcismStrategy(ParameterList({avoider}))
-    
+
     @classmethod
     def from_dict(cls, d: dict) -> "AvoiderExorcismFactory":
         return cls(**d)

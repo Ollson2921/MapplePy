@@ -26,5 +26,7 @@ mappling = MTCleaner.full_cleanup(mappling)
 pack = MappedTileScopePack.parameter_tomfoolery(None)
 searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=True, ruledb=ruledb)
 
-spec = searcher.auto_search(status_update=10,)
+spec = searcher.auto_search(
+    status_update=10,
+)
 spec.show()

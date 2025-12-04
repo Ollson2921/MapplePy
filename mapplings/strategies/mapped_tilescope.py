@@ -21,7 +21,7 @@ from .tilescope_strategies import (
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
     ParamPlacementFactory,
-    AvoiderExorcismFactory
+    AvoiderExorcismFactory,
 )
 
 
@@ -314,7 +314,7 @@ class MappedTileScopePack(StrategyPack):
             symmetries=[],
             iterative=False,
         )
-        
+
     @classmethod
     def parameter_tomfoolery(cls, rootmt: MappedTiling):
         """
@@ -322,9 +322,7 @@ class MappedTileScopePack(StrategyPack):
         makes all cells positive.
         """
         return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy()
-            ],
+            initial_strats=[MapplingFactorStrategy()],
             inferral_strats=[],
             expansion_strats=[
                 [
