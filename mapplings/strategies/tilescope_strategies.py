@@ -322,7 +322,7 @@ class MapplingILFactorStrategy(ShuffleFactorStrategy):
         return "Factor the mappling into interleaving factors"
 
 
-class MapplingInvertedILFactorStrategy(FactorStrategy):
+class MapplingInvertedILFactorStrategy(ShuffleFactorStrategy):
     """
     A strategy for finding interleaving factors in a mapped tiling by inverting 00 obstructions
     """
