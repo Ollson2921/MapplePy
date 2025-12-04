@@ -48,7 +48,7 @@ def new_status(self, elaborate: bool) -> str:
     return temp(self, elaborate) + MTCleaner.status_update() + ParamCleaner.status_update()
 
 
-CombinatorialSpecificationSearcher.status = (  # type: ignore[method-assign]
+CombinatorialSpecificationSearcher.status = (  # type: ignore[method-assign,assignment]
     cast(Callable[[Any, bool], str], new_status)
 )
 
