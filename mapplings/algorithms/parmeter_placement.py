@@ -152,9 +152,9 @@ class ParameterPlacement:
         If adjust_rows = 0 then it returns the new col map, if 1 then it returns the new row map.
         """
         if adjust_rows:
-            new_map = self.param.row_map
+            new_map = self.param.row_map.copy()
         else:
-            new_map = self.param.col_map
+            new_map = self.param.col_map.copy()
         vals_in_param = set(
             cell[adjust_rows] for cell in self.cells_in_parameter(base_cell)
         )

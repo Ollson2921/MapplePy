@@ -20,6 +20,8 @@ from .tilescope_strategies import (
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
+    ParamPlacementFactory,
+    AvoiderExorcismFactory
 )
 
 
@@ -309,6 +311,34 @@ class MappedTileScopePack(StrategyPack):
                 MapplingHorizontalInsertionEncodableVerificationStrategy(),
             ],
             name="Row and col placements",
+            symmetries=[],
+            iterative=False,
+        )
+        
+    @classmethod
+    def parameter_tomfoolery(cls, rootmt: MappedTiling):
+        """
+        Create a row and column placement strategy pack which initially
+        makes all cells positive.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy()
+            ],
+            inferral_strats=[],
+            expansion_strats=[
+                [
+                    ParamPlacementFactory(),
+                    AvoiderExorcismFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+                NoParameterVerificationStrategy(rootmt),
+                # MapplingVerticalInsertionEncodableVerificationStrategy(),
+                # MapplingHorizontalInsertionEncodableVerificationStrategy(),
+            ],
+            name="Param Nonsense",
             symmetries=[],
             iterative=False,
         )

@@ -27,11 +27,13 @@ from tilescope.strategies.point_placements import (
 from comb_spec_searcher import (
     DisjointUnionStrategy,
     CombinatorialSpecificationSearcher,
+    StrategyFactory,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from comb_spec_searcher.strategies.constructor import DisjointUnion, Complement
+from comb_spec_searcher.strategies.rule import Rule
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling, Parameter, ParameterList
+from mapplings import MappedTiling, ParameterList
 from mapplings.algorithms import (
     MTRequirementPlacement,
     ParameterPlacement,
@@ -44,7 +46,7 @@ from mapplings.algorithms import (
 from mapplings.cleaners import MTCleaner, ParamCleaner
 
 
-MTCleaner.global_log_toggle(1)
+MTCleaner.global_debug_toggle(0)
 temp = CombinatorialSpecificationSearcher.status
 
 
@@ -98,16 +100,25 @@ class MapplingCellInsertionFactory(CellInsertionFactory):
             yield strategy
 
 
-class ParameterPlacementStrategy(MapplingRequirementPlacementStrategy):
+class ParameterPlacementStrategy(DisjointUnionStrategy):
+    """Strategy for placing parameters"""
 
     cleaner = MTCleaner.make_full_cleaner("Param Placement Cleaner")
 
-    def __init__(self, c_list_index: int, point_index: int, direction: int):
+    def __init__(
+        self,
+        c_list_index: int,
+        point_index: int,
+        direction: int,
+        ignore_parent: bool = False,
+    ):
         self.c_list_index = c_list_index
         self.index = point_index
         self.direction = direction
+        super().__init__(ignore_parent)
 
     def algorithm(self, mappling: MappedTiling):
+        """Algorithm used by the decomposition function"""
         c_list = mappling.containing_parameters[self.c_list_index]
         return ParameterPlacement(mappling, c_list)
 
@@ -117,8 +128,58 @@ class ParameterPlacementStrategy(MapplingRequirementPlacementStrategy):
         )
         return (self.__class__.cleaner(new_mappling),)
 
+    def formal_step(self):
+        return (
+            f"Placed point {self.index} of containing parameter {self.c_list_index} "
+            + f"in direction {self.direction}"
+        )
 
-class ParamPlacementFactory(PointPlacementFactory):
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: tuple[Optional[GriddedCayleyPerm], ...],
+        children: Optional[tuple[MappedTiling, ...]] = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[tuple[MappedTiling, ...]] = None,
+    ) -> tuple[Optional[GriddedCayleyPerm], ...]:
+        raise NotImplementedError
+
+    def to_jsonable(self) -> dict:
+        """Return a dictionary form of the strategy."""
+        d: dict = super().to_jsonable()
+        d.pop("workable")
+        d.pop("inferrable")
+        d.pop("possibly_empty")
+        d["c_list_index"] = self.c_list_index
+        d["point_index"] = self.index
+        d["direction"] = self.direction
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ParameterPlacementStrategy":
+        """Return a strategy from a dictionary."""
+        return cls(**d)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            + f"{self.c_list_index}, {self.index}, {self.direction}"
+            + f"ignore_parent={self.ignore_parent})"
+        )
+    
+    def __str__(self):
+        return "Placed a parameter"
+
+
+class ParamPlacementFactory(StrategyFactory[MappedTiling]):
+    """Tries to place the points of any size 1 containing parameter list"""
+
     def __call__(
         self, comb_class: MappedTiling
     ) -> Iterator[ParameterPlacementStrategy]:
@@ -129,36 +190,187 @@ class ParamPlacementFactory(PointPlacementFactory):
             points = tuple(param.point_cells())
             if not points:
                 continue
-            for i in range(points):
+            for i in range(len(points)):
                 for direction in Directions:
                     yield ParameterPlacementStrategy(c_index, i, direction)
+                    
+    @classmethod
+    def from_dict(cls, d: dict) -> "ParamPlacementFactory":
+        return cls(**d)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "Parameter placement"
 
 
 class ParameterInsertionStrategy(DisjointUnionStrategy):
     """Straregy for inserting parameters"""
 
+    cleaner = MTCleaner.make_full_cleaner("Param Insertion Cleaner")
+
     def __init__(
         self,
         params: ParameterList,
         ignore_parent=False,
-        inferrable=True,
-        possibly_empty=True,
-        workable=True,
     ):
         self.params = params
-        super().__init__(ignore_parent, inferrable, possibly_empty, workable)
+        super().__init__(ignore_parent)
 
     def decomposition_function(self, comb_class: MappedTiling):
         avoiders, containers, enumerators = comb_class.ace_parameters()
         base = comb_class.tiling
         new_avoiders = ParameterList(avoiders | self.params)
         new_containers = list(containers) + [self.params]
+        clean = self.__class__.cleaner
         m1 = MappedTiling(base, new_avoiders, containers, enumerators)
         m2 = MappedTiling(base, avoiders, new_containers, enumerators)
-        return (m1, m2)
+        return (clean(m1), clean(m2))
 
     def formal_step(self):
         return "Contain or avoid parameters"
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: tuple[Optional[GriddedCayleyPerm], ...],
+        children: Optional[tuple[MappedTiling, ...]] = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[tuple[MappedTiling, ...]] = None,
+    ) -> tuple[Optional[GriddedCayleyPerm], ...]:
+        raise NotImplementedError
+
+    def to_jsonable(self) -> dict:
+        """Return a dictionary form of the strategy."""
+        d: dict = super().to_jsonable()
+        d.pop("workable")
+        d.pop("inferrable")
+        d.pop("possibly_empty")
+        d["params"] = self.params
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ParameterInsertionStrategy":
+        """Return a strategy from a dictionary."""
+        return cls(**d)
+
+
+class AvoiderExorcismStrategy(ParameterInsertionStrategy):
+    """Strategy for transforming Avoiders into Containers"""
+
+    cleaner = MTCleaner.make_full_cleaner("Avoider Exorcism Cleaner")
+
+    def __init__(self, params, ignore_parent=False):
+        assert len(params) == 1
+        super().__init__(params, ignore_parent)
+        
+    def __call__(
+        self,
+        comb_class: MappedTiling,
+        children: Optional[tuple[MappedTiling, MappedTiling]] = None,
+    ) -> Rule:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+            if children is None:
+                raise StrategyDoesNotApply("Strategy does not apply")
+        return Rule(self, children[0], (comb_class, children[1]))
+
+    def decomposition_function(self, comb_class):
+        avoider = tuple(self.params)[0]
+        avoiders, containers, enumerators = comb_class.ace_parameters()
+        assert avoider in avoiders, "Avoider Does Not Exist"
+        base = comb_class.tiling
+        new_avoiders = list(avoiders)
+        new_avoiders.remove(avoider)
+        new_containers = list(containers) + [self.params]
+        clean = self.__class__.cleaner
+        m1 = MappedTiling(base, new_avoiders, containers, enumerators)
+        m2 = MappedTiling(base, new_avoiders, new_containers, enumerators)
+        return (clean(m1), clean(m2))
+
+    def constructor(
+        self,
+        comb_class: MappedTiling,
+        children: Optional[tuple[MappedTiling, MappedTiling]] = None,
+    ) -> DisjointUnion:
+        if children is None:
+            children = self.decomposition_function(comb_class)
+            if children is None:
+                raise StrategyDoesNotApply("Strategy does not apply")
+        return DisjointUnion(children[0], (comb_class, children[1]))
+
+    def reverse_constructor(
+        self,
+        idx: int,
+        comb_class: MappedTiling,
+        children: Optional[tuple[MappedTiling, MappedTiling]] = None,
+    ):
+        if children is None:
+            children = self.decomposition_function(comb_class)
+            if children is None:
+                raise StrategyDoesNotApply("Strategy does not apply")
+        return Complement(children[0], (comb_class, children[1]), idx)
+
+
+class ContainerExorcismStrategy(AvoiderExorcismStrategy):
+    """Strategy for transforming Containers into Avoiders"""
+
+    cleaner = MTCleaner.make_full_cleaner("Container Exorcism Cleaner")
+
+    def decomposition_function(self, comb_class: MappedTiling):
+        contianer = tuple(self.params)[0]
+        avoiders, containers, enumerators = comb_class.ace_parameters()
+        assert self.params in containers, "Container Does Not Exist"
+        base = comb_class.tiling
+        new_avoiders = avoiders.add(contianer)
+        new_containers = list(containers)
+        new_containers.remove(self.params)
+        clean = self.__class__.cleaner
+        m1 = MappedTiling(base, avoiders, new_containers, enumerators)
+        m2 = MappedTiling(base, new_avoiders, new_containers, enumerators)
+        return (clean(m1), clean(m2))
+
+
+class AvoiderExorcismFactory(StrategyFactory[MappedTiling]):
+    """Transforms avoiders which map to a single cell into containers"""
+
+    def __call__(self, comb_class):
+        for avoider in comb_class.avoiding_parameters:
+            if len(set(avoider.col_map.values())) == len(set(avoider.row_map.values())) == 1:
+                yield AvoiderExorcismStrategy(ParameterList({avoider}))
+    
+    @classmethod
+    def from_dict(cls, d: dict) -> "AvoiderExorcismFactory":
+        return cls(**d)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "Avoider exorcism"
+
+
+class ContainerExorcismFactory(StrategyFactory[MappedTiling]):
+    """Transforms solo containers which map to a single cell into avoiders"""
+
+    def __call__(self, comb_class):
+        for c_list in comb_class.containing_parameters:
+            if len(c_list) > 1:
+                continue
+            for container in c_list:
+                if (
+                    len(container.col_map.values())
+                    == len(container.row_map.values())
+                    == 1
+                ):
+                    yield ContainerExorcismStrategy(ParameterList({container}))
 
 
 class MapplingPointPlacementFactory(PointPlacementFactory):
