@@ -5,6 +5,7 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.point_placements import Directions
 from tilescope.strategies import (
     FactorStrategy,
+    ShuffleFactorStrategy,
     RequirementPlacementStrategy,
     LessThanRowColSeparationStrategy,
     LessThanOrEqualRowColSeparationStrategy,
@@ -33,6 +34,8 @@ from mapplings import MappedTiling
 from mapplings.algorithms import (
     MTRequirementPlacement,
     Factor,
+    ILFactorNormal,
+    ILFactorInverted,
     LTORERowColSeparationMT,
     LTRowColSeparationMT,
 )
@@ -299,6 +302,42 @@ class MapplingFactorStrategy(FactorStrategy):
             raise StrategyDoesNotApply
         factors = tuple(map(self.__class__.cleaner, factors))
         return factors
+
+
+class MapplingILFactorStrategy(ShuffleFactorStrategy):
+    """
+    A strategy for finding interleaving factors in a mapped tiling.
+    """
+
+    cleaner = MTCleaner.make_full_cleaner("IL Factoring Cleaner")
+
+    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
+        factors = ILFactorNormal(comb_class).find_factors()
+        if len(factors) <= 1:
+            raise StrategyDoesNotApply
+        factors = tuple(map(self.__class__.cleaner, factors))
+        return factors
+
+    def formal_step(self) -> str:
+        return "Factor the mappling into interleaving factors"
+
+
+class MapplingInvertedILFactorStrategy(FactorStrategy):
+    """
+    A strategy for finding interleaving factors in a mapped tiling by inverting 00 obstructions
+    """
+
+    cleaner = MTCleaner.make_full_cleaner("Inverted IL Factoring Cleaner")
+
+    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
+        factors = ILFactorInverted(comb_class).find_factors()
+        if len(factors) <= 1:
+            raise StrategyDoesNotApply
+        factors = tuple(map(self.__class__.cleaner, factors))
+        return factors
+
+    def formal_step(self) -> str:
+        return "Invert obstructions and factor the mappling into interleaving factors"
 
 
 class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy):
