@@ -1,6 +1,6 @@
 """Strategies for mapplings tilescope."""
 
-from typing import Iterator
+from typing import Iterator, Optional
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.point_placements import Directions
 from tilescope.strategies import (
@@ -29,10 +29,12 @@ from comb_spec_searcher import (
     CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
+from comb_spec_searcher.strategies.constructor import DisjointUnion, Complement
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling
+from mapplings import MappedTiling, Parameter, ParameterList
 from mapplings.algorithms import (
     MTRequirementPlacement,
+    ParameterPlacement,
     Factor,
     ILFactorNormal,
     ILFactorInverted,
@@ -94,6 +96,69 @@ class MapplingCellInsertionFactory(CellInsertionFactory):
             gcps = (GriddedCayleyPerm(CayleyPermutation([0]), (cell,)),)
             strategy = MapplingRequirementInsertionStrategy(gcps, ignore_parent=False)
             yield strategy
+
+
+class ParameterPlacementStrategy(MapplingRequirementPlacementStrategy):
+
+    cleaner = MTCleaner.make_full_cleaner("Param Placement Cleaner")
+
+    def __init__(self, c_list_index: int, point_index: int, direction: int):
+        self.c_list_index = c_list_index
+        self.index = point_index
+        self.direction = direction
+
+    def algorithm(self, mappling: MappedTiling):
+        c_list = mappling.containing_parameters[self.c_list_index]
+        return ParameterPlacement(mappling, c_list)
+
+    def decomposition_function(self, comb_class):
+        new_mappling = self.algorithm(comb_class).param_placement(
+            self.direction, self.index
+        )
+        return (self.__class__.cleaner(new_mappling),)
+
+
+class ParamPlacementFactory(PointPlacementFactory):
+    def __call__(
+        self, comb_class: MappedTiling
+    ) -> Iterator[ParameterPlacementStrategy]:
+        for c_index, c_list in enumerate(comb_class.containing_parameters):
+            if len(c_list) != 1:
+                continue
+            param = tuple(c_list)[0]
+            points = tuple(param.point_cells())
+            if not points:
+                continue
+            for i in range(points):
+                for direction in Directions:
+                    yield ParameterPlacementStrategy(c_index, i, direction)
+
+
+class ParameterInsertionStrategy(DisjointUnionStrategy):
+    """Straregy for inserting parameters"""
+
+    def __init__(
+        self,
+        params: ParameterList,
+        ignore_parent=False,
+        inferrable=True,
+        possibly_empty=True,
+        workable=True,
+    ):
+        self.params = params
+        super().__init__(ignore_parent, inferrable, possibly_empty, workable)
+
+    def decomposition_function(self, comb_class: MappedTiling):
+        avoiders, containers, enumerators = comb_class.ace_parameters()
+        base = comb_class.tiling
+        new_avoiders = ParameterList(avoiders | self.params)
+        new_containers = list(containers) + [self.params]
+        m1 = MappedTiling(base, new_avoiders, containers, enumerators)
+        m2 = MappedTiling(base, avoiders, new_containers, enumerators)
+        return (m1, m2)
+
+    def formal_step(self):
+        return "Contain or avoid parameters"
 
 
 class MapplingPointPlacementFactory(PointPlacementFactory):
