@@ -45,16 +45,13 @@ temp = CombinatorialSpecificationSearcher.status
 
 def new_status(self, elaborate: bool) -> str:
     """Overwrites CSS status method"""
-    return (
-        temp(self, elaborate)
-        + MTCleaner.status_update()
-        + ParamCleaner.status_update()
-    )
+    return temp(self, elaborate) + MTCleaner.status_update() + ParamCleaner.status_update()
+    
 
 
 CombinatorialSpecificationSearcher.status = cast(
     Callable[[Any, bool], str], new_status
-)  # type: ignore[method-assign]
+)  # type: ignore[method-assign,assignment]
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
