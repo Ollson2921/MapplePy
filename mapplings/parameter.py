@@ -19,6 +19,7 @@ class Parameter(Tiling):
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-public-methods
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
         self.row_map = row_col_map.row_map
@@ -111,6 +112,83 @@ class Parameter(Tiling):
         temp = Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
         temp.active_cells = self.active_cells
         return temp
+
+    def find_blank_columns_and_rows_in_param(
+        self, tiling: Tiling
+    ) -> tuple[list[int], list[int]]:
+        """Collect all obstructions and requirements. Any obs that imply point rows or cols
+        ignore. Any that are implied by the tiling ignore. Then for the cells of gcps
+        left, can't remove rows or columns that have any of these cells, remove all others.
+        """
+        point_cells = self.point_cells()
+        if self.dimensions == (0, 0):
+            return [], []
+        if not self.obstructions and not self.requirements:
+            return list(range(self.dimensions[0])), list(range(self.dimensions[1]))
+        point_obs: set[GriddedCayleyPerm] = set()
+        point_cols = set(cell[0] for cell in point_cells)
+        for ob in self.obstructions:
+            if ob.pattern == CayleyPermutation(
+                (0, 1)
+            ) or ob.pattern == CayleyPermutation((1, 0)):
+                if (
+                    ob.positions[0][1] in self.point_rows
+                    and ob.positions[1][1] in self.point_rows
+                ):
+                    point_obs.add(ob)
+                elif (
+                    ob.positions[0] in point_cells
+                    and ob.positions[1] == ob.positions[0]
+                ):
+                    point_obs.add(ob)
+            elif (
+                ob.pattern == CayleyPermutation((0, 0))
+                and ob.positions[0] == ob.positions[1]
+                and ob.positions[0] in point_cells
+            ):
+                point_obs.add(ob)
+            elif (
+                ob.pattern == CayleyPermutation((0,))
+                and ob.positions[0][0] in point_cols
+            ):
+                point_obs.add(ob)
+        not_point_obs = set(self.obstructions) - point_obs
+        gcps_to_remove = set()
+        for ob in not_point_obs:
+            mapped_ob = self.map.map_gridded_cperm(ob)
+            if mapped_ob in tiling.obstructions:
+                gcps_to_remove.add(ob)
+        final_obs_dont_ignore = not_point_obs - gcps_to_remove
+        dont_ignore_cols = set(
+            cell[0]
+            for gcp in chain(final_obs_dont_ignore, *self.requirements)
+            for cell in gcp.positions
+        )
+        dont_ignore_rows = set(
+            cell[1]
+            for gcp in chain(final_obs_dont_ignore, *self.requirements)
+            for cell in gcp.positions
+        )
+        blank_rows = [
+            row for row in range(self.dimensions[1]) if row not in dont_ignore_rows
+        ]
+        blank_cols = [
+            col for col in range(self.dimensions[0]) if col not in dont_ignore_cols
+        ]
+        return blank_cols, blank_rows
+
+    def delete_blank_row_cols_in_param(self, base_tiling: Tiling) -> "Parameter":
+        """Deletes all blank rows and columns in the parameter."""
+        blank_cols, blank_rows = self.find_blank_columns_and_rows_in_param(base_tiling)
+        cols_to_remove = set()
+        rows_to_remove = set()
+        for i in range(self.dimensions[0] - 1):
+            if i in blank_cols and i + 1 in blank_cols:
+                cols_to_remove.add(i + 1)
+        for j in range(self.dimensions[1] - 1):
+            if j in blank_rows and j + 1 in blank_rows:
+                rows_to_remove.add(j + 1)
+        return self.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     def find_empty_rows_and_columns(self):
         if not self.active_cells:
@@ -250,6 +328,37 @@ class Parameter(Tiling):
             ):
                 return True
         return False
+
+    def to_html_representation(self) -> str:
+        """Returns an html representation of the tilings object
+        Mimics code from original tilings"""
+        rc_style = """
+            border: 0;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            background-color : white;
+            color : grey;
+            """
+        dim_i, dim_j = self.dimensions
+        result = self._html_table()
+        result.insert(-1, "<tr>")
+        result.insert(-1, f"<th style='{rc_style}'>")
+        result.insert(-1, " ")
+        result.insert(-1, "</th>")
+        for j in range(dim_i):
+            result.insert(-1, f"<th style='{rc_style}'>")
+            result.insert(-1, str(self.col_map[j]))
+            result.insert(-1, "</th>")
+        result.insert(-1, "</tr>")
+        row_width = 3 * (dim_i) + 2
+        for i in range(dim_j):
+            index = (i) * (row_width + 3) + 2
+            result.insert(index, "</th>")
+            result.insert(index, str(self.row_map[dim_j - i - 1]))
+            result.insert(index, f"<th style='{rc_style}'>")
+
+        return "".join(result)
 
     # dunder methods
 

@@ -17,7 +17,7 @@ import json
 @pytest.fixture
 def avoiding_parameter():
     """The avoiding parameter for motzkin mappling."""
-    til = MappedTiling.from_vincular(CayleyPermutation([0, 1, 2]), [])
+    til = Tiling.create_vincular_or_bivincular(CayleyPermutation([0, 1, 2]))
     ghost = til.delete_rows([4])
     param = Parameter(
         ghost, RowColMap({i: 0 for i in range(7)}, {i: 0 for i in range(6)})

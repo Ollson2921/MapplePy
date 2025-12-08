@@ -12,7 +12,6 @@ from typing import (
 )
 from collections import defaultdict
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-
 from .parameter import Parameter
 from .parameter_list import ParameterList
 
@@ -195,6 +194,20 @@ class MappedTiling(Tiling):
             for e_list in self.enumerating_parameters
         ]
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
+
+    # html stuff
+    def to_html_representation(self):
+        """Create an HTML string representing the mappling"""
+        base = super().to_html_representation()
+        if self.avoiding_parameters:
+            base += f'<br>{self.avoiding_parameters.html_dropdown("Avoiding Parameters", "red")}'
+        for i, c_list in enumerate(self.containing_parameters):
+            base += f'<br>{c_list.html_dropdown(f"Containing Parameters {i}", "blue")}'
+        for i, e_list in enumerate(self.enumerating_parameters):
+            base += (
+                f'<br>{e_list.html_dropdown(f"Enumerating Parameters {i}", "green")}'
+            )
+        return base
 
     # json methods
 

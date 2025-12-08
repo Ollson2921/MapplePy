@@ -25,3 +25,4 @@ share/python-wheels/
 *.egg
 MANIFEST
 *.DS_Store
+.tox/
