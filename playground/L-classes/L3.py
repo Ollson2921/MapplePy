@@ -6,15 +6,9 @@ from mapplings.strategies.tilescope_strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 from mapplings.cleaners import MTCleaner
 from itertools import combinations_with_replacement
-from mapplings.strategies.tilescope_strategies import (
-    CellInsertionFactory,
-    MapplingPointPlacementFactory,
-    CleaningStrategy,
-    MapplingFactorStrategy,
-    MapplingLessThanOrEqualRowColSeparationStrategy,
-    MapplingLessThanRowColSeparationStrategy,
-)
+
 import json
+
 # MTCleaner.DEBUG = 2
 
 # L3

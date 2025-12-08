@@ -6,15 +6,17 @@ from mapplings.strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 import json
 
-til = MappedTiling.from_vincular(CayleyPermutation([2,1,3,0]), [])
-ghost = til.add_obstructions([GriddedCayleyPerm(CayleyPermutation([0]), [(2,8)])])   
+til = MappedTiling.from_vincular_with_obs(CayleyPermutation([2, 1, 3, 0]), [])
+ghost = til.add_obstructions([GriddedCayleyPerm(CayleyPermutation([0]), [(2, 8)])])
 avoiding_parameters = [
     Parameter(ghost, RowColMap({i: 0 for i in range(9)}, {i: 0 for i in range(9)}))
 ]
 mappling = MappedTiling(
     Tiling(
         [
-            GriddedCayleyPerm(CayleyPermutation([1,2,3,0]), ((0, 0), (0, 0), (0, 0), (0,0))),
+            GriddedCayleyPerm(
+                CayleyPermutation([1, 2, 3, 0]), ((0, 0), (0, 0), (0, 0), (0, 0))
+            ),
         ],
         [],
         (1, 1),

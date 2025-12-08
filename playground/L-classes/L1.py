@@ -2,28 +2,22 @@ from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
-from mapplings.strategies.tilescope_strategies import MappedTileScopePack
+from mapplings.strategies.mapped_tilescope import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 from mapplings.cleaners import MTCleaner
 from itertools import combinations_with_replacement
-from mapplings.strategies.tilescope_strategies import (
-    CellInsertionFactory,
-    MapplingPointPlacementFactory,
-    CleaningStrategy,
-    MapplingFactorStrategy,
-    MapplingLessThanOrEqualRowColSeparationStrategy,
-    MapplingLessThanRowColSeparationStrategy,
-)
+
 import json
+
 # MTCleaner.DEBUG = 2
 
 
 # # L1
 ghost = Tiling(
     [
-        GriddedCayleyPerm(CayleyPermutation([1,0]), [(0, 0), (0, 0)]),
-        GriddedCayleyPerm(CayleyPermutation([0,1]), [(0, 1), (0, 1)]),
-        GriddedCayleyPerm(CayleyPermutation([0,1]), [(1, 1), (1, 1)]),
+        GriddedCayleyPerm(CayleyPermutation([1, 0]), [(0, 0), (0, 0)]),
+        GriddedCayleyPerm(CayleyPermutation([0, 1]), [(0, 1), (0, 1)]),
+        GriddedCayleyPerm(CayleyPermutation([0, 1]), [(1, 1), (1, 1)]),
         GriddedCayleyPerm(CayleyPermutation([0]), [(1, 0)]),
     ],
     [],
