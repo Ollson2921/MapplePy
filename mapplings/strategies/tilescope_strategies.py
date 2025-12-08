@@ -47,6 +47,7 @@ from mapplings.cleaners import MTCleaner, ParamCleaner
 
 
 MTCleaner.global_debug_toggle(0)
+MTCleaner.global_log_toggle(1)
 temp = CombinatorialSpecificationSearcher.status
 
 
