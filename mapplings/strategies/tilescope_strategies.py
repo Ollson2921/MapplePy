@@ -272,10 +272,9 @@ class ParameterInsertionFactory(StrategyFactory[MappedTiling]):
         super().__init__()
 
     def __call__(self, comb_class):
-        if comb_class.dimensions != (1, 1):
-            raise StrategyDoesNotApply
-        for param in self.special_params:
-            yield ParameterInsertionStrategy(ParameterList({param}))(comb_class)
+        if comb_class.dimensions == (1, 1) and comb_class.active_cells:
+            for param in self.special_params:
+                yield ParameterInsertionStrategy(ParameterList({param}))(comb_class)
 
     @classmethod
     def from_dict(cls, d: dict) -> "ParameterInsertionFactory":

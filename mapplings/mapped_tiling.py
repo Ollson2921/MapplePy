@@ -129,7 +129,9 @@ class MappedTiling(Tiling):
                 objects[param].append(gcp)
         return objects
 
-    def get_parameters(self, obj: GriddedCayleyPerm) -> tuple[int, ...]:
+    def get_parameters(
+        self, obj: GriddedCayleyPerm
+    ) -> tuple[int, ...]:  # This function is broken
         """Parameters are not what you think!!! This is specific to
         combinatorical class parameters"""
         return tuple(

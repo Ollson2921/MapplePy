@@ -1,7 +1,7 @@
 """Different strategy packs for MappedTileScope."""
 
 from comb_spec_searcher import StrategyPack, AtomStrategy
-from mapplings import MappedTiling
+from mapplings import MappedTiling, ParameterList, Parameter
 from .verification_strategy import (
     NoParameterVerificationStrategy,
     MapplingVerticalInsertionEncodableVerificationStrategy,
@@ -21,7 +21,10 @@ from .tilescope_strategies import (
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
     ParamPlacementFactory,
-    AvoiderExorcismFactory,
+    # AvoiderExorcismFactory,
+    ParameterInsertionFactory,
+    MapplingILFactorStrategy,
+    MapplingInvertedILFactorStrategy,
 )
 
 
@@ -326,8 +329,7 @@ class MappedTileScopePack(StrategyPack):
             inferral_strats=[],
             expansion_strats=[
                 [
-                    ParamPlacementFactory(),
-                    AvoiderExorcismFactory(),
+                    MapplingLessThanRowColSeparationStrategy(),
                 ]
             ],
             ver_strats=[
@@ -335,6 +337,35 @@ class MappedTileScopePack(StrategyPack):
                 NoParameterVerificationStrategy(rootmt),
                 # MapplingVerticalInsertionEncodableVerificationStrategy(),
                 # MapplingHorizontalInsertionEncodableVerificationStrategy(),
+            ],
+            name="Param Nonsense",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def pack_for_123(cls, special_param: Parameter):
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingInvertedILFactorStrategy(),
+                MapplingILFactorStrategy(),
+            ],
+            inferral_strats=[
+                MapplingCellInsertionFactory(),
+                ParamPlacementFactory(),
+            ],
+            expansion_strats=[
+                [
+                    ParameterInsertionFactory(ParameterList({special_param})),
+                    MapplingPointPlacementFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+                # NoParameterVerificationStrategy(rootmt),
+                MapplingVerticalInsertionEncodableVerificationStrategy(),
+                MapplingHorizontalInsertionEncodableVerificationStrategy(),
             ],
             name="Param Nonsense",
             symmetries=[],
