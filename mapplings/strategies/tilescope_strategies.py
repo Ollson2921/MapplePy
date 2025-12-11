@@ -1,6 +1,6 @@
 """Strategies for mapplings tilescope."""
 
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Iterable
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.point_placements import Directions
 from tilescope.strategies import (
@@ -30,10 +30,8 @@ from comb_spec_searcher import (
     StrategyFactory,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
-from comb_spec_searcher.strategies.constructor import DisjointUnion, Complement
-from comb_spec_searcher.strategies.rule import Rule
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling, ParameterList
+from mapplings import MappedTiling, ParameterList, Parameter
 from mapplings.algorithms import (
     MTRequirementPlacement,
     ParameterPlacement,
@@ -263,93 +261,51 @@ class ParameterInsertionStrategy(DisjointUnionStrategy):
         return cls(**d)
 
 
-class AvoiderExorcismStrategy(ParameterInsertionStrategy):
-    """Strategy for transforming Avoiders into Containers"""
+class ParameterInsertionFactory(StrategyFactory[MappedTiling]):
+    """Inserts special parameters to mapplings with 1x1 base tiling"""
 
-    cleaner = MTCleaner.make_full_cleaner("Avoider Exorcism Cleaner")
+    def __init__(self, special_params: Iterable[Parameter]):
+        assert all(
+            (len(param.image_cells()) == 1 for param in special_params)
+        ), "Param cells must all map to (0,0)"
+        self.special_params = special_params
+        super().__init__()
 
-    def __init__(self, params, ignore_parent=False):
-        assert len(params) == 1
-        super().__init__(params, ignore_parent)
+    def __call__(self, comb_class):
+        if comb_class.dimensions != (1, 1):
+            raise StrategyDoesNotApply
+        for param in self.special_params:
+            yield ParameterInsertionStrategy(ParameterList({param}))(comb_class)
 
-    def __call__(
-        self,
-        comb_class: MappedTiling,
-        children: Optional[tuple[MappedTiling, MappedTiling]] = None,
-    ) -> Rule:
-        if children is None:
-            children = self.decomposition_function(comb_class)
-            if children is None:
-                raise StrategyDoesNotApply("Strategy does not apply")
-        return Rule(self, children[0], (comb_class, children[1]))
+    @classmethod
+    def from_dict(cls, d: dict) -> "ParameterInsertionFactory":
+        return cls(**d)
 
-    def decomposition_function(self, comb_class):
-        avoider = tuple(self.params)[0]
-        avoiders, containers, enumerators = comb_class.ace_parameters()
-        assert avoider in avoiders, "Avoider Does Not Exist"
-        base = comb_class.tiling
-        new_avoiders = list(avoiders)
-        new_avoiders.remove(avoider)
-        new_containers = list(containers) + [self.params]
-        clean = self.__class__.cleaner
-        m1 = MappedTiling(base, new_avoiders, containers, enumerators)
-        m2 = MappedTiling(base, new_avoiders, new_containers, enumerators)
-        return (clean(m1), clean(m2))
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
 
-    def constructor(
-        self,
-        comb_class: MappedTiling,
-        children: Optional[tuple[MappedTiling, MappedTiling]] = None,
-    ) -> DisjointUnion:
-        if children is None:
-            children = self.decomposition_function(comb_class)
-            if children is None:
-                raise StrategyDoesNotApply("Strategy does not apply")
-        return DisjointUnion(children[0], (comb_class, children[1]))
-
-    def reverse_constructor(
-        self,
-        idx: int,
-        comb_class: MappedTiling,
-        children: Optional[tuple[MappedTiling, MappedTiling]] = None,
-    ):
-        if children is None:
-            children = self.decomposition_function(comb_class)
-            if children is None:
-                raise StrategyDoesNotApply("Strategy does not apply")
-        return Complement(children[0], (comb_class, children[1]), idx)
-
-
-class ContainerExorcismStrategy(AvoiderExorcismStrategy):
-    """Strategy for transforming Containers into Avoiders"""
-
-    cleaner = MTCleaner.make_full_cleaner("Container Exorcism Cleaner")
-
-    def decomposition_function(self, comb_class: MappedTiling):
-        contianer = tuple(self.params)[0]
-        avoiders, containers, enumerators = comb_class.ace_parameters()
-        assert self.params in containers, "Container Does Not Exist"
-        base = comb_class.tiling
-        new_avoiders = avoiders.add(contianer)
-        new_containers = list(containers)
-        new_containers.remove(self.params)
-        clean = self.__class__.cleaner
-        m1 = MappedTiling(base, avoiders, new_containers, enumerators)
-        m2 = MappedTiling(base, new_avoiders, new_containers, enumerators)
-        return (clean(m1), clean(m2))
+    def __str__(self) -> str:
+        return "Special Param Insertion"
 
 
 class AvoiderExorcismFactory(StrategyFactory[MappedTiling]):
     """Transforms avoiders which map to a single cell into containers"""
 
     def __call__(self, comb_class):
-        for avoider in comb_class.avoiding_parameters:
+        avoiders, containers, enumerators = comb_class.ace_parameters()
+        for avoider in avoiders:
             if (
                 len(set(avoider.col_map.values()))
                 == len(set(avoider.row_map.values()))
                 == 1
             ):
-                yield AvoiderExorcismStrategy(ParameterList({avoider}))
+                new_avoiders = ParameterList(
+                    {param for param in avoiders if param != avoider}
+                )
+                new_mappling = MappedTiling(
+                    comb_class.tiling, new_avoiders, containers, enumerators
+                )
+                yield ParameterInsertionStrategy(ParameterList({avoider}))(new_mappling)
 
     @classmethod
     def from_dict(cls, d: dict) -> "AvoiderExorcismFactory":
@@ -366,7 +322,8 @@ class ContainerExorcismFactory(StrategyFactory[MappedTiling]):
     """Transforms solo containers which map to a single cell into avoiders"""
 
     def __call__(self, comb_class):
-        for c_list in comb_class.containing_parameters:
+        avoiders, containers, enumerators = comb_class.ace_parameters()
+        for c_list in containers:
             if len(c_list) > 1:
                 continue
             for container in c_list:
@@ -375,7 +332,25 @@ class ContainerExorcismFactory(StrategyFactory[MappedTiling]):
                     == len(container.row_map.values())
                     == 1
                 ):
-                    yield ContainerExorcismStrategy(ParameterList({container}))
+                    new_containers = (
+                        param_list for param_list in containers if param_list != c_list
+                    )
+                    new_mappling = MappedTiling(
+                        comb_class.tiling, avoiders, new_containers, enumerators
+                    )
+                    yield ParameterInsertionStrategy(ParameterList({container}))(
+                        new_mappling
+                    )
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ContainerExorcismFactory":
+        return cls(**d)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "Container exorcism"
 
 
 class MapplingPointPlacementFactory(PointPlacementFactory):
