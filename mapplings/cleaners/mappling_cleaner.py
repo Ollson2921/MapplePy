@@ -95,6 +95,11 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 for avoider in mappling.avoiding_parameters
             ):
                 return MappedTiling.empty_mappling()
+            if any(
+                (
+                    all(container.positive_cells() for container in c_list)
+                    for c_list in mappling.containing_parameters
+                )
             ):
                 return MappedTiling.empty_mappling()
             return MappedTiling(
