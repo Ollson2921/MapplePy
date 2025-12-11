@@ -344,20 +344,23 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def pack_for_123(cls, special_param: Parameter):
+    def pack_for_1_32(
+        cls,
+    ):
+        """Pack to get the 1-32 tree"""
         return MappedTileScopePack(
             initial_strats=[
-                MapplingFactorStrategy(),
+                # MapplingFactorStrategy(),
                 MapplingInvertedILFactorStrategy(),
                 MapplingILFactorStrategy(),
             ],
             inferral_strats=[
                 MapplingCellInsertionFactory(),
-                ParamPlacementFactory(),
+                # ParamPlacementFactory(),
             ],
             expansion_strats=[
                 [
-                    ParameterInsertionFactory(ParameterList({special_param})),
+                    # ParameterInsertionFactory(ParameterList({special_param})),
                     MapplingPointPlacementFactory(),
                 ]
             ],
@@ -367,7 +370,7 @@ class MappedTileScopePack(StrategyPack):
                 MapplingVerticalInsertionEncodableVerificationStrategy(),
                 MapplingHorizontalInsertionEncodableVerificationStrategy(),
             ],
-            name="Param Nonsense",
+            name="1-32",
             symmetries=[],
             iterative=False,
         )

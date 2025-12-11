@@ -95,6 +95,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 for avoider in mappling.avoiding_parameters
             ):
                 return MappedTiling.empty_mappling()
+            ):
                 return MappedTiling.empty_mappling()
             return MappedTiling(
                 Tiling(
