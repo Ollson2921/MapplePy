@@ -4,22 +4,30 @@ import json
 from mapplings.cleaners import MTCleaner
 from datetime import timedelta
 import time
+import requests
 
 MTCleaner.global_log_toggle(2)
 
 from playground.table1 import from_table
 from all_tilings import all_other_mapplings, L_classes
 
-group_name = "all_other_mapplings"
+group_name = "from_table"
+all_to_run = from_table
 
 successes = []
 data_string = ""
 
+mappling_types = ["motzkin", "inc_inc", "hare_2_stack", "ten_point_one"]
+mappling_types = ["L0", "L1", "L3", "L4", "L5", "L7"]
+mappling_types = [n for n in range(1, len(all_to_run) + 1)]
+
+webhookurl = "https://discord.com/api/webhooks/1446479214629883997/Ct682I4szno9aF4mpskSHVoeCpXA37IfWddC1SVycmI-CY"
+
 count = 0
-for mappling in all_other_mapplings:
+for mappling in all_to_run:
     success = False
     count += 1
-    print(f"Starting mappling {count}/{len(all_other_mapplings)}")
+    print(f"Starting mappling {count}/{len(all_to_run)}")
     print(f"Successes so far: {sum(successes)}/{len(successes)}")
     try:
         start_time = time.time()
@@ -41,9 +49,18 @@ for mappling in all_other_mapplings:
         with open(f"{string}.json", "w") as f:
             f.write(json_str)
 
+        headers = {"User-Agent": "hildur", "Content-Type": "application/json"}
+        message = (
+            "Spec for mappling "
+            + f"{mappling_types[count - 1]} with "
+            + " point placement in "
+            + str(time_taken)
+        )
+        data = json.dumps({"content": message})
+        requests.post(webhookurl, headers=headers, data=data)
+
         new_spec = spec.expand_verified()
         # new_spec.show()
-
         json_dict = new_spec.to_jsonable()
         json_str = json.dumps(json_dict)
         string += "_expanded"
@@ -68,6 +85,16 @@ for mappling in all_other_mapplings:
         string = f"{group_name}_{count}_row_and_col.json"
         with open(f"{string}.json", "w") as f:
             f.write(json_str)
+
+        headers = {"User-Agent": "hildur", "Content-Type": "application/json"}
+        message = (
+            "Spec for mappling "
+            + f"{mappling_types[count - 1]} with "
+            + " row and col placement in "
+            + str(time_taken)
+        )
+        data = json.dumps({"content": message})
+        requests.post(webhookurl, headers=headers, data=data)
 
         new_spec = spec.expand_verified()
         # new_spec.show()
