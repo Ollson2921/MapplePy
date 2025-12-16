@@ -1,7 +1,7 @@
 """Different strategy packs for MappedTileScope."""
 
 from comb_spec_searcher import StrategyPack, AtomStrategy
-from mapplings import MappedTiling, ParameterList, Parameter
+from mapplings import MappedTiling
 from .verification_strategy import (
     NoParameterVerificationStrategy,
     MapplingVerticalInsertionEncodableVerificationStrategy,
@@ -20,9 +20,9 @@ from .tilescope_strategies import (
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
-    ParamPlacementFactory,
+    # ParamPlacementFactory,
     # AvoiderExorcismFactory,
-    ParameterInsertionFactory,
+    # ParameterInsertionFactory,
     MapplingILFactorStrategy,
     MapplingInvertedILFactorStrategy,
 )
