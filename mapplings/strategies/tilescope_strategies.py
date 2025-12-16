@@ -15,7 +15,6 @@ from tilescope.strategies import (
     ColInsertionFactory,
     RequirementInsertionStrategy,
 )
-
 from tilescope.strategies.point_placements import (
     DIR_LEFT_BOT,
     DIR_RIGHT_BOT,
@@ -29,8 +28,9 @@ from comb_spec_searcher import (
     CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
+from comb_spec_searcher.strategies import Strategy
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling
+from mapplings import MappedTiling, ParameterList
 from mapplings.algorithms import (
     MTRequirementPlacement,
     Factor,
@@ -149,6 +149,21 @@ class MapplingColPlacementFactory(ColInsertionFactory):
             indices = tuple(0 for _ in all_gcps)
             for direction in [DIR_LEFT, DIR_RIGHT]:
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
+
+
+class EnumeratorCorrection(Strategy[MappedTiling, GriddedCayleyPerm]):
+    """Removes 0x0 enumerators and [NOT YET] adjusts counts"""
+
+    def decomposition_function(self, comb_class):
+        avoiders, containers, enumerators = comb_class.ace_parameters()
+        new_enumerators = []
+        for e_list in enumerators:
+            new_e_list = ParameterList(
+                (param for param in e_list if param.dimensions != (0, 0))
+            )
+            if new_e_list:
+                new_enumerators.append(new_e_list)
+        return MappedTiling(comb_class.tiling, avoiders, containers, new_enumerators)
 
 
 class MapplingVerticalInsertionEncodingRequirementInsertionFactory(

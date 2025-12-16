@@ -131,6 +131,28 @@ class ParamCleaner(GenericCleaner[Parameter]):
                     break
         return new_param
 
+    @staticmethod
+    @reg(4, run_on_avoiders=False, run_on_containers=False)
+    def remove_injective_rows_and_cols(param: Parameter) -> Parameter:
+        """Gets rid of one-to-one rows/cols in an enumerator"""
+        cols, image_cols = map(set[int], zip(*param.col_map.items()))
+        rows, image_rows = map(set[int], zip(*param.row_map.items()))
+        col_preimages, row_preimages = param.map.preimage_map()
+        blank_cols, blank_rows = map(set[int], param.find_blank_columns_and_rows())
+        if len(cols) == len(image_cols):
+            to_delete = tuple[int]()
+            for preimages in row_preimages.values():
+                if len(preimages) == 1:
+                    to_delete += preimages
+            return param.delete_rows_and_columns([], set(to_delete) & blank_rows)
+        if len(rows) == len(image_rows):
+            to_delete = tuple[int]()
+            for preimages in col_preimages.values():
+                if len(preimages) == 1:
+                    to_delete += preimages
+            return param.delete_rows_and_columns(set(to_delete) & blank_cols, [])
+        return param
+
     # Internal Methods
 
     @staticmethod
