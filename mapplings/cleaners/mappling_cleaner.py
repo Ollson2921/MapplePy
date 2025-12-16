@@ -254,8 +254,6 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             CayleyPermutation((0, 0)),
         )
         small_obs = set(ob for ob in mappling.obstructions if ob.pattern in look_for)
-        if not small_obs:
-            return mappling
         new_mappling = MappedTiling(mappling.tiling, *mappling.ace_parameters())
 
         for ob in small_obs:
@@ -484,15 +482,15 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             return param
         new_ghost = Tiling(param.obstructions, param.requirements, param.dimensions)
         increasing = input_ob.pattern[0] < input_ob.pattern[1]
-        point_cells = param.point_cells()
+        positive_cells = param.positive_cells()
         add_obs = []
-        for point in first_preimages & point_cells:
+        for point in first_preimages & positive_cells:
             for cell in second_preimages:
                 if not point[0] < cell[0]:
                     continue
                 if (point[1] < cell[1]) == increasing:
                     add_obs.append(GriddedCayleyPerm((0,), [cell]))
-        for point in second_preimages & point_cells:
+        for point in second_preimages & positive_cells:
             for cell in first_preimages:
                 if not cell[0] < point[0]:
                     continue
@@ -521,15 +519,15 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         if len(u_cols) == 1 or len(u_rows) == 0:
             return param
         new_ghost = Tiling(param.obstructions, param.requirements, param.dimensions)
-        point_cells = param.point_cells()
+        positive_cells = param.positive_cells()
         add_obs = []
-        for point in first_preimages & point_cells:
+        for point in first_preimages & positive_cells:
             for cell in second_preimages:
                 if not point[0] < cell[0]:
                     continue
                 if point[1] == cell[1]:
                     add_obs.append(GriddedCayleyPerm((0,), [cell]))
-        for point in second_preimages & point_cells:
+        for point in second_preimages & positive_cells:
             for cell in first_preimages:
                 if not cell[0] < point[0]:
                     continue
