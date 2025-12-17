@@ -214,7 +214,8 @@ class MTRequirementPlacement:
                 self.mappling.avoiding_parameters, cell
             )
             new_containing_parameters = self.update_list_of_param_lists(
-                self.mappling.containing_parameters, cell, containing=True
+                self.mappling.containing_parameters,
+                cell,
             )
             new_enumeration_parameters = self.update_list_of_param_lists(
                 self.mappling.enumerating_parameters, cell
@@ -231,18 +232,15 @@ class MTRequirementPlacement:
         self,
         param_lists: Iterable[ParameterList],
         cell: Tuple[int, int],
-        containing: bool = False,
     ) -> list[ParameterList]:
         """Doing directionless point placements in a list of parameter lists and updating maps."""
         new_param_lists = []
         for param_list in param_lists:
-            new_param_lists.append(
-                self.update_param_list(param_list, cell, containing=containing)
-            )
+            new_param_lists.append(self.update_param_list(param_list, cell))
         return new_param_lists
 
     def update_param_list(
-        self, param_list: ParameterList, cell: Tuple[int, int], containing: bool = False
+        self, param_list: ParameterList, cell: Tuple[int, int]
     ) -> ParameterList:
         """Doing directionless point placements in parameter list and updating maps.
         if 'containing' is True, then we are updating a containing parameter list, so if
@@ -274,8 +272,6 @@ class MTRequirementPlacement:
                 else:
                     new_map = self.map_for_param_unchanged(parameter, cell)
                     new_param_list.append(Parameter(parameter.ghost, new_map))
-        if containing and not new_param_list:
-            new_param_list.append(Parameter.empty_parameter())
         return ParameterList(new_param_list)
 
     def new_parameter_from_point_placed_tiling(

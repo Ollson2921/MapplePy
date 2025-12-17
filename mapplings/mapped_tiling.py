@@ -144,7 +144,11 @@ class MappedTiling(Tiling):
         Returns True if the tiling is empty or there is a contradiction between
         containing and avoiding parameters.
         """
-        return self.tiling.is_empty() or self.parameters_are_contradictory()
+        return (
+            self.tiling.is_empty()
+            or self.parameters_are_contradictory()
+            or any(len(c_list) == 0 for c_list in self.containing_parameters)
+        )
 
     # requirement insertion functions
 
@@ -275,6 +279,7 @@ class MappedTiling(Tiling):
             + "\nAvoiding parameters:\n"
             + "\n".join([str(p) for p in self.avoiding_parameters])
             + "\nContaining parameters:\n"
+            + f"{len(self.containing_parameters)} lists "
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
