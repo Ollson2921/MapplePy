@@ -75,19 +75,9 @@ class MappedTiling(Tiling):
         """
         if not self.avoiding_parameters:
             return False
-        len_one_cont_params = [
-            contain_list
-            for contain_list in self.containing_parameters
-            if len(contain_list) == 1
-        ]
-        if not len_one_cont_params:
-            return False
-        if any(
-            avoiding_parameter in contain_list
-            for contain_list in len_one_cont_params
-            for avoiding_parameter in self.avoiding_parameters
-        ):
-            return True
+        for c_list in self.containing_parameters:
+            if all(param in self.avoiding_parameters for param in c_list):
+                return True
         return False
 
     @classmethod
