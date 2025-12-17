@@ -29,6 +29,11 @@ class Parameter(Tiling):
             ghost.obstructions, ghost.requirements, ghost.dimensions, False
         )
 
+    @classmethod
+    def empty_parameter(cls) -> "Parameter":
+        """Returns an empty parameter."""
+        return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
+
     def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
         return self.map.image_cells
