@@ -269,7 +269,6 @@ class MappedTiling(Tiling):
             + "\nAvoiding parameters:\n"
             + "\n".join([str(p) for p in self.avoiding_parameters])
             + "\nContaining parameters:\n"
-            + f"{len(self.containing_parameters)} lists "
             + "\nNew containing parameters list \n".join(
                 ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
             )
