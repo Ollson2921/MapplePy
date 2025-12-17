@@ -242,10 +242,7 @@ class MTRequirementPlacement:
     def update_param_list(
         self, param_list: ParameterList, cell: Tuple[int, int]
     ) -> ParameterList:
-        """Doing directionless point placements in parameter list and updating maps.
-        if 'containing' is True, then we are updating a containing parameter list, so if
-        all params in the list are empty then keep the list containing the empty param. For
-        avoiders the list would become empty."""
+        """Doing directionless point placements in parameter list and updating maps."""
         new_param_list = []
         for parameter in param_list:
             if cell in parameter.image_cells():
