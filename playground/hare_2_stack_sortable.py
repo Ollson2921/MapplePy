@@ -5,6 +5,10 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings.strategies import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 import json
+from mapplings.cleaners import MTCleaner, ParamCleaner
+
+MTCleaner.global_debug_toggle(2)
+ParamCleaner.global_debug_toggle(2)
 
 til = MappedTiling.from_vincular_with_obs(CayleyPermutation([2, 1, 3, 0]), [])
 ghost = til.add_obstructions([GriddedCayleyPerm(CayleyPermutation([0]), [(2, 8)])])
@@ -26,23 +30,25 @@ mappling = MappedTiling(
     [],
 )
 pack = MappedTileScopePack.point_placement(mappling)
-searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
+searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=True)
 
 spec = searcher.auto_search(status_update=30)
 spec.show()
 
-json_dict = spec.to_jsonable()
-json_str = json.dumps(json_dict)
-with open("hare_2_stack_sortable.json", "w") as f:
-    f.write(json_str)
+spec.sanity_check()
 
-new_spec = spec.expand_verified()
-new_spec.show()
+# json_dict = spec.to_jsonable()
+# json_str = json.dumps(json_dict)
+# with open("hare_2_stack_sortable.json", "w") as f:
+#     f.write(json_str)
 
-json_dict = new_spec.to_jsonable()
-json_str = json.dumps(json_dict)
-with open("hare_2_stack_sortable_expanded.json", "w") as f:
-    f.write(json_str)
+# new_spec = spec.expand_verified()
+# new_spec.show()
 
-new_spec.get_genf()
-print([new_spec.count_objects_of_size(i) for i in range(10)])
+# json_dict = new_spec.to_jsonable()
+# json_str = json.dumps(json_dict)
+# with open("hare_2_stack_sortable_expanded.json", "w") as f:
+#     f.write(json_str)
+
+# new_spec.get_genf()
+# print([new_spec.count_objects_of_size(i) for i in range(10)])

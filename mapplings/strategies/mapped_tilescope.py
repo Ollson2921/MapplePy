@@ -30,6 +30,34 @@ class MappedTileScopePack(StrategyPack):
         super().__init__(*args, **kwargs)
 
     @classmethod
+    def no_ver_point_placement(cls):
+        """
+        Create a point placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                # CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingCellInsertionFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+            ],
+            name="Point placements, no parameterless verification strategy",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
     def no_param_ver_point_placement(cls):
         """
         Create a point placement strategy pack for the given root mapped tiling.
@@ -83,6 +111,34 @@ class MappedTileScopePack(StrategyPack):
                 AtomStrategy(),
                 MapplingVerticalInsertionEncodableVerificationStrategy(),
                 MapplingHorizontalInsertionEncodableVerificationStrategy(),
+            ],
+            name="Row and col placements, no parameterless verification strategy",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def no_ver_row_and_col_placement(cls):
+        """
+        Create a row and column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                # CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingRowPlacementFactory(),
+                    MapplingColPlacementFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
             ],
             name="Row and col placements, no parameterless verification strategy",
             symmetries=[],

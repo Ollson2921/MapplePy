@@ -235,3 +235,14 @@ ten_point_one = MappedTiling(
 
 L_classes = [l0, l1, l3, l4, l5, l7]
 all_other_mapplings = [motzkin, inc_inc, hare_2_stack, ten_point_one]
+
+
+# from comb_spec_searcher import CombinatorialSpecification
+# import json
+
+# with open("from_table_7_point_place.json", "r") as f:
+#     load_dict = eval(f.readline())
+# spec = CombinatorialSpecification.from_dict(load_dict)
+# spec.show()
+# for n in range(10):
+#     print(spec.count_objects_of_size(n))
