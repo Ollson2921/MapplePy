@@ -410,5 +410,75 @@ class Parameter(Tiling):
             return NotImplemented
         return (self.ghost, self.map) < (other.ghost, other.map)
 
+    def _string_table(self) -> list[str]:
+        """Creates a list of strings for each row of the __str__ grid"""
+        if self.dimensions == (0, 0):
+            return ["┌ ┐", " ε ", "└ ┘"]
+        cell_labels = self.cell_labels
+
+        # Style
+        for cell in self.empty_cells():
+            cell_labels[cell] = "░"
+            if cell in self.point_rows:
+                cell_labels[cell] = "#"
+        row_separator = "├" + ("┼─" * self.dimensions[0] + "┤")[1:]
+        internal_row = "├" + ("┼ " * self.dimensions[0] + "┤")[1:]
+        top_row = "┌" + ("┬─" * self.dimensions[0])[1:] + "┐"
+        bottom_row = "└" + ("┴─" * self.dimensions[0])[1:] + "┘"
+
+        # Make Table
+        final_table = [row_separator]
+        for row in range(self.dimensions[1]):
+            new_row = "│"
+            for col in range(self.dimensions[0]):
+                cell_end = "│"
+                if col < self.dimensions[0] - 1:
+                    if self.col_map[col] == self.col_map[col + 1]:
+                        cell_end = " "
+                label = " "
+                if (col, row) in cell_labels:
+                    label = self.cell_labels[(col, row)]
+                new_row += label + cell_end
+            separator = row_separator
+            if row < self.dimensions[1] - 1:
+                if self.row_map[row] == self.row_map[row + 1]:
+                    separator = internal_row
+            final_table += [new_row + f"{self.row_map[row]}", separator]
+        final_table.reverse()
+        final_table[0] = top_row
+        final_table[-1] = bottom_row
+        final_table.append(
+            " " + " ".join((str(value) for _, value in self.col_map.items()))
+        )
+        return final_table
+
     def __str__(self) -> str:
-        return str(self.map) + "\n" + str(self.ghost)
+        crossing_string = "\nCrossing obstructions: \n"
+        cayley_ob = CayleyPermutation((0, 0))
+        for ob in self.obstructions:
+            if len(set(ob.positions)) > 1 and ob.pattern != cayley_ob:
+                crossing_string += f"{ob} \n"
+
+        requirements_string = "\n"
+        for i, req_list in enumerate(self.requirements):
+            requirements_string += f"Requirements {i}: \n"
+            for req in req_list:
+                requirements_string += f"{req} \n"
+
+        key_dict = dict[str, list[CayleyPermutation]]()
+        for cell, label in self.cell_labels.items():
+            if not label.isalpha():
+                continue
+            if label not in key_dict:
+                key_dict[label] = self.cell_basis[cell][0]
+        if key_dict:
+            key_string = "\nKey: \n"
+            for label, patts in key_dict.items():
+                basis_string = ", ".join(map(str, patts))
+                key_string += f"{label}: Av({basis_string}) \n"
+        else:
+            key_string = ""
+
+        grid = "\n".join(self._string_table())
+
+        return grid + key_string + requirements_string + crossing_string
