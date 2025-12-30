@@ -443,7 +443,10 @@ class Parameter(Tiling):
             if row < self.dimensions[1] - 1:
                 if self.row_map[row] == self.row_map[row + 1]:
                     separator = internal_row
-            final_table += [new_row + f"{self.row_map[row]}", separator]
+            new_row += f"{self.row_map[row]}"
+            if row in self.point_rows:
+                new_row += "*"
+            final_table += [new_row, separator]
         final_table.reverse()
         final_table[0] = top_row
         final_table[-1] = bottom_row
