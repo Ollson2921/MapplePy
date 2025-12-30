@@ -459,7 +459,7 @@ class Parameter(Tiling):
         crossing_string = "\nCrossing obstructions: \n"
         cayley_ob = CayleyPermutation((0, 0))
         for ob in self.obstructions:
-            if len(set(ob.positions)) > 1 and ob.pattern != cayley_ob:
+            if len(set(ob.positions)) != 1 and ob.pattern != cayley_ob:
                 crossing_string += f"{ob} \n"
 
         requirements_string = "\n"
