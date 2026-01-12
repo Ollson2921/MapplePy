@@ -112,6 +112,7 @@ class CleanerLog(Generic[T]):
         self.name = name
         self.log_level = log_level
         self.debug_level = debug_level
+        self.debug_depth = 2
         self.functions = logged_functions
         self.tracker = {
             getattr(func, "log_id"): {
@@ -273,8 +274,10 @@ class CleanerLog(Generic[T]):
                 self._update_log(func, elapsed_time, changed)
                 if changed:
                     if self.debug_level > 1:
-                        old_counts = cleaning_object.initial_conditions(2)
-                        new_counts = new_object.initial_conditions(2)
+                        old_counts = cleaning_object.initial_conditions(
+                            self.debug_depth
+                        )
+                        new_counts = new_object.initial_conditions(self.debug_depth)
                         assert old_counts == new_counts, (
                             f"Counts differ after {self.name}.{func.__name__}:"
                             + f"\nInitial counts: {old_counts}\nClean counts: {new_counts}"
@@ -460,11 +463,12 @@ class GenericCleaner(Generic[T]):
             logger.tracker = logger.reset_log()
 
     @classmethod
-    def global_debug_toggle(cls, level: int) -> None:
+    def global_debug_toggle(cls, level: int, depth: int = 2) -> None:
         """Applies a debug level to all cleaner instances"""
         cls.DEBUG = level
         for logger in cls.all_loggers:
             logger.debug_level = level
+            logger.debug_depth = depth
 
     @classmethod
     def status_update(cls) -> str:
