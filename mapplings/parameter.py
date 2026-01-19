@@ -443,7 +443,10 @@ class Parameter(Tiling):
             if row < self.dimensions[1] - 1:
                 if self.row_map[row] == self.row_map[row + 1]:
                     separator = internal_row
-            final_table += [new_row + f"{self.row_map[row]}", separator]
+            new_row += f"{self.row_map[row]}"
+            if row in self.point_rows:
+                new_row += "*"
+            final_table += [new_row, separator]
         final_table.reverse()
         final_table[0] = top_row
         final_table[-1] = bottom_row
@@ -451,34 +454,3 @@ class Parameter(Tiling):
             " " + " ".join((str(value) for _, value in self.col_map.items()))
         )
         return final_table
-
-    def __str__(self) -> str:
-        crossing_string = "\nCrossing obstructions: \n"
-        cayley_ob = CayleyPermutation((0, 0))
-        for ob in self.obstructions:
-            if len(set(ob.positions)) > 1 and ob.pattern != cayley_ob:
-                crossing_string += f"{ob} \n"
-
-        requirements_string = "\n"
-        for i, req_list in enumerate(self.requirements):
-            requirements_string += f"Requirements {i}: \n"
-            for req in req_list:
-                requirements_string += f"{req} \n"
-
-        key_dict = dict[str, list[CayleyPermutation]]()
-        for cell, label in self.cell_labels.items():
-            if not label.isalpha():
-                continue
-            if label not in key_dict:
-                key_dict[label] = self.cell_basis[cell][0]
-        if key_dict:
-            key_string = "\nKey: \n"
-            for label, patts in key_dict.items():
-                basis_string = ", ".join(map(str, patts))
-                key_string += f"{label}: Av({basis_string}) \n"
-        else:
-            key_string = ""
-
-        grid = "\n".join(self._string_table())
-
-        return grid + key_string + requirements_string + crossing_string
