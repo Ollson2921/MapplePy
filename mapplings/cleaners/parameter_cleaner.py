@@ -2,7 +2,7 @@
 
 from typing import Iterable
 from gridded_cayley_permutations.row_col_map import RowColMap
-from gridded_cayley_permutations.unplacement import PointUnplacement
+from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
 
@@ -102,34 +102,31 @@ class ParamCleaner(GenericCleaner[Parameter]):
     @reg(2, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
-        found = True
-        new_param = Parameter(param.ghost, param.map)
-        while found:
-            found = False
-            for cell in new_param.point_cells():
-                algo = PointUnplacement(new_param.ghost, cell)
-                if not algo.cell_in_valid_region():
-                    continue
-                if (
-                    not new_param.col_map[cell[0] - 1]
-                    == new_param.col_map[cell[0]]
-                    == new_param.col_map[cell[0] + 1]
-                ):
-                    continue
-                if (
-                    not new_param.row_map[cell[1] - 1]
-                    == new_param.row_map[cell[1]]
-                    == new_param.row_map[cell[1] + 1]
-                ):
-                    continue
-                check_reqs = algo.intersecting_req_list()
-                if PointUnplacement(new_param.ghost, cell).point_can_be_unplaced(
-                    check_reqs
-                ):
-                    new_param = new_param.unplace_point(cell)
-                    found = True
-                    break
-        return new_param
+        algo = PartialUnplacement(param.ghost)
+        points = param.point_cells()
+        cells, cols, rows = set[tuple[int, int]](), set[int](), set[int]()
+        for cell in points:
+            valid = algo.cell_in_valid_region(cell)
+            if valid[0] and param.col_map[cell[0] - 1] == param.col_map[cell[0] + 1]:
+                cells.add(cell)
+                cols.add(cell[0])
+            if valid[1] and param.row_map[cell[1] - 1] == param.row_map[cell[1] + 1]:
+                cells.add(cell)
+                rows.add(cell[1])
+        unplace_cols, unplace_rows = algo.fusable_check(cells, cols, rows)
+        new_ghost = algo.unplace(unplace_cols, unplace_rows)
+        col_preimages, row_preimages = algo.adjustment_map(
+            unplace_cols, unplace_rows
+        ).preimage_map()
+        new_col_map = {
+            i: param.col_map[col_preimages[i][0]]
+            for i in range(new_ghost.dimensions[0])
+        }
+        new_row_map = {
+            i: param.row_map[row_preimages[i][0]]
+            for i in range(new_ghost.dimensions[1])
+        }
+        return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
     # Internal Methods
 
