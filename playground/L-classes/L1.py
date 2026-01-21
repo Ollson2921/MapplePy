@@ -37,23 +37,25 @@ mappling = MappedTiling(
     containing_params,
     [],
 )
-pack = MappedTileScopePack.point_placement(mappling)
+pack = MappedTileScopePack.row_and_col_placement(mappling)
 searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=False)
 spec = searcher.auto_search(status_update=30)
-# spec.show()
+spec.show()
 
-json_dict = spec.to_jsonable()
-json_str = json.dumps(json_dict)
-with open("L1.json", "w") as f:
-    f.write(json_str)
+spec.sanity_check()
 
-new_spec = spec.expand_verified()
-new_spec.show()
+# json_dict = spec.to_jsonable()
+# json_str = json.dumps(json_dict)
+# with open("L1.json", "w") as f:
+#     f.write(json_str)
 
-json_dict = new_spec.to_jsonable()
-json_str = json.dumps(json_dict)
-with open("L1_expanded.json", "w") as f:
-    f.write(json_str)
+# new_spec = spec.expand_verified()
+# new_spec.show()
 
-new_spec.get_genf()
-print([new_spec.count_objects_of_size(i) for i in range(10)])
+# json_dict = new_spec.to_jsonable()
+# json_str = json.dumps(json_dict)
+# with open("L1_expanded.json", "w") as f:
+#     f.write(json_str)
+
+# new_spec.get_genf()
+# print([new_spec.count_objects_of_size(i) for i in range(10)])
