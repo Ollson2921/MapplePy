@@ -12,6 +12,7 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.factors import Factors
 
 Cell = tuple[int, int]
+Objects = defaultdict[tuple[int, ...], list[GriddedCayleyPerm]]
 
 
 class Parameter(Tiling):
@@ -48,6 +49,29 @@ class Parameter(Tiling):
             (value for value in preimage_rows.values() if len(value) == 1)
         )
         return set(product(inj_cols, inj_rows))
+
+    def single_value_cells(self) -> set[Cell]:
+        """Returns the set of cells with at most one value"""
+        cells = set[Cell]()
+        for cell in self.active_cells:
+            if (
+                GriddedCayleyPerm((0, 1), (cell, cell)) in self.obstructions
+                and GriddedCayleyPerm((1, 0), (cell, cell)) in self.obstructions
+            ):
+                cells.add(cell)
+        return cells
+
+    def single_position_cells(self) -> set[Cell]:
+        """Returns the set of cells with at most one position"""
+        cells = set[Cell]()
+        for cell in self.active_cells:
+            if (
+                GriddedCayleyPerm((0, 1), (cell, cell)) in self.obstructions
+                and GriddedCayleyPerm((1, 0), (cell, cell)) in self.obstructions
+                and GriddedCayleyPerm((0, 0), (cell, cell)) in self.obstructions
+            ):
+                cells.add(cell)
+        return cells
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
@@ -364,6 +388,37 @@ class Parameter(Tiling):
             result.insert(index, f"<th style='{rc_style}'>")
 
         return "".join(result)
+
+    def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
+        """Return gridded Cayley permutations of size n in the tiling."""
+        for val in self.get_objects(n).values():
+            yield from val
+
+    def get_objects(self, n: int) -> Objects:
+        """Return the objects of size n in the tiling."""
+        objects = defaultdict(list)
+        col_map = {
+            val: key for key, val in enumerate(sorted(set(self.col_map.values())))
+        }
+        row_map = {
+            val: key for key, val in enumerate(sorted(set(self.row_map.values())))
+        }
+        map_reduction = RowColMap(
+            {key: col_map[val] for key, val in self.col_map.items()},
+            {key: row_map[val] for key, val in self.row_map.items()},
+        )
+        temp = Parameter(self.ghost, map_reduction)
+        base = Tiling([], [], (len(col_map), len(row_map)))
+        for gcp in base.objects_of_size(n):
+            if temp.gcp_has_preimage(gcp):
+                param = self.get_parameters(gcp)
+                objects[param].append(gcp)
+        return objects
+
+    def get_parameters(self, obj: GriddedCayleyPerm) -> tuple[int, ...]:
+        """Parameters are not what you think!!! This is specific to
+        combinatorical class parameters"""
+        return (1,)
 
     # dunder methods
 

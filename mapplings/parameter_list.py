@@ -69,7 +69,7 @@ class ParameterList(frozenset[Parameter]):
         """Removes parameters with empty ghost"""
         return ParameterList(param for param in self if not param.is_empty())
 
-    def simple_remove_redundant(self) -> "ParameterList":
+    def simple_remove_redundant(self, reverse: bool = False) -> "ParameterList":
         """Removes any parameter implied by another through a basic check"""
         exclude = set[Parameter]()
         for param0, param1 in combinations(self, 2):
@@ -82,7 +82,10 @@ class ParameterList(frozenset[Parameter]):
             if param0.map != temp_param.map:
                 continue
             if param0.ghost.is_subset(temp_param.ghost):
-                exclude.add(param1)
+                if reverse:
+                    exclude.add(param0)
+                else:
+                    exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
 
     def to_html(self) -> str:

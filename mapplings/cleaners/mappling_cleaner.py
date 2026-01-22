@@ -226,7 +226,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     @reg(12)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
-        new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
+        new_avoiders = mappling.avoiding_parameters.simple_remove_redundant(True)
         new_containers = [
             c_list.simple_remove_redundant()
             for c_list in mappling.containing_parameters
@@ -279,10 +279,20 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         avoiders, containers, enumerators = mappling.ace_parameters()
         new_avoiders = []
         for avoider in avoiders:
+            if not (avoider.obstructions or avoider.requirements):
+                new_avoiders.append(avoider)
+                continue
+            empty_cells = (
+                set(product(range(avoider.dimensions[0]), range(avoider.dimensions[1])))
+                - avoider.active_cells
+            )
             injective_cells = avoider.active_cells & (
                 avoider.injective_cells() - avoider.point_cells()
             )
-            new_reqs = []
+            if injective_cells == avoider.active_cells and empty_cells:
+                new_avoiders.append(avoider)
+                continue
+            new_reqs, add_reqs = [], set[GriddedCayleyPerm]()
             for req_list in avoider.requirements:
                 req_list_positions = set(
                     chain.from_iterable((req.positions for req in req_list))
@@ -290,10 +300,15 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 if not req_list_positions.issubset(injective_cells):
                     new_reqs.append(req_list)
                     continue
-                new_base = new_base.add_obstructions(
-                    avoider.map.map_gridded_cperms(req_list)
-                )
-            new_obs = avoider.obstructions
+                add_reqs.update(set(req_list))
+            new_base = new_base.add_obstructions(
+                avoider.map.map_gridded_cperms(add_reqs)
+            )
+            new_obs = {
+                ob
+                for ob in avoider.obstructions
+                if not any((ob.contains_gridded_cperm(req) for req in add_reqs))
+            }
             if new_obs or new_reqs:
                 new_avoiders.append(
                     Parameter(
@@ -418,15 +433,22 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         simplify.remove_redundant_obstructions()
         new_obs = []
         for ob in simplify.obstructions:
+            if ob.pattern in (CayleyPermutation([0, 1]), CayleyPermutation([1, 0])):
+                if all(
+                    position in param.single_value_cells() for position in ob.positions
+                ):
+                    new_obs.append(ob)
+                    continue
             if len(set(ob.positions)) == 1:
                 cell = ob.positions[0]
                 if (
-                    cell in point_cells
+                    cell in param.single_value_cells()
                     and (param.col_map[cell[0]], param.row_map[cell[1]])
                     not in mappling_point_cells
                 ):
                     new_obs.append(ob)
                     continue
+
             if any(
                 param.map.map_gridded_cperm(ob).contains_gridded_cperm(mt_ob)
                 for mt_ob in mappling.obstructions

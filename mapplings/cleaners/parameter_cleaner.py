@@ -1,6 +1,7 @@
 """Module with the parameter cleaner"""
 
 from typing import Iterable
+from itertools import chain
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
@@ -61,24 +62,26 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
         columns, rows = param.find_blank_columns_and_rows()
         cols_to_remove, rows_to_remove = set(), set()
-        if param.positive_cells():
-            positive_cols, positive_rows = map(set, zip(*param.positive_cells()))
+        if param.requirements:
+            req_cols, req_rows = zip(
+                *chain(*(set(req.positions) for req in chain(*param.requirements)))
+            )
         else:
-            positive_cols, positive_rows = set(), set()
+            req_cols, req_rows = tuple(), tuple()
 
         def check_for_blank(columns: Iterable[int], image: int, check_rows: bool):
             for col in columns:
                 if check_rows:
                     if col in rows_to_remove:
                         break
-                    if param.row_map[col] == image and col not in positive_rows:
+                    if param.row_map[col] == image and col not in req_rows:
                         rows_to_remove.add(col)
                     else:
                         break
                 else:
                     if col in cols_to_remove:
                         break
-                    if param.col_map[col] == image and col not in positive_cols:
+                    if param.col_map[col] == image and col not in req_cols:
                         cols_to_remove.add(column)
                     else:
                         break
@@ -99,35 +102,66 @@ class ParamCleaner(GenericCleaner[Parameter]):
         ):
             return Parameter(Tiling([], [], (1, 1)), RowColMap({0: 0}, {0: 0}))
 
-        if param.point_cells():
-            cols_with_point, rows_with_point = map(set, zip(*param.point_cells()))
-            temp_cols, temp_rows = set(), set()
-            for col in cols_to_remove:
-                if col - 1 in cols_with_point:
-                    if col + 1 in cols_to_remove:
-                        temp_cols.add(col + 1)
-                else:
-                    temp_cols.add(col)
-            cols_to_remove = set()
-            for col in temp_cols:
-                if col + 1 in cols_with_point:
-                    if col - 1 in temp_cols:
-                        cols_to_remove.add(col - 1)
-                else:
-                    cols_to_remove.add(col)
-            for row in rows_to_remove:
-                if row - 1 in rows_with_point:
-                    if row + 1 in rows_to_remove:
-                        temp_rows.add(row + 1)
-                else:
-                    temp_rows.add(row)
-            rows_to_remove = set()
-            for row in temp_rows:
-                if row + 1 in rows_with_point:
-                    if row - 1 in temp_rows:
-                        rows_to_remove.add(row - 1)
-                else:
-                    rows_to_remove.add(row)
+        single_pos, single_val = (
+            param.single_position_cells(),
+            param.single_value_cells(),
+        )
+        cols_with_point, rows_with_point = set[int](), set[int]()
+        if single_pos:
+            cols_with_point, _ = zip(*single_pos)
+        if single_val:
+            _, rows_with_point = zip(*single_val)
+        temp_cols, temp_rows = set(), set()
+        for col in cols_to_remove:
+            if (
+                col - 1 in cols_with_point
+                and param.col_map[col] == param.col_map[col - 1]
+            ):
+                if (
+                    col + 1 in cols_to_remove
+                    and param.col_map[col] == param.col_map[col + 1]
+                ):
+                    temp_cols.add(col + 1)
+            else:
+                temp_cols.add(col)
+        cols_to_remove = set()
+        for col in temp_cols:
+            if (
+                col + 1 in cols_with_point
+                and param.col_map[col] == param.col_map[col + 1]
+            ):
+                if (
+                    col - 1 in temp_cols
+                    and param.col_map[col] == param.col_map[col - 1]
+                ):
+                    cols_to_remove.add(col - 1)
+            else:
+                cols_to_remove.add(col)
+        for row in rows_to_remove:
+            if (
+                row - 1 in rows_with_point
+                and param.row_map[row] == param.row_map[row - 1]
+            ):
+                if (
+                    row + 1 in rows_to_remove
+                    and param.row_map[row] == param.row_map[row + 1]
+                ):
+                    temp_rows.add(row + 1)
+            else:
+                temp_rows.add(row)
+        rows_to_remove = set()
+        for row in temp_rows:
+            if (
+                row + 1 in rows_with_point
+                and param.row_map[row] == param.row_map[row + 1]
+            ):
+                if (
+                    row - 1 in temp_rows
+                    and param.row_map[row] == param.row_map[row - 1]
+                ):
+                    rows_to_remove.add(row - 1)
+            else:
+                rows_to_remove.add(row)
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
