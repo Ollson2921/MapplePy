@@ -59,7 +59,7 @@ class Parameter(Tiling):
         """Determines if the sub-gridding of the gcp that lives in the image region
         has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
-        if not sub_gridding.positions and not self.positive_cells():
+        if not sub_gridding.positions and not self.requirements:
             return True
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.gcp_in_tiling(preimage):

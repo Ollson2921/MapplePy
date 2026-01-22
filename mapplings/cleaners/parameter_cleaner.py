@@ -23,6 +23,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     global_tracker = CleanerLog[Parameter](
         reg.registered_functions, name="Global Tracker"
     )
+
     all_loggers = {global_tracker}
     # Final Methods
 
@@ -57,6 +58,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     @reg(1, run_on_enumerators=False)
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
+
         columns, rows = param.find_blank_columns_and_rows()
         cols_to_remove, rows_to_remove = set(), set()
         if param.positive_cells():
@@ -96,6 +98,36 @@ class ParamCleaner(GenericCleaner[Parameter]):
             or len(rows_to_remove) == param.dimensions[1]
         ):
             return Parameter(Tiling([], [], (1, 1)), RowColMap({0: 0}, {0: 0}))
+
+        if param.point_cells():
+            cols_with_point, rows_with_point = map(set, zip(*param.point_cells()))
+            temp_cols, temp_rows = set(), set()
+            for col in cols_to_remove:
+                if col - 1 in cols_with_point:
+                    if col + 1 in cols_to_remove:
+                        temp_cols.add(col + 1)
+                else:
+                    temp_cols.add(col)
+            cols_to_remove = set()
+            for col in temp_cols:
+                if col + 1 in cols_with_point:
+                    if col - 1 in temp_cols:
+                        cols_to_remove.add(col - 1)
+                else:
+                    cols_to_remove.add(col)
+            for row in rows_to_remove:
+                if row - 1 in rows_with_point:
+                    if row + 1 in rows_to_remove:
+                        temp_rows.add(row + 1)
+                else:
+                    temp_rows.add(row)
+            rows_to_remove = set()
+            for row in temp_rows:
+                if row + 1 in rows_with_point:
+                    if row - 1 in temp_rows:
+                        rows_to_remove.add(row - 1)
+                else:
+                    rows_to_remove.add(row)
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
@@ -114,6 +146,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 cells.add(cell)
                 rows.add(cell[1])
         unplace_cols, unplace_rows = algo.fusable_check(cells, cols, rows)
+        if not (unplace_cols or unplace_rows):
+            return param
         new_ghost = algo.unplace(unplace_cols, unplace_rows)
         col_preimages, row_preimages = algo.adjustment_map(
             unplace_cols, unplace_rows

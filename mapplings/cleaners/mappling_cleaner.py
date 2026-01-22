@@ -50,13 +50,15 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 if getattr(func, "run_on_avoiders"):
                     new_avoiders = ParameterList(
                         param.update_active_cells(mappling.tiling)
-                        for param in new_avoiders.apply_to_all(func)
+                        for param in new_avoiders.apply_to_all(
+                            param_cleaner.logger(func)
+                        )
                     )
                 if getattr(func, "run_on_containers"):
                     new_containers = [
                         ParameterList(
                             param.update_active_cells(mappling.tiling)
-                            for param in c_list.apply_to_all(func)
+                            for param in c_list.apply_to_all(param_cleaner.logger(func))
                         )
                         for c_list in new_containers
                     ]
@@ -64,7 +66,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     new_enumerators = [
                         ParameterList(
                             param.update_active_cells(mappling.tiling)
-                            for param in e_list.apply_to_all(func)
+                            for param in e_list.apply_to_all(param_cleaner.logger(func))
                         )
                         for e_list in new_enumerators
                     ]
@@ -277,16 +279,9 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         avoiders, containers, enumerators = mappling.ace_parameters()
         new_avoiders = []
         for avoider in avoiders:
-            empty_cells = (
-                set(product(range(avoider.dimensions[0]), range(avoider.dimensions[1])))
-                - avoider.active_cells
-            )
             injective_cells = avoider.active_cells & (
                 avoider.injective_cells() - avoider.point_cells()
             )
-            if injective_cells == avoider.active_cells and empty_cells:
-                new_avoiders.append(avoider)
-                continue
             new_reqs = []
             for req_list in avoider.requirements:
                 req_list_positions = set(
