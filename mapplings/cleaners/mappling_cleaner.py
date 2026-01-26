@@ -243,7 +243,11 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     def reduce_all_parameter_gcps(mappling: MappedTiling) -> MappedTiling:
         """Removes all obs and reqs that are implied by the base tiling from all Parameters"""
         param_reducer = partial(MTCleaner._reduce_parameter_gcps, mappling)
-        return mappling.apply_to_all_parameters(param_reducer)
+        avoiders, containers, enumerators = mappling.apply_to_all_parameters(
+            param_reducer
+        ).ace_parameters()
+        new_avoiders = ParameterList(av for av in avoiders if av.dimensions != (0, 0))
+        return MappedTiling(mappling.tiling, new_avoiders, containers, enumerators)
 
     @staticmethod
     @reg(11)
@@ -260,12 +264,50 @@ class MTCleaner(GenericCleaner[MappedTiling]):
 
         for ob in small_obs:
             if ob.pattern == CayleyPermutation((0, 0)):
-                new_mappling = new_mappling.apply_to_all_parameters(
-                    MTCleaner._cayley_ob_adjust_param, (ob,)
+                new_avoiders = tuple(
+                    avoider
+                    for avoider in new_mappling.avoiding_parameters.apply_to_all(
+                        MTCleaner._cayley_ob_adjust_param, (ob,)
+                    )
+                    if avoider.dimensions != (0, 0)
+                )
+                new_containers = tuple(
+                    ParameterList(
+                        c_list.apply_to_all(MTCleaner._cayley_ob_adjust_param, (ob,))
+                    )
+                    for c_list in mappling.containing_parameters
+                )
+                new_enumerators = tuple(
+                    ParameterList(
+                        e_list.apply_to_all(MTCleaner._cayley_ob_adjust_param, (ob,))
+                    )
+                    for e_list in mappling.enumerating_parameters
+                )
+                new_mappling = MappedTiling(
+                    mappling.tiling, new_avoiders, new_containers, new_enumerators
                 )
             else:
-                new_mappling = new_mappling.apply_to_all_parameters(
-                    MTCleaner._ob_adjust_param, (ob,)
+                new_avoiders = tuple(
+                    avoider
+                    for avoider in new_mappling.avoiding_parameters.apply_to_all(
+                        MTCleaner._ob_adjust_param, (ob,)
+                    )
+                    if avoider.dimensions != (0, 0)
+                )
+                new_containers = tuple(
+                    ParameterList(
+                        c_list.apply_to_all(MTCleaner._ob_adjust_param, (ob,))
+                    )
+                    for c_list in mappling.containing_parameters
+                )
+                new_enumerators = tuple(
+                    ParameterList(
+                        e_list.apply_to_all(MTCleaner._ob_adjust_param, (ob,))
+                    )
+                    for e_list in mappling.enumerating_parameters
+                )
+                new_mappling = MappedTiling(
+                    mappling.tiling, new_avoiders, new_containers, new_enumerators
                 )
         return new_mappling
 
@@ -527,6 +569,9 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     continue
                 if (cell[1] < point[1]) == increasing:
                     add_obs.append(GriddedCayleyPerm((0,), [cell]))
+        for req_list in param.requirements:
+            if all(req.contains(add_obs) for req in req_list):
+                return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
         return Parameter(new_ghost.add_obstructions(add_obs), param.map)
 
     @staticmethod
