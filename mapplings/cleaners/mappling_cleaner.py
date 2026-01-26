@@ -4,7 +4,7 @@ from typing import Callable, Iterable
 from itertools import chain, product
 from functools import partial
 
-from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
+from gridded_cayley_permutations import GriddedCayleyPerm, Tiling, RowColMap
 from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
     SimplifyObstructionsAndRequirements,
 )
@@ -462,7 +462,21 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 req_list, simplify.requirements
             )
         ]
-        new_ghost = Tiling(new_obs, new_reqs, param.dimensions, simplify=False)
+        final_reqs = []
+        for req_list in new_reqs:
+            new_req_list = [
+                req
+                for req in req_list
+                if all(
+                    not param.map.map_gridded_cperm(req).contains_gridded_cperm(ob)
+                    for ob in mappling.obstructions
+                )
+            ]
+            if new_req_list:
+                final_reqs.append(new_req_list)
+            else:
+                return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
+        new_ghost = Tiling(new_obs, final_reqs, param.dimensions, simplify=False)
         return Parameter(new_ghost, param.map)
 
     @staticmethod

@@ -19,7 +19,7 @@ Cell = tuple[int, int]
 FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
-OPEN_DISPLAY = ""  # Change to "open" for fully expanded html trees
+OPEN_DISPLAY = "open"  # Change to "open" for fully expanded html trees
 
 
 class ParameterList(frozenset[Parameter]):
@@ -90,7 +90,7 @@ class ParameterList(frozenset[Parameter]):
 
     def to_html(self) -> str:
         """Returns a html of all parameters in self seperated by a line"""
-        return "<br>".join((param.to_html_representation() for param in self))
+        return "<br>".join((param.to_html_representation() for param in sorted(self)))
 
     def html_dropdown(self, label: str, border_color: str = "grey") -> str:
         """Makes a cute html dropdown for the parameter list"""

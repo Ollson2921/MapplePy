@@ -458,12 +458,12 @@ class Parameter(Tiling):
     def __leq__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (self.ghost, self.map) <= (other.ghost, other.map)
+        return (self.map, self.ghost) <= (other.map, other.ghost)
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (self.ghost, self.map) < (other.ghost, other.map)
+        return (self.map, self.ghost) < (other.map, other.ghost)
 
     def _string_table(self) -> list[str]:
         """Creates a list of strings for each row of the __str__ grid"""
