@@ -60,20 +60,29 @@ class ParamCleaner(GenericCleaner[Parameter]):
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
 
-        blank = tuple(map(set, param.blank_and_near_blank()))
-        req_cols, req_rows = map(
-            set[int],
-            zip(*chain(*(set(req.positions) for req in chain(*param.requirements)))),
-        )
+        blank = tuple(map(set[int], param.blank_and_near_blank()))
+        if not any(blank):
+            return param
+
         col_preimages, row_preimages = param.map.preimage_map()
+
+        req_cols, req_rows = set[int](), set[int]()
+        if param.requirements:
+            req_cols, req_rows = map(
+                set[int],
+                zip(
+                    *chain(*(set(req.positions) for req in chain(*param.requirements)))
+                ),
+            )
+        cols_with_point, rows_with_point = set[int](), set[int]()
         try:
             cols_with_point, _ = map(set[int], zip(*param.single_position_cells()))
         except ValueError:
-            cols_with_point = set[int]()
+            pass
         try:
             _, rows_with_point = map(set[int], zip(*param.single_value_cells()))
         except ValueError:
-            rows_with_point = set[int]()
+            pass
 
         splits = cols_with_point | req_cols, rows_with_point | req_rows
 
@@ -87,12 +96,11 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 for i, check in enumerate(preimage):
                     if check in splits[find_rows]:
                         section = set(preimage[slice_start:i])
-                        if len(section) > 1:
-                            try:
-                                yield section - {tuple(section & blank[find_rows])[0]}
-                            except IndexError:
-                                pass
                         slice_start = i + 1
+                        try:
+                            yield section - {tuple(section & blank[find_rows])[0]}
+                        except ValueError:
+                            pass
                 if slice_start == 0:
                     yield set(preimage)
 
