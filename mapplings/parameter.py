@@ -142,6 +142,25 @@ class Parameter(Tiling):
         temp.active_cells = self.active_cells
         return temp
 
+    def blank_and_near_blank(self) -> tuple[tuple[int, ...], tuple[int, ...]]:
+        if self.dimensions == (0, 0):
+            return tuple(), tuple()
+        if not self.obstructions and not self.requirements:
+            return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
+        req_cells = tuple(
+            chain(*(set(req.positions) for req in chain(*self.requirements)))
+        )
+        check_cells = (
+            cell
+            for cell in self.not_blank_cells()
+            if cell in req_cells
+            or (cell[0] not in self.point_cols and cell[1] not in self.point_rows)
+        )
+        not_blank_cols, not_blank_rows = zip(*check_cells)
+        blank_cols = tuple(set(range(self.dimensions[0])) - set(not_blank_cols))
+        blank_rows = tuple(set(range(self.dimensions[1])) - set(not_blank_rows))
+        return blank_cols, blank_rows
+
     def find_blank_columns_and_rows_in_param(
         self, tiling: Tiling
     ) -> tuple[list[int], list[int]]:
