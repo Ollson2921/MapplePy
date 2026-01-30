@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from copy import copy
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Optional
 from itertools import product, chain
 
 from cayley_permutations import CayleyPermutation
@@ -407,6 +407,42 @@ class Parameter(Tiling):
             result.insert(index, f"<th style='{rc_style}'>")
 
         return "".join(result)
+
+    def compare_to(
+        self, other: "Parameter", depth: int = 4
+    ) -> tuple[bool, Optional[GriddedCayleyPerm]]:
+        """Compares the gcps that live on self to the gcps on other up to size depth"""
+
+        col_map = {
+            val: key
+            for key, val in enumerate(
+                sorted(set(self.col_map.values()) | set(other.col_map.values()))
+            )
+        }
+        row_map = {
+            val: key
+            for key, val in enumerate(
+                sorted(set(self.row_map.values()) | set(other.row_map.values()))
+            )
+        }
+        self_reduction = RowColMap(
+            {key: col_map[val] for key, val in self.col_map.items()},
+            {key: row_map[val] for key, val in self.row_map.items()},
+        )
+        other_reduction = RowColMap(
+            {key: col_map[val] for key, val in other.col_map.items()},
+            {key: row_map[val] for key, val in other.row_map.items()},
+        )
+        temp_self = Parameter(self.ghost, self_reduction)
+        temp_other = Parameter(other.ghost, other_reduction)
+        base = Tiling([], [], (len(col_map), len(row_map)))
+        i = 0
+        while i < depth:
+            for gcp in base.objects_of_size(i):
+                if temp_self.gcp_has_preimage(gcp) != temp_other.gcp_has_preimage(gcp):
+                    return False, gcp
+            i += 1
+        return True, None
 
     def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
         """Return gridded Cayley permutations of size n in the tiling."""
