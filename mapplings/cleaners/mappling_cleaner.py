@@ -469,7 +469,6 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             param.map.preimage_of_requirements(mappling.requirements),
             mappling.dimensions,
         )
-        point_cells = param.point_cells()
         mappling_point_cells = mappling.point_cells()
         simplify.remove_factors_from_obstructions()
         simplify.remove_redundant_obstructions()
