@@ -11,7 +11,7 @@ from mapplings import MappedTiling, Parameter, ParameterList
 from mapplings.cleaners import MTCleaner, ParamCleaner
 
 MTCleaner.DEBUG = 2
-ParamCleaner.DEBUG = 2
+ParamCleaner.DEBUG = 0
 
 
 @pytest.mark.skip(reason="strategy not working yet")
