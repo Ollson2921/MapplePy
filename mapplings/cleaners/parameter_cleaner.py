@@ -99,7 +99,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
                         slice_start = i + 1
                         try:
                             yield section - {tuple(section & blank[find_rows])[0]}
-                        except ValueError:
+                        except IndexError:
                             pass
                 if slice_start == 0:
                     yield set(preimage)
