@@ -143,6 +143,7 @@ class Parameter(Tiling):
         return temp
 
     def blank_and_near_blank(self) -> tuple[tuple[int, ...], tuple[int, ...]]:
+        """Finds blank rows and cols allowing point row/col intersection"""
         if self.dimensions == (0, 0):
             return tuple(), tuple()
         if not self.obstructions and not self.requirements:
