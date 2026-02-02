@@ -410,5 +410,47 @@ class Parameter(Tiling):
             return NotImplemented
         return (self.ghost, self.map) < (other.ghost, other.map)
 
-    def __str__(self) -> str:
-        return str(self.map) + "\n" + str(self.ghost)
+    def _string_table(self) -> list[str]:
+        """Creates a list of strings for each row of the __str__ grid"""
+        if self.dimensions == (0, 0):
+            return ["┌ ┐", " ε ", "└ ┘"]
+        cell_labels = self.cell_labels
+
+        # Style
+        for cell in self.empty_cells():
+            cell_labels[cell] = "░"
+            if cell in self.point_rows:
+                cell_labels[cell] = "#"
+        row_separator = "├" + ("┼─" * self.dimensions[0] + "┤")[1:]
+        internal_row = "├" + ("┼ " * self.dimensions[0] + "┤")[1:]
+        top_row = "┌" + ("┬─" * self.dimensions[0])[1:] + "┐"
+        bottom_row = "└" + ("┴─" * self.dimensions[0])[1:] + "┘"
+
+        # Make Table
+        final_table = [row_separator]
+        for row in range(self.dimensions[1]):
+            new_row = "│"
+            for col in range(self.dimensions[0]):
+                cell_end = "│"
+                if col < self.dimensions[0] - 1:
+                    if self.col_map[col] == self.col_map[col + 1]:
+                        cell_end = " "
+                label = " "
+                if (col, row) in cell_labels:
+                    label = self.cell_labels[(col, row)]
+                new_row += label + cell_end
+            separator = row_separator
+            if row < self.dimensions[1] - 1:
+                if self.row_map[row] == self.row_map[row + 1]:
+                    separator = internal_row
+            new_row += f"{self.row_map[row]}"
+            if row in self.point_rows:
+                new_row += "*"
+            final_table += [new_row, separator]
+        final_table.reverse()
+        final_table[0] = top_row
+        final_table[-1] = bottom_row
+        final_table.append(
+            " " + " ".join((str(value) for _, value in self.col_map.items()))
+        )
+        return final_table

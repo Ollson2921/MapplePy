@@ -19,6 +19,8 @@ Cell = tuple[int, int]
 FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
+OPEN_DISPLAY = ""  # Change to "open" for fully expanded html trees
+
 
 class ParameterList(frozenset[Parameter]):
     """A tiling (called a ghost) mapping to a base tiling."""
@@ -97,7 +99,7 @@ class ParameterList(frozenset[Parameter]):
             padding-right : 29px;
             """
         return (
-            f'<details style = "{style}"><summary>{label}</summary>'
+            f'<details {OPEN_DISPLAY} style = "{style}"><summary>{label}</summary>'
             + f"<br>{self.to_html()}</details>"
         )
 
