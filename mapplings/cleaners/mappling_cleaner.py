@@ -248,9 +248,11 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     def small_ob_inferral(mappling: MappedTiling) -> MappedTiling:
         """Adds point obstructions implied by param point cells
         and small base tiling obstructions"""
-        if not mappling.obstructions:
-            return mappling
-        look_for = (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
+        look_for = (
+            CayleyPermutation((0, 1)),
+            CayleyPermutation((1, 0)),
+            CayleyPermutation((0, 0)),
+        )
         small_obs = set(ob for ob in mappling.obstructions if ob.pattern in look_for)
         new_mappling = MappedTiling(mappling.tiling, *mappling.ace_parameters())
 
