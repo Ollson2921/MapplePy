@@ -67,7 +67,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
         col_preimages, row_preimages = param.map.preimage_map()
 
         try:
-            splits = tuple(map(set[int], zip(*param.requirement_cells())))
+            req_cols, req_rows = map(set[int], zip(*param.requirement_cells()))
+            splits = req_cols, req_rows
         except ValueError:
             splits = set[int](), set[int]()
 
