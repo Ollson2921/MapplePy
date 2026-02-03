@@ -142,6 +142,12 @@ class Parameter(Tiling):
         temp.active_cells = self.active_cells
         return temp
 
+    def requirement_cells(self) -> set[Cell]:
+        """Returns every cell that contains a requirement"""
+        if not self.requirements:
+            return set[Cell]()
+        return set(chain(*(set(req.positions) for req in chain(*self.requirements))))
+
     def blank_and_near_blank(self) -> tuple[tuple[int, ...], tuple[int, ...]]:
         """Finds blank rows and cols allowing point row/col intersection"""
         if self.dimensions == (0, 0):

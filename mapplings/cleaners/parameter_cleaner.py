@@ -66,31 +66,19 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
         col_preimages, row_preimages = param.map.preimage_map()
 
-        req_cols, req_rows = set[int](), set[int]()
-        if param.requirements:
-            req_cols, req_rows = map(
-                set[int],
-                zip(
-                    *chain(*(set(req.positions) for req in chain(*param.requirements)))
-                ),
-            )
-        cols_with_point, rows_with_point = set[int](), set[int]()
         try:
-            cols_with_point, _ = map(set[int], zip(*param.single_position_cells()))
+            splits = tuple(map(set[int], zip(*param.requirement_cells())))
         except ValueError:
-            pass
-        try:
-            _, rows_with_point = map(set[int], zip(*param.single_value_cells()))
-        except ValueError:
-            pass
-
-        splits = cols_with_point | req_cols, rows_with_point | req_rows
+            splits = set[int](), set[int]()
 
         def to_remove(
             preimages: dict[int, tuple[int, ...]], find_rows: bool
         ) -> Iterator[set[int]]:
             for preimage in sorted(preimages.values()):
                 if not set(preimage) & blank[find_rows]:
+                    continue
+                if not splits[find_rows]:
+                    yield set(preimage)
                     continue
                 slice_start = 0
                 for i, check in enumerate(preimage):
@@ -110,7 +98,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
             len(cols_to_remove) == param.dimensions[0]
             or len(rows_to_remove) == param.dimensions[1]
         ):
-            return Parameter(Tiling([], [], (1, 1)), RowColMap({0: 0}, {0: 0}))
+            return Parameter(Tiling([], [], (0, 0)), RowColMap({}, {}))
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
@@ -163,7 +151,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
                         new_ghost = new_ghost.delete_columns([new_idx])
                     del new_maps[fuse_rows][old_idx + extend]
                     extend += 1
-                    continue
             old_idx += extend
             new_idx += 1
             extend = 1
