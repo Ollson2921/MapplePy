@@ -152,6 +152,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
                         new_ghost = new_ghost.delete_columns([new_idx])
                     del new_maps[fuse_rows][old_idx + extend]
                     extend += 1
+                    continue
             old_idx += extend
             new_idx += 1
             extend = 1
