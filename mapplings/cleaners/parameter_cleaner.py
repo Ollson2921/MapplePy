@@ -39,6 +39,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
         temp = Parameter(
             Tiling(param.obstructions, [], param.dimensions, False), param.map
         ).delete_rows_and_columns(deleted_cols, deleted_rows)
+        if not param.requirements:
+            return temp
         new_ghost = Tiling(
             temp.obstructions,
             [

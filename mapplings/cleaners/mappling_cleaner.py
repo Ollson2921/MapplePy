@@ -275,16 +275,16 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     ParameterList(
                         c_list.apply_to_all(MTCleaner._cayley_ob_adjust_param, (ob,))
                     )
-                    for c_list in mappling.containing_parameters
+                    for c_list in new_mappling.containing_parameters
                 )
                 new_enumerators = tuple(
                     ParameterList(
                         e_list.apply_to_all(MTCleaner._cayley_ob_adjust_param, (ob,))
                     )
-                    for e_list in mappling.enumerating_parameters
+                    for e_list in new_mappling.enumerating_parameters
                 )
                 new_mappling = MappedTiling(
-                    mappling.tiling, new_avoiders, new_containers, new_enumerators
+                    new_mappling.tiling, new_avoiders, new_containers, new_enumerators
                 )
             else:
                 new_avoiders = tuple(
@@ -298,16 +298,16 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     ParameterList(
                         c_list.apply_to_all(MTCleaner._ob_adjust_param, (ob,))
                     )
-                    for c_list in mappling.containing_parameters
+                    for c_list in new_mappling.containing_parameters
                 )
                 new_enumerators = tuple(
                     ParameterList(
                         e_list.apply_to_all(MTCleaner._ob_adjust_param, (ob,))
                     )
-                    for e_list in mappling.enumerating_parameters
+                    for e_list in new_mappling.enumerating_parameters
                 )
                 new_mappling = MappedTiling(
-                    mappling.tiling, new_avoiders, new_containers, new_enumerators
+                    new_mappling.tiling, new_avoiders, new_containers, new_enumerators
                 )
         return new_mappling
 
