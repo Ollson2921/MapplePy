@@ -1,6 +1,6 @@
 """Module with the parameter cleaner"""
 
-from typing import Iterator
+from typing import Iterator, Iterable
 from itertools import chain
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.unplacement import PartialUnplacement
@@ -26,15 +26,29 @@ class ParamCleaner(GenericCleaner[Parameter]):
     )
 
     all_loggers = {global_tracker}
+
     # Final Methods
 
     @staticmethod
     @reg(3, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
-        return ParamCleaner._fuse_valid_rows_or_cols(
-            ParamCleaner._fuse_valid_rows_or_cols(param, True), False
+        deleted_cols, deleted_rows = ParamCleaner._find_indixes_to_fuse(
+            param, False
+        ), ParamCleaner._find_indixes_to_fuse(param, True)
+        temp = Parameter(
+            Tiling(param.obstructions, [], param.dimensions, False), param.map
+        ).delete_rows_and_columns(deleted_cols, deleted_rows)
+        new_ghost = Tiling(
+            temp.obstructions,
+            [
+                ParamCleaner._make_adjustment_map(
+                    param, deleted_cols, deleted_rows
+                ).map_gridded_cperms(param.minimal_gridded_cperms())
+            ],
+            temp.dimensions,
         )
+        return Parameter(new_ghost, temp.map)
 
     @staticmethod
     @reg(0)
@@ -137,28 +151,37 @@ class ParamCleaner(GenericCleaner[Parameter]):
     # Internal Methods
 
     @staticmethod
-    def _fuse_valid_rows_or_cols(param: Parameter, fuse_rows: bool) -> Parameter:
-        """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
-        direction = 0 for cols, directions = 1 for rows"""
-        new_ghost = param.ghost
-        new_maps = [param.col_map, param.row_map]
-        old_idx, new_idx, extend = 0, 0, 1
-        while old_idx + extend < param.dimensions[fuse_rows]:
-            if new_maps[fuse_rows][old_idx] == new_maps[fuse_rows][old_idx + extend]:
-                if new_ghost.is_fusable(fuse_rows, new_idx):
-                    if fuse_rows:
-                        new_ghost = new_ghost.delete_rows([new_idx])
-                    else:
-                        new_ghost = new_ghost.delete_columns([new_idx])
-                    del new_maps[fuse_rows][old_idx + extend]
-                    extend += 1
-                    continue
-            old_idx += extend
-            new_idx += 1
-            extend = 1
-        new_direction_map = {
-            idx: new_maps[fuse_rows][value]
-            for idx, value in enumerate(new_maps[fuse_rows].keys())
-        }
-        new_maps[fuse_rows] = new_direction_map
-        return Parameter(new_ghost, RowColMap(*new_maps))
+    def _find_indixes_to_fuse(param: Parameter, fuse_rows: bool) -> Iterator[int]:
+        """Yields all indices that can be fused"""
+        maps = param.col_map, param.row_map
+        temp = Parameter(
+            Tiling(param.obstructions, [], param.dimensions, False), param.map
+        )
+        for i in range(param.dimensions[fuse_rows] - 1):
+            if maps[fuse_rows][i] == maps[fuse_rows][i + 1]:
+                if temp.is_fusable(fuse_rows, i):
+                    yield i
+
+    @staticmethod
+    def _make_adjustment_map(
+        original_param: Parameter,
+        deleted_cols: Iterable[int],
+        deleted_rows: Iterable[int],
+    ) -> RowColMap:
+        """Makes a map from original param to that param after cols and rows are deleted"""
+        col_correction, row_correction = dict[int, int](), dict[int, int]()
+        adjust = 0
+        for i in range(original_param.dimensions[0]):
+            if i in deleted_cols:
+                col_correction[i] = col_correction[i - 1]
+                adjust += 1
+            else:
+                col_correction[i] = i - adjust
+        adjust = 0
+        for i in range(original_param.dimensions[1]):
+            if i in deleted_rows:
+                row_correction[i] = row_correction[i - 1]
+                adjust += 1
+            else:
+                row_correction[i] = i - adjust
+        return RowColMap(col_correction, row_correction)
