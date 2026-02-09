@@ -295,7 +295,16 @@ class Parameter(Tiling):
         cols, rows = zip(*cells)
         cols_to_delete = {i for i in range(self.dimensions[0]) if i not in cols}
         rows_to_delete = {i for i in range(self.dimensions[1]) if i not in rows}
-        return self.delete_rows_and_columns(cols_to_delete, rows_to_delete)
+        temp = Tiling(self.obstructions, [], self.dimensions)
+        for req_list in self.requirements:
+            new_req_list = set[GriddedCayleyPerm]()
+            for req in req_list:
+                if any(pos in cells for pos in req.positions):
+                    new_req_list.add(req.sub_gridded_cayley_perm(cells))
+            if len(new_req_list) == len(req_list):
+                temp = temp.add_requirement_list(new_req_list)
+        new_param = Parameter(temp, self.map)
+        return new_param.delete_rows_and_columns(cols_to_delete, rows_to_delete)
 
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""

@@ -72,20 +72,68 @@ class ParameterList(frozenset[Parameter]):
     def simple_remove_redundant(self, reverse: bool = False) -> "ParameterList":
         """Removes any parameter implied by another through a basic check"""
         exclude = set[Parameter]()
+
+        def match_reverse(smaller: Parameter, bigger: Parameter) -> None:
+            if reverse:
+                exclude.add(smaller)
+            else:
+                exclude.add(bigger)
+
+        def compare(smaller: Parameter, bigger: Parameter) -> bool:
+            temp_bigger = bigger.sub_parameter(
+                bigger.map.preimage_of_cells(smaller.image_cells())
+            )
+            if len(bigger.requirements) != len(temp_bigger.requirements):
+                return False
+
+            if smaller.map != temp_bigger.map:
+                return False
+            if not reverse:
+                if any(smaller.gcp_in_tiling(ob) for ob in temp_bigger.obstructions):
+                    return False
+                for req_list in temp_bigger.requirements:
+                    # any req list that doesnt have any req implied by all reqs of a small req list
+                    if all(
+                        all(
+                            any(small_req.avoids([req]) for small_req in small_list)
+                            for small_list in smaller.requirements
+                        )
+                        for req in req_list
+                    ):
+                        return False
+                return True
+            if any(temp_bigger.gcp_in_tiling(ob) for ob in smaller.obstructions):
+                return False
+            for req_list in smaller.requirements:
+                # any req list that doesnt have any req implied by all reqs of a small req list
+                if all(
+                    all(
+                        any(big_req.avoids([req]) for big_req in big_list)
+                        for big_list in temp_bigger.requirements
+                    )
+                    for req in req_list
+                ):
+                    return False
+            return True
+
         for param0, param1 in combinations(self, 2):
             if {param0, param1} & exclude:
                 continue
-            image_cells = param0.image_cells()
-            if not image_cells.issubset(param1.image_cells()):
-                continue
-            temp_param = param1.sub_parameter(param1.map.preimage_of_cells(image_cells))
-            if param0.map != temp_param.map:
-                continue
-            if param0.ghost.is_subset(temp_param.ghost):
-                if reverse:
-                    exclude.add(param0)
-                else:
-                    exclude.add(param1)
+            image_cells = param0.image_cells(), param1.image_cells()
+            if image_cells[0] == image_cells[1]:
+                if compare(param0, param1):
+                    match_reverse(param0, param1)
+                elif compare(param1, param0):
+                    match_reverse(param1, param0)
+
+            elif image_cells[0].issubset(image_cells[1]):
+                if compare(param0, param1):
+                    match_reverse(param0, param1)
+
+            elif image_cells[1].issubset(image_cells[0]):
+                if compare(param1, param0):
+                    match_reverse(param1, param0)
+
         return ParameterList(param for param in self if param not in exclude)
 
     def to_html(self) -> str:
