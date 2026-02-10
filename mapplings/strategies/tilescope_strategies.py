@@ -2,7 +2,7 @@
 
 from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.point_placements import Directions
+from gridded_cayley_permutations.point_placements import DIRECTIONS
 from tilescope.strategies import (
     FactorStrategy,
     ShuffleFactorStrategy,
@@ -105,7 +105,7 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
         self, comb_class: Tiling
     ) -> Iterator[MapplingRequirementPlacementStrategy]:
         for cell in comb_class.positive_cells():
-            for direction in Directions:
+            for direction in DIRECTIONS:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), (cell,)),)
                 indices = (0,)
                 yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
