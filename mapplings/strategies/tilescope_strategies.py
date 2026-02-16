@@ -304,6 +304,7 @@ class MapplingFactorStrategy(FactorStrategy):
         return factors
 
 
+# pylint:disable=too-many-ancestors
 class MapplingILFactorStrategy(ShuffleFactorStrategy):
     """
     A strategy for finding interleaving factors in a mapped tiling.
