@@ -169,13 +169,11 @@ def rule2():
     return strategy(mappling2)
 
 
-@pytest.fixture
-def rules():
-    return [rule1, rule2]
+rules = [rule1, rule2]
 
 
-def test_rules(rules):
-    for rule in rules:
-        print(rule)
-        for i in range(5):
-            assert rule.sanity_check(i)
+@pytest.mark.parametrize("rule", rules)
+def test_rules(rule):
+    print(rule)
+    for i in range(5):
+        assert rule.sanity_check(i)
