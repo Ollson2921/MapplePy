@@ -79,14 +79,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
         blank = tuple(map(set[int], param.blank_and_near_blank()))
         if not any(blank):
             return param
-
         col_preimages, row_preimages = param.map.preimage_map()
-
-        try:
-            req_cols, req_rows = map(set[int], zip(*param.requirement_cells()))
-            splits = req_cols, req_rows
-        except ValueError:
-            splits = set[int](), set[int]()
+        splits = param.requirement_corequirement_columns_and_rows()
 
         def to_remove(
             preimages: dict[int, tuple[int, ...]], find_rows: bool
