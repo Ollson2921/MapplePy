@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from copy import copy
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Optional
 from itertools import product, chain
 
 from cayley_permutations import CayleyPermutation
@@ -12,6 +12,7 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.factors import Factors
 
 Cell = tuple[int, int]
+Objects = defaultdict[tuple[int, ...], list[GriddedCayleyPerm]]
 
 
 class Parameter(Tiling):
@@ -59,7 +60,7 @@ class Parameter(Tiling):
         """Determines if the sub-gridding of the gcp that lives in the image region
         has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
-        if not sub_gridding.positions and not self.positive_cells():
+        if not sub_gridding.positions and not self.requirements:
             return True
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.gcp_in_tiling(preimage):
@@ -365,6 +366,73 @@ class Parameter(Tiling):
 
         return "".join(result)
 
+    def compare_to(
+        self, other: "Parameter", depth: int = 4
+    ) -> tuple[bool, Optional[GriddedCayleyPerm]]:
+        """Compares the gcps that live on self to the gcps on other up to size depth"""
+
+        col_map = {
+            val: key
+            for key, val in enumerate(
+                sorted(set(self.col_map.values()) | set(other.col_map.values()))
+            )
+        }
+        row_map = {
+            val: key
+            for key, val in enumerate(
+                sorted(set(self.row_map.values()) | set(other.row_map.values()))
+            )
+        }
+        self_reduction = RowColMap(
+            {key: col_map[val] for key, val in self.col_map.items()},
+            {key: row_map[val] for key, val in self.row_map.items()},
+        )
+        other_reduction = RowColMap(
+            {key: col_map[val] for key, val in other.col_map.items()},
+            {key: row_map[val] for key, val in other.row_map.items()},
+        )
+        temp_self = Parameter(self.ghost, self_reduction)
+        temp_other = Parameter(other.ghost, other_reduction)
+        base = Tiling([], [], (len(col_map), len(row_map)))
+        i = 0
+        while i < depth:
+            for gcp in base.objects_of_size(i):
+                if temp_self.gcp_has_preimage(gcp) != temp_other.gcp_has_preimage(gcp):
+                    return False, gcp
+            i += 1
+        return True, None
+
+    def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
+        """Return gridded Cayley permutations of size n in the tiling."""
+        for val in self.get_objects(n).values():
+            yield from val
+
+    def get_objects(self, n: int) -> Objects:
+        """Return the objects of size n in the tiling."""
+        objects = defaultdict(list)
+        col_map = {
+            val: key for key, val in enumerate(sorted(set(self.col_map.values())))
+        }
+        row_map = {
+            val: key for key, val in enumerate(sorted(set(self.row_map.values())))
+        }
+        map_reduction = RowColMap(
+            {key: col_map[val] for key, val in self.col_map.items()},
+            {key: row_map[val] for key, val in self.row_map.items()},
+        )
+        temp = Parameter(self.ghost, map_reduction)
+        base = Tiling([], [], (len(col_map), len(row_map)))
+        for gcp in base.objects_of_size(n):
+            if temp.gcp_has_preimage(gcp):
+                param = self.get_parameters(gcp)
+                objects[param].append(gcp)
+        return objects
+
+    def get_parameters(self, obj: GriddedCayleyPerm) -> tuple[int, ...]:
+        """Parameters are not what you think!!! This is specific to
+        combinatorical class parameters"""
+        return (1,)
+
     # dunder methods
 
     def to_jsonable(self) -> dict:
@@ -403,12 +471,12 @@ class Parameter(Tiling):
     def __leq__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (self.ghost, self.map) <= (other.ghost, other.map)
+        return (self.map, self.ghost) <= (other.map, other.ghost)
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (self.ghost, self.map) < (other.ghost, other.map)
+        return (self.map, self.ghost) < (other.map, other.ghost)
 
     def _string_table(self) -> list[str]:
         """Creates a list of strings for each row of the __str__ grid"""
