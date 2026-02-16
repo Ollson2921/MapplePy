@@ -80,7 +80,10 @@ class ParamCleaner(GenericCleaner[Parameter]):
         if not any(blank):
             return param
         col_preimages, row_preimages = param.map.preimage_map()
-        splits = param.requirement_columns_and_rows()
+        try:
+            splits = param.requirement_columns_and_rows()
+        except ValueError:
+            splits = (set[int], set[int])
 
         def to_remove(
             preimages: dict[int, tuple[int, ...]], find_rows: bool
