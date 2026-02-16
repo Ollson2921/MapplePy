@@ -83,7 +83,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
         try:
             splits = param.requirement_columns_and_rows()
         except ValueError:
-            splits = (set[int], set[int])
+            splits = (set[int](), set[int]())
 
         def to_remove(
             preimages: dict[int, tuple[int, ...]], find_rows: bool
