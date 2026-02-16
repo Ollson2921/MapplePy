@@ -6,167 +6,142 @@ from mapplings.strategies.tilescope_strategies import (
 )
 import pytest
 
-
-@pytest.fixture()
-def rule1():
-    mappling = MappedTiling(
-        Tiling(
-            (
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (0, 0))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (0, 2))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (1, 2))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (1, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 2), (1, 2))),
-                GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 0), (0, 0))),
-                GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 2), (0, 2))),
-            ),
-            ((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),),
-            (2, 3),
-        ),
-        ParameterList(frozenset()),
+mappling = MappedTiling(
+    Tiling(
         (
-            ParameterList(
-                frozenset(
-                    {
-                        Parameter(
-                            Tiling(
-                                (
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 0),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 0), (2, 0))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 0), (2, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (2, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 1), (1, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((1, 1), (1, 1))
-                                    ),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (0, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (0, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 2), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 0), (0, 0))),
+            GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 2), (0, 2))),
+        ),
+        ((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),),
+        (2, 3),
+    ),
+    ParameterList(frozenset()),
+    (
+        ParameterList(
+            frozenset(
+                {
+                    Parameter(
+                        Tiling(
+                            (
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((2, 0), (2, 0))
                                 ),
-                                (),
-                                (3, 2),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((2, 0), (2, 1))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((2, 1), (2, 1))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((0, 1), (1, 1))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((1, 1), (1, 1))
+                                ),
                             ),
-                            RowColMap({0: 0, 1: 1, 2: 1}, {0: 1, 1: 2}),
-                        )
-                    }
-                )
-            ),
+                            (),
+                            (3, 2),
+                        ),
+                        RowColMap({0: 0, 1: 1, 2: 1}, {0: 1, 1: 2}),
+                    )
+                }
+            )
         ),
-        (),
-    )
-    req = (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),)
-    indices = (0,)
-    direction = 0
-    strategy = MapplingRequirementPlacementStrategy(req, indices, direction)
-    return strategy(mappling)
+    ),
+    (),
+)
+req = (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),)
+indices = (0,)
+direction = 0
+strategy = MapplingRequirementPlacementStrategy(req, indices, direction)
+rule1 = strategy(mappling)
 
 
-@pytest.fixture
-def rule2():
-    mappling2 = MappedTiling(
-        Tiling(
-            (
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 2),)),
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 0),)),
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 0),)),
-                GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 2),)),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (0, 0))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (1, 0))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (0, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (1, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (2, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (3, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 0), (1, 0))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (1, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (2, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (3, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 1), (2, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 1), (3, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 2), (2, 2))),
-                GriddedCayleyPerm(CayleyPermutation((0, 0)), ((3, 1), (3, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 1)), ((1, 0), (1, 0))),
-                GriddedCayleyPerm(CayleyPermutation((1, 0)), ((2, 2), (2, 2))),
-            ),
-            ((GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 2),)),),),
-            (4, 3),
-        ),
-        ParameterList(frozenset()),
+mappling2 = MappedTiling(
+    Tiling(
         (
-            ParameterList(
-                frozenset(
-                    {
-                        Parameter(
-                            Tiling(
-                                (
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((0, 1),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((0, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 1),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((2, 1),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((2, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 1),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((4, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((1, 0), (1, 0))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((1, 0), (2, 0))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((1, 2), (1, 2))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (4, 1))
-                                    ),
-                                ),
-                                (),
-                                (5, 3),
-                            ),
-                            RowColMap(
-                                {0: 0, 1: 0, 2: 1, 3: 2, 4: 3}, {0: 0, 1: 1, 2: 1}
-                            ),
-                        )
-                    }
-                )
-            ),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 2),)),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 0),)),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 0),)),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 2),)),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (0, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (1, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (0, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (2, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 1), (3, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 0), (1, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (2, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (3, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 1), (2, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 1), (3, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 2), (2, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((3, 1), (3, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((1, 0), (1, 0))),
+            GriddedCayleyPerm(CayleyPermutation((1, 0)), ((2, 2), (2, 2))),
         ),
-        (),
-    )
-    reqs = (GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 2),)),)
-    indices = (0,)
-    direction = 0
+        ((GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 2),)),),),
+        (4, 3),
+    ),
+    ParameterList(frozenset()),
+    (
+        ParameterList(
+            frozenset(
+                {
+                    Parameter(
+                        Tiling(
+                            (
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 1),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 2),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 1),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 2),)),
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((4, 2),)),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((1, 0), (1, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((1, 0), (2, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((0, 0), (0, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((1, 2), (1, 2))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((4, 1), (4, 1))
+                                ),
+                            ),
+                            (),
+                            (5, 3),
+                        ),
+                        RowColMap({0: 0, 1: 0, 2: 1, 3: 2, 4: 3}, {0: 0, 1: 1, 2: 1}),
+                    )
+                }
+            )
+        ),
+    ),
+    (),
+)
+reqs = (GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 2),)),)
+indices = (0,)
+direction = 0
 
-    strategy = MapplingRequirementPlacementStrategy(reqs, indices, direction)
-    return strategy(mappling2)
+strategy = MapplingRequirementPlacementStrategy(reqs, indices, direction)
+rule2 = strategy(mappling2)
 
 
 rules = [rule1, rule2]
