@@ -75,7 +75,7 @@ class MTRequirementPlacement:
         n, m = parameter.dimensions
         new_n = n + 1
         row_map = {i: i for i in range(m)}
-        col_map = {i: i for i in range(col)}
+        col_map = {i: i for i in range(col + 1)}
         col_map.update({i: i - 1 for i in range(col + 1, new_n)})
         obs, reqs = RowColMap(col_map, row_map).preimage_of_tiling(parameter.ghost)
         return Tiling(obs, reqs, (new_n, m))
