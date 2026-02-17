@@ -189,6 +189,8 @@ class CompareParameters:
         self.find_redundant()
 
     def __call__(self) -> ParameterList:
+        if len(self.params) < 2:
+            return self.params
         return ParameterList(
             param for param in self.params if param not in self.redundant
         )
@@ -208,6 +210,9 @@ class CompareParameters:
         else:
             positive2 = (set[int](), set[int]())
 
+        point_indices1 = param1.point_cols, param1.point_rows
+        point_indices2 = param2.point_cols, param2.point_rows
+
         def make_maps(
             row_maps: bool,
         ) -> tuple[tuple[dict[int, int], ...], tuple[dict[int, int], ...]]:
@@ -218,6 +223,16 @@ class CompareParameters:
             for image in set(preimages1[row_maps].keys()) & set(
                 preimages2[row_maps].keys()
             ):
+                maxes = max(preimages1[row_maps][image]), max(
+                    preimages2[row_maps][image]
+                )
+                mins = min(preimages1[row_maps][image]), min(
+                    preimages2[row_maps][image]
+                )
+                force_extremal = (
+                    [i in point_indices1[row_maps] for i in (mins[0], maxes[0])],
+                    [i in point_indices2[row_maps] for i in (maxes[1], mins[1])],
+                )
                 check_positive = (
                     set(preimages1[row_maps][image]) & positive1[row_maps],
                     set(preimages2[row_maps][image]) & positive2[row_maps],
@@ -230,6 +245,10 @@ class CompareParameters:
                     for indices in combinations(
                         preimages1[row_maps][image], len(preimages2[row_maps][image])
                     ):
+                        if force_extremal[1][0] and mins[0] not in indices:
+                            continue
+                        if force_extremal[1][1] and maxes[0] not in indices:
+                            continue
 
                         if not check_positive[0].issubset(indices):
                             continue
@@ -243,6 +262,10 @@ class CompareParameters:
                     for indices in combinations(
                         preimages2[row_maps][image], len(preimages1[row_maps][image])
                     ):
+                        if force_extremal[0][0] and mins[1] not in indices:
+                            continue
+                        if force_extremal[0][1] and maxes[1] not in indices:
+                            continue
                         if not check_positive[1].issubset(indices):
                             continue
                         section_maps2.add(
@@ -283,19 +306,32 @@ class CompareParameters:
 
         def _check(temp_map: RowColMap) -> bool:
             temp_param = Parameter(param1.ghost, temp_map)
+            backwards_map = RowColMap(
+                {val: key for key, val in temp_map.col_map.items()},
+                {val: key for key, val in temp_map.row_map.items()},
+            )
             if any(
-                req_free2.gcp_in_tiling(temp_param.map.map_gridded_cperm(ob))
+                req_free2.gcp_in_tiling(
+                    temp_param.map.map_gridded_cperm(
+                        ob.sub_gridded_cayley_perm(backwards_map.image_cells)
+                    )
+                )
                 for ob in temp_param.obstructions
             ):
-                print("NO", temp_param.map)
                 return False
             for req_list in temp_param.requirements:
-                if not Simplify.requirement_implied_by_some_requirement(
-                    temp_param.map.map_gridded_cperms(req_list), param2.requirements
-                ):
-                    print("NO", temp_param.map)
+                temp_req_list = [
+                    req
+                    for req in req_list
+                    if set(req.positions).issubset(backwards_map.image_cells)
+                ]
+                if not temp_req_list:
                     return False
-            print("Yes?", temp_param.map)
+                if not Simplify.requirement_implied_by_some_requirement(
+                    temp_param.map.map_gridded_cperms(temp_req_list),
+                    param2.requirements,
+                ):
+                    return False
             return True
 
         for temp_map in maps:
