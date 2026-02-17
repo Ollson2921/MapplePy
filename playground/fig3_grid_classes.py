@@ -33,32 +33,7 @@ mappling1 = MappedTiling(
     [],
 )
 
-# pack = MappedTileScopePack.point_placement(mappling1)
-# searcher = CombinatorialSpecificationSearcher(mappling1, pack, debug=False)
-
-# spec = searcher.auto_search(status_update=30)
-# spec.show()
-
-# json_dict = spec.to_jsonable()
-# json_str = json.dumps(json_dict)
-# with open("fig_3_gc_1.json", "w") as f:
-#     f.write(json_str)
-
-# new_spec = spec.expand_verified()
-# new_spec.show()
-
-# json_dict = new_spec.to_jsonable()
-# json_str = json.dumps(json_dict)
-# with open("fig_3_gc_1_expanded.json", "w") as f:
-#     f.write(json_str)
-
-# new_spec.get_genf()
-# spec_counts = [new_spec.count_objects_of_size(i) for i in range(10)]
-# mappling_counts = [mappling1.get_terms(i).total() for i in range(10)]
-# print(spec_counts, "spec counts")
-# print(mappling_counts, "mappling counts")
-
-# new_spec.sanity_check()
+# print(mappling1)
 
 
 ghost2 = Tiling(
@@ -104,7 +79,7 @@ mappling2 = MappedTiling(
     [],
 )
 
-print(mappling2)
+# print(mappling2)
 
 
 ghost3 = Tiling(
@@ -140,4 +115,106 @@ mappling3 = MappedTiling(
     [],
 )
 
-print(mappling3)
+# print(mappling3)
+
+"""Finding spec"""
+# mappling = mappling2
+# mt = 2
+
+# from mapplings.cleaners import MTCleaner
+
+# MTCleaner.global_debug_toggle(2)
+
+# pack = MappedTileScopePack.point_placement(mappling)
+# searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=True)
+
+# spec = searcher.auto_search(status_update=30)
+# spec.show()
+
+# json_dict = spec.to_jsonable()
+# json_str = json.dumps(json_dict)
+# with open(f"fig_3_gc_{mt}.json", "w") as f:
+#     f.write(json_str)
+
+# new_spec = spec.expand_verified()
+# new_spec.show()
+
+# json_dict = new_spec.to_jsonable()
+# json_str = json.dumps(json_dict)
+# with open(f"fig_3_gc_{mt}_expanded.json", "w") as f:
+#     f.write(json_str)
+
+# new_spec.get_genf()
+# spec_counts = [new_spec.count_objects_of_size(i) for i in range(10)]
+# mappling_counts = [mappling.get_terms(i).total() for i in range(10)]
+# print(spec_counts, "spec counts")
+# print(mappling_counts, "mappling counts")
+
+# new_spec.sanity_check()
+
+
+"""Debudding 1"""
+mt = MappedTiling(
+    Tiling(
+        (
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
+            GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 0), (0, 0))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (0, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 2), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (1, 1))),
+            GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 2), (1, 2))),
+            GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 0), (0, 0))),
+            GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 2), (0, 2))),
+        ),
+        ((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),),
+        (2, 3),
+    ),
+    ParameterList(frozenset()),
+    (
+        ParameterList(
+            frozenset(
+                {
+                    Parameter(
+                        Tiling(
+                            (
+                                GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((2, 0), (2, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((2, 0), (2, 1))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((2, 1), (2, 1))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((0, 1), (1, 1))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((1, 1), (1, 1))
+                                ),
+                            ),
+                            (),
+                            (3, 2),
+                        ),
+                        RowColMap({0: 0, 1: 1, 2: 1}, {0: 1, 1: 2}),
+                    )
+                }
+            )
+        ),
+    ),
+    (),
+)
+
+print(mt)
+
+from mapplings.strategies.tilescope_strategies import (
+    MapplingRequirementPlacementStrategy,
+)
+
+for out in MapplingRequirementPlacementStrategy(
+    (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (0,), 0
+).decomposition_function(mt):
+    print(out)
+    print(repr(out))
