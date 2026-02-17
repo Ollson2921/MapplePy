@@ -33,9 +33,9 @@ class ParamCleaner(GenericCleaner[Parameter]):
     @reg(3, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
-        deleted_cols, deleted_rows = ParamCleaner._find_indixes_to_fuse(
-            param, False
-        ), ParamCleaner._find_indixes_to_fuse(param, True)
+        deleted_cols, deleted_rows = set(
+            ParamCleaner._find_indixes_to_fuse(param, False)
+        ), set(ParamCleaner._find_indixes_to_fuse(param, True))
         temp = Parameter(
             Tiling(param.obstructions, [], param.dimensions, False), param.map
         ).delete_rows_and_columns(deleted_cols, deleted_rows)
@@ -79,14 +79,11 @@ class ParamCleaner(GenericCleaner[Parameter]):
         blank = tuple(map(set[int], param.blank_and_near_blank()))
         if not any(blank):
             return param
-
         col_preimages, row_preimages = param.map.preimage_map()
-
         try:
-            req_cols, req_rows = map(set[int], zip(*param.requirement_cells()))
-            splits = req_cols, req_rows
+            splits = param.requirement_columns_and_rows()
         except ValueError:
-            splits = set[int](), set[int]()
+            splits = (set[int](), set[int]())
 
         def to_remove(
             preimages: dict[int, tuple[int, ...]], find_rows: bool
@@ -162,7 +159,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
         for i in range(param.dimensions[fuse_rows] - 1):
             if maps[fuse_rows][i] == maps[fuse_rows][i + 1]:
                 if temp.is_fusable(fuse_rows, i):
-                    yield i
+                    yield i + 1
 
     @staticmethod
     def _make_adjustment_map(
