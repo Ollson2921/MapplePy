@@ -267,13 +267,19 @@ class MappedTiling(Tiling):
             "Base tiling: \n"
             + str(self.tiling)
             + "\nAvoiding parameters:\n"
-            + "\n".join([str(p) for p in self.avoiding_parameters])
+            + "\n".join([str(p) for p in sorted(self.avoiding_parameters)])
             + "\nContaining parameters:\n"
             + "\nNew containing parameters list \n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
+                [
+                    "\n".join([str(p) for p in sorted(ps)])
+                    for ps in self.containing_parameters
+                ]
             )
             + "\nEnumerating parameters:\n"
             + "\nNew enumerating parameters list\n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
+                [
+                    "\n".join([str(p) for p in sorted(ps)])
+                    for ps in self.enumerating_parameters
+                ]
             )
         )

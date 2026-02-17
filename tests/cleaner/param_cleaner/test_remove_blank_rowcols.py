@@ -32,9 +32,7 @@ def test_remove_blank_rowcols():
         ParameterList(frozenset()),
         (
             ParameterList(
-                frozenset(
-                    {Parameter(Tiling((), (), (1, 1)), RowColMap({0: 0}, {0: 0}))}
-                )
+                frozenset({Parameter(Tiling([], [], (0, 0)), RowColMap({}, {}))})
             ),
         ),
         (),

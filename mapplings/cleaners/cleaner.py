@@ -281,8 +281,8 @@ class CleanerLog(Generic[T]):
                         assert old_counts == new_counts, (
                             f"Counts differ after {self.name}.{func.__name__}:"
                             + f"\nInitial counts: {old_counts}\nClean counts: {new_counts}"
-                            + f"\n {cleaning_object}\n {new_object}"
-                            + f"\n {repr(cleaning_object)}"
+                            + f"\n{cleaning_object}\n{new_object}"
+                            + f"\n{repr(cleaning_object)}"
                         )
                         print(
                             f"++ {self.name}.{func.__name__} elapsed time : {elapsed_time} ++"
