@@ -31,7 +31,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     # Final Methods
 
     @staticmethod
-    @reg(4, run_on_enumerators=False)
+    @reg(5, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         deleted_cols, deleted_rows = set(
@@ -117,7 +117,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(3, run_on_enumerators=False)
+    @reg(4, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
         algo = PartialUnplacement(param.ghost)
@@ -150,7 +150,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     @staticmethod
     @reg(2, run_on_enumerators=False)
-    def insert_blank(param: Parameter) -> Parameter:
+    def insert_blank_cols(param: Parameter) -> Parameter:
         look_at = [
             req_list
             for req_list in param.requirements
@@ -209,6 +209,69 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 (param.dimensions[0] + len(to_insert), param.dimensions[1]),
             ),
             RowColMap(new_col_map, param.row_map),
+        )
+        
+    @staticmethod
+    @reg(3, run_on_enumerators=False)
+    def insert_blank_rows(param: Parameter) -> Parameter:
+        look_at = [
+            req_list
+            for req_list in param.requirements
+            if len(req_list) == 1
+            and req_list[0].pattern
+            in (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
+        ]
+        if not look_at:
+            return param
+        look_at = [
+            req_list
+            for req_list in look_at
+            if (
+                {req_list[0].positions[0][1], req_list[0].positions[1][1]}.issubset(
+                    param.point_rows
+                )
+            )
+            and (req_list[0].positions[0][1] + 1 == req_list[0].positions[1][1])
+        ]
+        if not look_at:
+            return param
+        look_at = [
+            req_list
+            for req_list in look_at
+            if req_list[0].positions[0][0] == req_list[0].positions[1][0]
+        ]
+        if not look_at:
+            return param
+        blank_rows = param.find_blank_columns_and_rows()[1]
+        to_insert = set[int]()
+        for req_list in look_at:
+            req = req_list[0]
+            if param.row_map[req.positions[0][1]] != param.row_map[req.positions[1][1]]:
+                continue
+            if req.positions[0][1] - 1 or req.positions[1][1] + 1 in blank_rows:
+                to_insert.add(req.positions[0][1])
+        row_adjust = {
+            i: i + sum((j < i for j in to_insert)) for i in range(param.dimensions[1])
+        }
+        adjust = RowColMap({i: i for i in range(param.dimensions[1])}, row_adjust)
+        new_obs = adjust.map_gridded_cperms(param.obstructions)
+        new_reqs = adjust.map_requirements(param.requirements)
+        new_row_map = dict[int, int]()
+        tweak = 0
+        for i in range(param.dimensions[1] + len(to_insert)):
+            if i - tweak - 1 in to_insert:
+                new_row_map[i] = new_row_map[i - 1]
+                tweak += 1
+            else:
+                new_row_map[i] = param.col_map[i - tweak]
+
+        return Parameter(
+            Tiling(
+                new_obs,
+                new_reqs,
+                (param.dimensions[0], param.dimensions[1] + len(to_insert)),
+            ),
+            RowColMap(param.col_map, new_row_map),
         )
 
     # Internal Methods
