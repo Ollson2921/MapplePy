@@ -50,6 +50,29 @@ class Parameter(Tiling):
         )
         return set(product(inj_cols, inj_rows))
 
+    def single_value_cells(self) -> set[Cell]:
+        """Returns the set of cells with at most one value"""
+        cells = set[Cell]()
+        for cell in self.active_cells:
+            if (
+                GriddedCayleyPerm((0, 1), (cell, cell)) in self.obstructions
+                and GriddedCayleyPerm((1, 0), (cell, cell)) in self.obstructions
+            ):
+                cells.add(cell)
+        return cells
+
+    def single_position_cells(self) -> set[Cell]:
+        """Returns the set of cells with at most one position"""
+        cells = set[Cell]()
+        for cell in self.active_cells:
+            if (
+                GriddedCayleyPerm((0, 1), (cell, cell)) in self.obstructions
+                and GriddedCayleyPerm((1, 0), (cell, cell)) in self.obstructions
+                and GriddedCayleyPerm((0, 0), (cell, cell)) in self.obstructions
+            ):
+                cells.add(cell)
+        return cells
+
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
@@ -118,6 +141,32 @@ class Parameter(Tiling):
         temp = Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
         temp.active_cells = self.active_cells
         return temp
+
+    def requirement_cells(self) -> set[Cell]:
+        """Returns every cell that contains a requirement"""
+        if not self.requirements:
+            return set[Cell]()
+        return set(chain(*(set(req.positions) for req in chain(*self.requirements))))
+
+    def blank_and_near_blank(self) -> tuple[tuple[int, ...], tuple[int, ...]]:
+        """Finds blank rows and cols allowing point row/col intersection"""
+        if self.dimensions == (0, 0):
+            return tuple(), tuple()
+        if not self.obstructions and not self.requirements:
+            return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
+        req_cells = tuple(
+            chain(*(set(req.positions) for req in chain(*self.requirements)))
+        )
+        check_cells = (
+            cell
+            for cell in self.not_blank_cells()
+            if cell in req_cells
+            or (cell[0] not in self.point_cols and cell[1] not in self.point_rows)
+        )
+        not_blank_cols, not_blank_rows = zip(*check_cells)
+        blank_cols = tuple(set(range(self.dimensions[0])) - set(not_blank_cols))
+        blank_rows = tuple(set(range(self.dimensions[1])) - set(not_blank_rows))
+        return blank_cols, blank_rows
 
     def find_blank_columns_and_rows_in_param(
         self, tiling: Tiling
@@ -241,12 +290,66 @@ class Parameter(Tiling):
             new_row_map[key] = temp_param.row_map[key] = value - adjust
         return Parameter(temp_param.ghost, RowColMap(new_col_map, new_row_map))
 
+    def insert_cols_and_rows(
+        self, cols: Iterable[int], rows: Iterable[int]
+    ) -> "Parameter":
+        """Inserts a blank col or col at each index.
+        New col/row gets map data from the col/row at the given index."""
+        col_adjust = {
+            i: i + sum((j < i for j in cols)) for i in range(self.dimensions[0])
+        }
+        row_adjust = {
+            i: i + sum((j < i for j in rows)) for i in range(self.dimensions[1])
+        }
+        adjust = RowColMap(col_adjust, row_adjust)
+        new_obs = adjust.map_gridded_cperms(self.obstructions)
+        new_reqs = adjust.map_requirements(self.requirements)
+        new_col_map = dict[int, int]()
+        new_row_map = dict[int, int]()
+        new_dimensions = (
+            self.dimensions[0] + len(tuple(cols)),
+            self.dimensions[1] + len(tuple(rows)),
+        )
+        tweak = 0
+
+        for i in range(new_dimensions[0]):
+            if i - tweak - 1 in cols:
+                new_col_map[i] = new_col_map[i - 1]
+                tweak += 1
+            else:
+                new_col_map[i] = self.col_map[i - tweak]
+        tweak = 0
+        for i in range(new_dimensions[1]):
+            if i - tweak - 1 in rows:
+                new_row_map[i] = new_row_map[i - 1]
+                tweak += 1
+            else:
+                new_row_map[i] = self.row_map[i - tweak]
+        return Parameter(
+            Tiling(
+                new_obs,
+                new_reqs,
+                new_dimensions,
+                False,
+            ),
+            RowColMap(new_col_map, new_row_map),
+        )
+
     def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
         """Returns the parameter containing only the specified cells"""
         cols, rows = zip(*cells)
         cols_to_delete = {i for i in range(self.dimensions[0]) if i not in cols}
         rows_to_delete = {i for i in range(self.dimensions[1]) if i not in rows}
-        return self.delete_rows_and_columns(cols_to_delete, rows_to_delete)
+        temp = Tiling(self.obstructions, [], self.dimensions)
+        for req_list in self.requirements:
+            new_req_list = set[GriddedCayleyPerm]()
+            for req in req_list:
+                if any(pos in cells for pos in req.positions):
+                    new_req_list.add(req.sub_gridded_cayley_perm(cells))
+            if len(new_req_list) == len(req_list):
+                temp = temp.add_requirement_list(new_req_list)
+        new_param = Parameter(temp, self.map)
+        return new_param.delete_rows_and_columns(cols_to_delete, rows_to_delete)
 
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""
