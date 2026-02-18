@@ -2,6 +2,7 @@
 
 from typing import Iterator, Iterable
 from itertools import chain
+from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
@@ -30,7 +31,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     # Final Methods
 
     @staticmethod
-    @reg(3, run_on_enumerators=False)
+    @reg(4, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         deleted_cols, deleted_rows = set(
@@ -76,7 +77,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
 
-        blank = tuple(map(set[int], param.blank_and_near_blank()))
+        blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
         if not any(blank):
             return param
         col_preimages, row_preimages = param.map.preimage_map()
@@ -116,7 +117,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(2, run_on_enumerators=False)
+    @reg(3, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
         algo = PartialUnplacement(param.ghost)
@@ -146,6 +147,69 @@ class ParamCleaner(GenericCleaner[Parameter]):
             for i in range(new_ghost.dimensions[1])
         }
         return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+
+    @staticmethod
+    @reg(2, run_on_enumerators=False)
+    def insert_blank(param: Parameter) -> Parameter:
+        look_at = [
+            req_list
+            for req_list in param.requirements
+            if len(req_list) == 1
+            and req_list[0].pattern
+            in (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
+        ]
+        if not look_at:
+            return param
+        look_at = [
+            req_list
+            for req_list in look_at
+            if (
+                {req_list[0].positions[0][0], req_list[0].positions[1][0]}.issubset(
+                    param.point_cols
+                )
+            )
+            and (req_list[0].positions[0][0] + 1 == req_list[0].positions[1][0])
+        ]
+        if not look_at:
+            return param
+        look_at = [
+            req_list
+            for req_list in look_at
+            if req_list[0].positions[0][1] == req_list[0].positions[1][1]
+        ]
+        if not look_at:
+            return param
+        blank_cols = param.find_blank_columns_and_rows()[0]
+        to_insert = set[int]()
+        for req_list in look_at:
+            req = req_list[0]
+            if param.col_map[req.positions[0][0]] != param.col_map[req.positions[1][0]]:
+                continue
+            if req.positions[0][0] - 1 or req.positions[1][0] + 1 in blank_cols:
+                to_insert.add(req.positions[0][0])
+        col_adjust = {
+            i: i + sum((j < i for j in to_insert)) for i in range(param.dimensions[0])
+        }
+        adjust = RowColMap(col_adjust, {i: i for i in range(param.dimensions[1])})
+        new_obs = adjust.map_gridded_cperms(param.obstructions)
+        new_reqs = adjust.map_requirements(param.requirements)
+        new_col_map = dict[int, int]()
+        tweak = 0
+        for i in range(param.dimensions[0] + len(to_insert)):
+            if i - tweak - 1 in to_insert:
+                new_col_map[i] = new_col_map[i - 1]
+                tweak += 1
+            else:
+                new_col_map[i] = param.col_map[i - tweak]
+
+        return Parameter(
+            Tiling(
+                new_obs,
+                new_reqs,
+                (param.dimensions[0] + len(to_insert), param.dimensions[1]),
+            ),
+            RowColMap(new_col_map, param.row_map),
+        )
 
     # Internal Methods
 
