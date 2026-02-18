@@ -493,9 +493,7 @@ class GenericCleaner(Generic[T]):
             "right",
             "right",
         )
-        logs = list(
-            log for log in cls.all_loggers if log.log_level > 0 and log.runs > 0
-        )
+        logs = list(log for log in cls.all_loggers if log.log_level > 0)
         if not logs:
             return f"Logging dissabled for all {cls.__name__} cleaners.\n"
         logs.sort(key=lambda log: log.total_times, reverse=True)

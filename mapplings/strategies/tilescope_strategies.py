@@ -41,8 +41,6 @@ from mapplings.algorithms import (
 )
 from mapplings.cleaners import MTCleaner, ParamCleaner
 
-
-MTCleaner.global_log_toggle(1)
 temp = CombinatorialSpecificationSearcher.status
 
 
@@ -294,7 +292,7 @@ class MapplingFactorStrategy(FactorStrategy):
     A strategy for finding factors in a mapped tiling.
     """
 
-    cleaner = MTCleaner.make_full_cleaner("Factoring Cleaner")
+    cleaner = MTCleaner([], "Factoring Cleaner")
 
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
         factors = Factor(comb_class).find_factors()
@@ -348,6 +346,8 @@ class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy)
 
     def decomposition_function(self, comb_class):
         algo = LTRowColSeparationMT(comb_class)
+        if algo.separation.row_col_map.is_identity():
+            raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))
 
 
@@ -360,4 +360,6 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 
     def decomposition_function(self, comb_class):
         algo = LTORERowColSeparationMT(comb_class)
+        if algo.separation.row_col_map.is_identity():
+            raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))

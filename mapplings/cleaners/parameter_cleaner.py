@@ -23,7 +23,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
         run_on_enumerators=True,
     )
     global_tracker = CleanerLog[Parameter](
-        reg.registered_functions, name="Global Tracker"
+        reg.registered_functions, log_level=2,name="Global Tracker"
     )
 
     all_loggers = {global_tracker}
@@ -150,129 +150,49 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     @staticmethod
     @reg(2, run_on_enumerators=False)
-    def insert_blank_cols(param: Parameter) -> Parameter:
-        look_at = [
-            req_list
-            for req_list in param.requirements
-            if len(req_list) == 1
-            and req_list[0].pattern
-            in (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
-        ]
-        if not look_at:
+    def insert_blank(param: Parameter) -> Parameter:
+        """Inserts a blank col/row in between descents/ascents wherever possible"""
+        if not param.requirements:
             return param
-        look_at = [
-            req_list
-            for req_list in look_at
-            if (
-                {req_list[0].positions[0][0], req_list[0].positions[1][0]}.issubset(
-                    param.point_cols
-                )
-            )
-            and (req_list[0].positions[0][0] + 1 == req_list[0].positions[1][0])
-        ]
-        if not look_at:
-            return param
-        look_at = [
-            req_list
-            for req_list in look_at
-            if req_list[0].positions[0][1] == req_list[0].positions[1][1]
-        ]
-        if not look_at:
-            return param
-        blank_cols = param.find_blank_columns_and_rows()[0]
-        to_insert = set[int]()
-        for req_list in look_at:
-            req = req_list[0]
-            if param.col_map[req.positions[0][0]] != param.col_map[req.positions[1][0]]:
-                continue
-            if req.positions[0][0] - 1 or req.positions[1][0] + 1 in blank_cols:
-                to_insert.add(req.positions[0][0])
-        col_adjust = {
-            i: i + sum((j < i for j in to_insert)) for i in range(param.dimensions[0])
-        }
-        adjust = RowColMap(col_adjust, {i: i for i in range(param.dimensions[1])})
-        new_obs = adjust.map_gridded_cperms(param.obstructions)
-        new_reqs = adjust.map_requirements(param.requirements)
-        new_col_map = dict[int, int]()
-        tweak = 0
-        for i in range(param.dimensions[0] + len(to_insert)):
-            if i - tweak - 1 in to_insert:
-                new_col_map[i] = new_col_map[i - 1]
-                tweak += 1
-            else:
-                new_col_map[i] = param.col_map[i - tweak]
+        to_insert = [set[int](), set[int]()]
+        maps = param.col_map, param.row_map
+        blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
+        point_indices = param.point_cols, param.point_rows
 
-        return Parameter(
-            Tiling(
-                new_obs,
-                new_reqs,
-                (param.dimensions[0] + len(to_insert), param.dimensions[1]),
-            ),
-            RowColMap(new_col_map, param.row_map),
-        )
+        def validate(index1: int, index2: int, check_rows: bool) -> bool:
+            indeices = {index1, index2}
+            if maps[check_rows][index1] != maps[check_rows][index2]:
+                return False
+            if not indeices.issubset(point_indices[check_rows]):
+                return False
+            if {index1 - 1, index2 + 1} & blank[check_rows]:
+                return True
+            return False
+
+        for req_list in param.requirements:
+            if not len(req_list) == 1:
+                continue
+            req = req_list[0]
+            if req.pattern not in (
+                CayleyPermutation((0, 1)),
+                CayleyPermutation((1, 0)),
+            ):
+                continue
+            cell1, cell2 = req.positions
+            if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
+                continue
+            if cell1[0] + 1 == cell2[0]:
+                if validate(cell1[0], cell2[0], False):
+                    to_insert[0].add(cell1[0])
+                    continue
+            idx1, idx2 = sorted([cell1[1], cell2[1]])
+            if idx1 + 1 == idx2:
+                if validate(idx1, idx2, True):
+                    to_insert[1].add(idx1)
+        if not any(to_insert):
+            return param
         
-    @staticmethod
-    @reg(3, run_on_enumerators=False)
-    def insert_blank_rows(param: Parameter) -> Parameter:
-        look_at = [
-            req_list
-            for req_list in param.requirements
-            if len(req_list) == 1
-            and req_list[0].pattern
-            in (CayleyPermutation((0, 1)), CayleyPermutation((1, 0)))
-        ]
-        if not look_at:
-            return param
-        look_at = [
-            req_list
-            for req_list in look_at
-            if (
-                {req_list[0].positions[0][1], req_list[0].positions[1][1]}.issubset(
-                    param.point_rows
-                )
-            )
-            and (req_list[0].positions[0][1] + 1 == req_list[0].positions[1][1])
-        ]
-        if not look_at:
-            return param
-        look_at = [
-            req_list
-            for req_list in look_at
-            if req_list[0].positions[0][0] == req_list[0].positions[1][0]
-        ]
-        if not look_at:
-            return param
-        blank_rows = param.find_blank_columns_and_rows()[1]
-        to_insert = set[int]()
-        for req_list in look_at:
-            req = req_list[0]
-            if param.row_map[req.positions[0][1]] != param.row_map[req.positions[1][1]]:
-                continue
-            if req.positions[0][1] - 1 or req.positions[1][1] + 1 in blank_rows:
-                to_insert.add(req.positions[0][1])
-        row_adjust = {
-            i: i + sum((j < i for j in to_insert)) for i in range(param.dimensions[1])
-        }
-        adjust = RowColMap({i: i for i in range(param.dimensions[1])}, row_adjust)
-        new_obs = adjust.map_gridded_cperms(param.obstructions)
-        new_reqs = adjust.map_requirements(param.requirements)
-        new_row_map = dict[int, int]()
-        tweak = 0
-        for i in range(param.dimensions[1] + len(to_insert)):
-            if i - tweak - 1 in to_insert:
-                new_row_map[i] = new_row_map[i - 1]
-                tweak += 1
-            else:
-                new_row_map[i] = param.col_map[i - tweak]
-
-        return Parameter(
-            Tiling(
-                new_obs,
-                new_reqs,
-                (param.dimensions[0], param.dimensions[1] + len(to_insert)),
-            ),
-            RowColMap(param.col_map, new_row_map),
-        )
+        return param.insert_cols_and_rows(*to_insert)
 
     # Internal Methods
 
