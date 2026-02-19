@@ -294,7 +294,7 @@ class MapplingFactorStrategy(FactorStrategy):
     A strategy for finding factors in a mapped tiling.
     """
 
-    cleaner = MTCleaner.make_full_cleaner("Factoring Cleaner")
+    cleaner = MTCleaner([])
 
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
         factors = Factor(comb_class).find_factors()
