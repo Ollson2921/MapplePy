@@ -77,8 +77,9 @@ class ParamCleaner(GenericCleaner[Parameter]):
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
 
-        blank = tuple(map(set[int], param.blank_and_near_blank()))
-        if not any(blank):
+        try:
+            blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
+        except ValueError:
             return param
         col_preimages, row_preimages = param.map.preimage_map()
         try:

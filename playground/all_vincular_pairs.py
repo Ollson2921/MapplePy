@@ -14,9 +14,10 @@ ParamCleaner.global_log_toggle(1)
 ParamCleaner.global_tracker.log_level = 2
 
 from_table = []
-failures = []
-run_time = 3600 * 0.1
+results = dict[str, str]()
+run_time = 60 * 10
 debug = False
+check_depth = 6
 
 all_patterns = [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
 all_params = dict[str, Parameter]()
@@ -34,21 +35,26 @@ base = Tiling([GriddedCayleyPerm((0, 0), ((0, 0), (0, 0)))], [], (1, 1))
 for key1, key2 in combinations(all_params.keys(), 2):
     p1, p2 = all_params[key1], all_params[key2]
     mappling = cleaner(MappedTiling(base, [p1, p2], [], []))
+    name = f"Av({key1})_Av({key2})"
     try:
         pack = MappedTileScopePack.point_placement(mappling)
         searcher = CombinatorialSpecificationSearcher(mappling, pack, debug=debug)
         spec = searcher.auto_search(status_update=30, max_expansion_time=run_time)
+        assert spec.sanity_check(check_depth)
         spec.show()
         json_dict = spec.to_jsonable()
         json_str = json.dumps(json_dict)
-        with open(f"Av({key1})_Av({key2}).json", "w") as f:
+        with open(f"{name}.json", "w") as f:
             f.write(json_str)
         spec.get_genf()
         from_table.append(mappling)
+        results[name] = (
+            f"Success: {[spec.count_objects_of_size(i) for i in range(check_depth)]}"
+        )
     except Exception as e:
         print(f"Av({key1}), Av({key2}): {e}")
-        failures.append(f"Av({key1}), Av({key2}): {e}")
+        results[name] = f"Failure: {e}"
 
-print("Failures:")
-for failure in failures:
-    print(" " * 6, failure)
+    print("----Results----:")
+    for av, result in results.items():
+        print(f"{av} - {result}")
