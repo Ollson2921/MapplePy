@@ -2,6 +2,7 @@
 
 from typing import Iterator, Iterable
 from itertools import chain
+from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
@@ -30,7 +31,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     # Final Methods
 
     @staticmethod
-    @reg(3, run_on_enumerators=False)
+    @reg(4, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         deleted_cols, deleted_rows = set(
@@ -116,11 +117,11 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(2, run_on_enumerators=False)
+    @reg(3, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
         algo = PartialUnplacement(param.ghost)
-        points = param.point_cells()
+        points = param.single_value_cells()
         cells, cols, rows = set[tuple[int, int]](), set[int](), set[int]()
         for cell in points:
             valid = algo.cell_in_valid_region(cell)
@@ -146,6 +147,52 @@ class ParamCleaner(GenericCleaner[Parameter]):
             for i in range(new_ghost.dimensions[1])
         }
         return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+
+    @staticmethod
+    @reg(2, run_on_enumerators=False)
+    def insert_blank(param: Parameter) -> Parameter:
+        """Inserts a blank col/row in between descents/ascents wherever possible"""
+        if not param.requirements:
+            return param
+        to_insert = [set[int](), set[int]()]
+        maps = param.col_map, param.row_map
+        blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
+        point_indices = param.point_cols, param.point_rows
+
+        def validate(index1: int, index2: int, check_rows: bool) -> bool:
+            indeices = {index1, index2}
+            if maps[check_rows][index1] != maps[check_rows][index2]:
+                return False
+            if not indeices.issubset(point_indices[check_rows]):
+                return False
+            if {index1 - 1, index2 + 1} & blank[check_rows]:
+                return True
+            return False
+
+        for req_list in param.requirements:
+            if not len(req_list) == 1:
+                continue
+            req = req_list[0]
+            if req.pattern not in (
+                CayleyPermutation((0, 1)),
+                CayleyPermutation((1, 0)),
+            ):
+                continue
+            cell1, cell2 = req.positions
+            if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
+                continue
+            if cell1[0] + 1 == cell2[0]:
+                if validate(cell1[0], cell2[0], False):
+                    to_insert[0].add(cell1[0])
+                    continue
+            idx1, idx2 = sorted([cell1[1], cell2[1]])
+            if idx1 + 1 == idx2:
+                if validate(idx1, idx2, True):
+                    to_insert[1].add(idx1)
+        if not any(to_insert):
+            return param
+
+        return param.insert_cols_and_rows(*to_insert)
 
     # Internal Methods
 
