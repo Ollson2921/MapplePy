@@ -12,7 +12,7 @@ from tilescope.strategies.row_column_separation import (
 from ..mapped_tiling import MappedTiling, Parameter, ParameterList
 
 
-class LTRowColSeparationMT:
+class MTLTRowColSeparation:
     """
     When separating, cells must be strictly above/below each other.
     """
@@ -219,7 +219,7 @@ class LTRowColSeparationMT:
             yield Parameter(parameter, RowColMap(new_col_map, new_row_map))
 
 
-class LTORERowColSeparationMT(LTRowColSeparationMT):
+class MTLTORERowColSeparation(MTLTRowColSeparation):
     """
     Allow cells to interleave in the top/bottom rows when
     separating cells in a row.
