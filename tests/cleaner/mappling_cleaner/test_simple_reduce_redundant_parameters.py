@@ -164,7 +164,7 @@ def test_containing_parameter_list():
         ),
         (),
     )
-    cleaned = MTCleaner.full_cleanup(mt)
+    cleaned = MTCleaner.simple_reduce_redundant_parameters(mt)
 
     correct_cleaned = MappedTiling(
         Tiling(

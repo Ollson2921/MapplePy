@@ -241,6 +241,51 @@ class Parameter(Tiling):
             new_row_map[key] = temp_param.row_map[key] = value - adjust
         return Parameter(temp_param.ghost, RowColMap(new_col_map, new_row_map))
 
+    def insert_cols_and_rows(
+        self, cols: Iterable[int], rows: Iterable[int]
+    ) -> "Parameter":
+        """Inserts a blank col or col at each index.
+        New col/row gets map data from the col/row at the given index."""
+        col_adjust = {
+            i: i + sum((j < i for j in cols)) for i in range(self.dimensions[0])
+        }
+        row_adjust = {
+            i: i + sum((j < i for j in rows)) for i in range(self.dimensions[1])
+        }
+        adjust = RowColMap(col_adjust, row_adjust)
+        new_obs = adjust.map_gridded_cperms(self.obstructions)
+        new_reqs = adjust.map_requirements(self.requirements)
+        new_col_map = dict[int, int]()
+        new_row_map = dict[int, int]()
+        new_dimensions = (
+            self.dimensions[0] + len(tuple(cols)),
+            self.dimensions[1] + len(tuple(rows)),
+        )
+        tweak = 0
+
+        for i in range(new_dimensions[0]):
+            if i - tweak - 1 in cols:
+                new_col_map[i] = new_col_map[i - 1]
+                tweak += 1
+            else:
+                new_col_map[i] = self.col_map[i - tweak]
+        tweak = 0
+        for i in range(new_dimensions[1]):
+            if i - tweak - 1 in rows:
+                new_row_map[i] = new_row_map[i - 1]
+                tweak += 1
+            else:
+                new_row_map[i] = self.row_map[i - tweak]
+        return Parameter(
+            Tiling(
+                new_obs,
+                new_reqs,
+                new_dimensions,
+                False,
+            ),
+            RowColMap(new_col_map, new_row_map),
+        )
+
     def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
         """Returns the parameter containing only the specified cells"""
         cols, rows = zip(*cells)
@@ -334,6 +379,46 @@ class Parameter(Tiling):
             ):
                 return True
         return False
+
+    @staticmethod
+    def make_vincular(
+        pattern: tuple[int, ...], adjacency: Iterable[int], image_cell: Cell = (0, 0)
+    ) -> "Parameter":
+        """Returns a parameter equivilent to the vincular pattern mapping to image_cell"""
+        col_positions = list[int]()
+        col = 0 - int(0 in adjacency)
+        obs = set[GriddedCayleyPerm]()
+        for idx in range(len(pattern)):
+            if idx + 1 in adjacency:
+                col += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((0, 1), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((1, 0), ((col, 0), (col, 0))),
+                    }
+                )
+                col_positions.append(col)
+            elif idx in adjacency:
+                col += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((0, 1), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((1, 0), ((col, 0), (col, 0))),
+                    }
+                )
+                col_positions.append(col)
+                col += 1
+            else:
+                col_positions.append(col)
+        ghost = Tiling(
+            obs,
+            [[GriddedCayleyPerm(pattern, [(col, 0) for col in col_positions])]],
+            (col + 1, 1),
+        )
+        col_map = {i: image_cell[0] for i in range(col + 1)}
+        return Parameter(ghost, RowColMap(col_map, {0: image_cell[1]}))
 
     def to_html_representation(self) -> str:
         """Returns an html representation of the tilings object
