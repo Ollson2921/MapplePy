@@ -165,9 +165,9 @@ class ParamCleaner(GenericCleaner[Parameter]):
             blank row/col adjacent to them mapping to the same place."""
             indices = {index1, index2}
             mapping_to = maps[check_rows][index1]
-            if mapping_to != maps[check_rows][index2]:
-                return False
-            if not indices.issubset(point_indices[check_rows]):
+            if mapping_to != maps[check_rows][index2] or not indices.issubset(
+                point_indices[check_rows]
+            ):
                 return False
             if (
                 index1 - 1 in blank[check_rows]
