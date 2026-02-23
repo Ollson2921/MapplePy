@@ -1,26 +1,22 @@
 """Point placement algorithm for MappedTiling."""
 
 from typing import Tuple, Iterator, Iterable
-from gridded_cayley_permutations.point_placements import (
-    AbstractPointPlacement,
-    PointPlacement,
-)
+from gridded_cayley_permutations.point_placements import PointPlacement
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings import MappedTiling, Parameter, ParameterList
 
-
 Cell = tuple[int, int]
 
 
-class MTRequirementPlacement(AbstractPointPlacement):
+class MTRequirementPlacement:
     """Handles point placement for requirements in a MappedTiling."""
 
     # pylint: disable=too-many-positional-arguments
     # pylint: disable=too-many-arguments
-    # def __init__(self, mappling: MappedTiling) -> None:
-    #     self.mappling = mappling
-    #     self.directionless_dict = dict[Cell, MappedTiling]()
+    def __init__(self, mappling: MappedTiling) -> None:
+        self.mappling = mappling
+        self.directionless_dict = dict[Cell, MappedTiling]()
 
     def point_placement(
         self,
@@ -29,15 +25,14 @@ class MTRequirementPlacement(AbstractPointPlacement):
         direction: int,
     ) -> Tuple[MappedTiling, ...]:
         """Point placement in the mapped tiling."""
-        # cells = []
-        # for idx, gcp in zip(indices, requirement_list):
-        #     cells.append(gcp.positions[idx])
-        # cells = sorted(set(cells))
-        # return tuple(
-        #     self.point_placement_in_cell(requirement_list, indices, direction, cell)
-        #     for cell in cells
-        # )
-        return super().point_placement(requirement_list, indices, direction)
+        cells = []
+        for idx, gcp in zip(indices, requirement_list):
+            cells.append(gcp.positions[idx])
+        cells = sorted(set(cells))
+        return tuple(
+            self.point_placement_in_cell(requirement_list, indices, direction, cell)
+            for cell in cells
+        )
 
     def point_placement_in_cell(
         self,
