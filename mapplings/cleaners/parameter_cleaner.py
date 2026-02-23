@@ -160,13 +160,38 @@ class ParamCleaner(GenericCleaner[Parameter]):
         blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
         point_indices = param.point_cols, param.point_rows
 
-        def validate(index1: int, index2: int, check_rows: bool) -> bool:
-            indeices = {index1, index2}
-            if maps[check_rows][index1] != maps[check_rows][index2]:
+        def validate_two_cells(index1: int, index2: int, check_rows: bool) -> bool:
+            indices = {index1, index2}
+            mapping_to = maps[check_rows][index1]
+            if mapping_to != maps[check_rows][index2]:
                 return False
-            if not indeices.issubset(point_indices[check_rows]):
+            if not indices.issubset(point_indices[check_rows]):
                 return False
-            if {index1 - 1, index2 + 1} & blank[check_rows]:
+            if (
+                index1 - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index1 - 1]
+            ):
+                return True
+            if (
+                index2 + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index2 + 1]
+            ):
+                return True
+            return False
+
+        def validate_one_cell(index: int, check_rows: bool) -> bool:
+            if index not in point_indices[check_rows]:
+                return False
+            mapping_to = maps[check_rows][index]
+            if (
+                index - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index - 1]
+            ):
+                return True
+            if (
+                index + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index + 1]
+            ):
                 return True
             return False
 
@@ -174,6 +199,16 @@ class ParamCleaner(GenericCleaner[Parameter]):
             if not len(req_list) == 1:
                 continue
             req = req_list[0]
+            if req.pattern == CayleyPermutation((0,)):
+                cell = req.positions[0]
+                if validate_one_cell(cell[0], False):
+                    to_insert[0].add(cell[0])
+                    continue
+                if validate_one_cell(cell[1], True):
+                    to_insert[1].add(cell[1])
+                    continue
+                continue
+
             if req.pattern not in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
@@ -183,12 +218,12 @@ class ParamCleaner(GenericCleaner[Parameter]):
             if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
                 continue
             if cell1[0] + 1 == cell2[0]:
-                if validate(cell1[0], cell2[0], False):
+                if validate_two_cells(cell1[0], cell2[0], False):
                     to_insert[0].add(cell1[0])
                     continue
             idx1, idx2 = sorted([cell1[1], cell2[1]])
             if idx1 + 1 == idx2:
-                if validate(idx1, idx2, True):
+                if validate_two_cells(idx1, idx2, True):
                     to_insert[1].add(idx1)
         if not any(to_insert):
             return param
