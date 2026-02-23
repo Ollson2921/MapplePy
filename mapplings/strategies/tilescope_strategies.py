@@ -65,6 +65,7 @@ class MapplingRequirementPlacementStrategy(AbstractRequirementPlacementStrategy)
     cleaner = MTCleaner.make_full_cleaner("Req Placement Cleaner")
 
     def algorithm(self, tiling):
+        """Returns the algorithm to use for placing points in a mapped tiling."""
         return MTRequirementPlacement(tiling)
 
     def decomposition_function(self, comb_class):
