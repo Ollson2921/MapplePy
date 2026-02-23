@@ -48,9 +48,9 @@ for key1, key2 in combinations(all_params.keys(), 2):
             f.write(json_str)
         spec.get_genf()
         from_table.append(mappling)
-        results[name] = (
-            f"Success: {[spec.count_objects_of_size(i) for i in range(check_depth)]}"
-        )
+        results[
+            name
+        ] = f"Success: {[spec.count_objects_of_size(i) for i in range(check_depth)]}"
     except Exception as e:
         print(f"Av({key1}), Av({key2}): {e}")
         results[name] = f"Failure: {e}"
