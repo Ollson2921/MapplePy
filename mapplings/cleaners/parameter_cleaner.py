@@ -161,6 +161,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
         point_indices = param.point_cols, param.point_rows
 
         def validate_two_cells(index1: int, index2: int, check_rows: bool) -> bool:
+            """Returns True if two adjacent cells are in point rows/cols with a
+            blank row/col adjacent to them mapping to the same place."""
             indices = {index1, index2}
             mapping_to = maps[check_rows][index1]
             if mapping_to != maps[check_rows][index2]:
@@ -180,6 +182,9 @@ class ParamCleaner(GenericCleaner[Parameter]):
             return False
 
         def validate_one_cell(index: int, check_rows: bool) -> bool:
+            """Returns True if a cell is in a point row/col
+            with a blank row/col adjacent to it mapping to the
+            same place."""
             if index not in point_indices[check_rows]:
                 return False
             mapping_to = maps[check_rows][index]
