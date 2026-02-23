@@ -3,8 +3,8 @@ from cayley_permutations import CayleyPermutation
 from mapplings import Parameter, MappedTiling, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings.algorithms.row_col_sep_mt import (
-    LTRowColSeparationMT,
-    LTORERowColSeparationMT,
+    MTLTRowColSeparation,
+    MTLTORERowColSeparation,
 )
 
 
@@ -70,7 +70,7 @@ def test_less_than_row_col_separation():
         ParameterList([]),
     )
 
-    all_separated = list(LTRowColSeparationMT(mt).separate())
+    all_separated = list(MTLTRowColSeparation(mt).separate())
     assert len(all_separated) == 1
     assert all_separated[0] == separated_mt
 
@@ -129,7 +129,7 @@ def test_less_than_row_col_separation_rows():
         (),
     )
 
-    for mappling in LTRowColSeparationMT(mt).separate():
+    for mappling in MTLTRowColSeparation(mt).separate():
         assert mappling == separated_mt
 
 
@@ -217,7 +217,7 @@ def test_less_than__or_equal_row_col_separation_cols():
         (),
     )
 
-    all_separated = list(LTORERowColSeparationMT(mt).separate())
+    all_separated = list(MTLTORERowColSeparation(mt).separate())
     assert len(all_separated) == 2
     assert all_separated[0] == sep1
     assert all_separated[1] == sep2
@@ -337,7 +337,7 @@ def test_less_than_or_equal_row_col_separation():
         (),
     )
 
-    all_separated = list(LTORERowColSeparationMT(original_mt).separate())
+    all_separated = list(MTLTORERowColSeparation(original_mt).separate())
     assert len(all_separated) == 2
     assert all_separated[0] == separated_1
     assert all_separated[1] == separated_2
@@ -402,7 +402,7 @@ def test_relative_order_active_cells_rows():
         (),
     )
 
-    assert list(LTRowColSeparationMT(mt).separate()) == [
+    assert list(MTLTRowColSeparation(mt).separate()) == [
         MappedTiling(
             Tiling(
                 (
@@ -523,7 +523,7 @@ def test_relative_order_active_cells_cols():
         )
     ]
 
-    assert list(LTRowColSeparationMT(mt).separate()) == separated
+    assert list(MTLTRowColSeparation(mt).separate()) == separated
 
 
 def test_relative_order_cols_LORE():
@@ -651,7 +651,7 @@ def test_relative_order_cols_LORE():
         ),
     ]
 
-    assert list(LTORERowColSeparationMT(mt).separate()) == separation
+    assert list(MTLTORERowColSeparation(mt).separate()) == separation
 
 
 def test_double_expansion_param():
@@ -1935,7 +1935,7 @@ def test_double_expansion_param():
         )
     ]
 
-    assert list(LTRowColSeparationMT(mt).separate()) == separation
+    assert list(MTLTRowColSeparation(mt).separate()) == separation
 
 
 def test_expand_3_rows():
@@ -2016,7 +2016,7 @@ def test_expand_3_rows():
         )
     ]
 
-    assert list(LTRowColSeparationMT(mt).separate()) == separated
+    assert list(MTLTRowColSeparation(mt).separate()) == separated
 
 
 def test_double_column_expansion():
@@ -2169,5 +2169,5 @@ def test_double_column_expansion():
         ),
         (),
     )
-    for output in LTRowColSeparationMT(mt).separate():
+    for output in MTLTRowColSeparation(mt).separate():
         assert output == correct_output

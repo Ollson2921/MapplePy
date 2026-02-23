@@ -69,7 +69,13 @@ class MapplingRequirementPlacementStrategy(AbstractRequirementPlacementStrategy)
 
     def decomposition_function(self, comb_class):
         return tuple(
-            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+            map(
+                self.__class__.cleaner,
+                (comb_class.add_obstructions(self.gcps),)
+                + self.algorithm(comb_class).point_placement(
+                    self.gcps, self.indices, self.direction
+                ),
+            )
         )
 
 
@@ -80,7 +86,13 @@ class MapplingRequirementInsertionStrategy(AbstractRequirementInsertionStrategy)
 
     def decomposition_function(self, comb_class):
         return tuple(
-            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+            map(
+                self.__class__.cleaner,
+                (
+                    comb_class.add_obstructions(self.gcps),
+                    comb_class.add_requirement_list(self.gcps),
+                ),
+            )
         )
 
 
@@ -306,7 +318,6 @@ class MapplingFactorStrategy(AbstractFactorStrategy):
         return factors
 
 
-# pylint:disable=too-many-ancestors
 class MapplingILFactorStrategy(AbstractShuffleFactorStrategy):
     """
     A strategy for finding interleaving factors in a mapped tiling.
