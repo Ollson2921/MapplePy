@@ -263,23 +263,29 @@ class MappedTiling(Tiling):
 
     def __str__(self) -> str:
         """Return a string representation of the MappedTiling."""
-        return (
-            "Base tiling: \n"
-            + str(self.tiling)
-            + "\nAvoiding parameters:\n"
-            + "\n".join([str(p) for p in sorted(self.avoiding_parameters)])
-            + "\nContaining parameters:\n"
-            + "\nNew containing parameters list \n".join(
-                [
-                    "\n".join([str(p) for p in sorted(ps)])
-                    for ps in self.containing_parameters
-                ]
+        string = "Base tiling: \n" + str(self.tiling)
+        if self.avoiding_parameters:
+            string += "\nAvoiding parameters:\n" + "\n".join(
+                [str(p) for p in sorted(self.avoiding_parameters)]
             )
-            + "\nEnumerating parameters:\n"
-            + "\nNew enumerating parameters list\n".join(
-                [
-                    "\n".join([str(p) for p in sorted(ps)])
-                    for ps in self.enumerating_parameters
-                ]
+        if self.containing_parameters:
+            string += (
+                "\nContaining parameters:\n"
+                + "\nNew containing parameters list \n".join(
+                    [
+                        "\n".join([str(p) for p in sorted(ps)])
+                        for ps in self.containing_parameters
+                    ]
+                )
             )
-        )
+        if self.enumerating_parameters:
+            string += (
+                "\nEnumerating parameters:\n"
+                + "\nNew enumerating parameters list\n".join(
+                    [
+                        "\n".join([str(p) for p in sorted(ps)])
+                        for ps in self.enumerating_parameters
+                    ]
+                )
+            )
+        return string
