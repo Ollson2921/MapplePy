@@ -214,14 +214,11 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 valid = validate_one_cell(cell[0], False)
                 if valid[0]:
                     to_insert[0].add(cell[0] - valid[1])
-                    continue
                 valid = validate_one_cell(cell[1], True)
                 if valid[0]:
                     to_insert[1].add(cell[1] - valid[1])
-                    continue
-                continue
 
-            if req.pattern not in (
+            elif req.pattern in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
             ):
