@@ -208,28 +208,22 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 cell = req.positions[0]
                 if validate_one_cell(cell[0], False):
                     to_insert[0].add(cell[0])
-                    continue
                 if validate_one_cell(cell[1], True):
                     to_insert[1].add(cell[1])
-                    continue
-                continue
-
-            if req.pattern not in (
+            elif req.pattern in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
             ):
-                continue
-            cell1, cell2 = req.positions
-            if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
-                continue
-            if cell1[0] + 1 == cell2[0] and validate_two_cells(
-                cell1[0], cell2[0], False
-            ):
-                to_insert[0].add(cell1[0])
-                continue
-            idx1, idx2 = sorted([cell1[1], cell2[1]])
-            if idx1 + 1 == idx2 and validate_two_cells(idx1, idx2, True):
-                to_insert[1].add(idx1)
+                cell1, cell2 = req.positions
+                if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
+                    continue
+                if cell1[0] + 1 == cell2[0] and validate_two_cells(
+                    cell1[0], cell2[0], False
+                ):
+                    to_insert[0].add(cell1[0])
+                idx1, idx2 = sorted([cell1[1], cell2[1]])
+                if idx1 + 1 == idx2 and validate_two_cells(idx1, idx2, True):
+                    to_insert[1].add(idx1)
         if not any(to_insert):
             return param
 
