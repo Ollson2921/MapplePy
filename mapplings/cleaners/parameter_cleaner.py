@@ -181,24 +181,29 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 return True
             return False
 
-        def validate_one_cell(index: int, check_rows: bool) -> bool:
+        def validate_one_cell(index: int, check_rows: bool) -> tuple[bool, bool]:
             """Returns True if a cell is in a point row/col
             with a blank row/col adjacent to it mapping to the
-            same place."""
+            same place.
+            Returns false if both adjacent row/cols are blank.
+            A second bool is used to determine which direction to insert the new row/col
+            """
             if index not in point_indices[check_rows]:
-                return False
+                return False, False
             mapping_to = maps[check_rows][index]
-            if (
+            negative = (
                 index - 1 in blank[check_rows]
                 and mapping_to == maps[check_rows][index - 1]
-            ):
-                return True
-            if (
+            )
+            positive = (
                 index + 1 in blank[check_rows]
                 and mapping_to == maps[check_rows][index + 1]
-            ):
-                return True
-            return False
+            )
+            if negative and not positive:
+                return True, False
+            if positive and not negative:
+                return True, True
+            return False, False
 
         for req_list in param.requirements:
             if not len(req_list) == 1:
@@ -206,11 +211,17 @@ class ParamCleaner(GenericCleaner[Parameter]):
             req = req_list[0]
             if req.pattern == CayleyPermutation((0,)):
                 cell = req.positions[0]
-                if validate_one_cell(cell[0], False):
-                    to_insert[0].add(cell[0])
-                if validate_one_cell(cell[1], True):
-                    to_insert[1].add(cell[1])
-            elif req.pattern in (
+                valid = validate_one_cell(cell[0], False)
+                if valid[0]:
+                    to_insert[0].add(cell[0] - valid[1])
+                    continue
+                valid = validate_one_cell(cell[1], True)
+                if valid[0]:
+                    to_insert[1].add(cell[1] - valid[1])
+                    continue
+                continue
+
+            if req.pattern not in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
             ):
