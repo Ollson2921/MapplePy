@@ -272,6 +272,10 @@ class Parameter(Tiling):
         tweak = 0
         for i in range(new_dimensions[1]):
             if i - tweak - 1 in rows:
+                if i - tweak - 1 == -1:
+                    new_row_map[i] = self.row_map[0]
+                    tweak += 1
+                    continue
                 new_row_map[i] = new_row_map[i - 1]
                 tweak += 1
             else:
