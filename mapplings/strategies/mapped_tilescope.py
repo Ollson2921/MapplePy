@@ -29,7 +29,7 @@ class MappedTileScopePack(StrategyPack):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def no_ver_point_placement(cls):
+    def atom_verification_point_placement(cls):
         """
         Create a point placement strategy pack for the given root mapped tiling.
         """
@@ -51,7 +51,7 @@ class MappedTileScopePack(StrategyPack):
             ver_strats=[
                 AtomStrategy(),
             ],
-            name="Point placements, no parameterless verification strategy",
+            name="Point placements, only atom verification strategy",
             symmetries=[],
             iterative=False,
         )
@@ -117,7 +117,7 @@ class MappedTileScopePack(StrategyPack):
         )
 
     @classmethod
-    def no_ver_row_and_col_placement(cls):
+    def atom_verification_row_and_col_placement(cls):
         """
         Create a row and column placement strategy pack for the given root mapped tiling.
         """
@@ -139,7 +139,7 @@ class MappedTileScopePack(StrategyPack):
             ver_strats=[
                 AtomStrategy(),
             ],
-            name="Row and col placements, no parameterless verification strategy",
+            name="Row and col placements, only atom verification strategy",
             symmetries=[],
             iterative=False,
         )
