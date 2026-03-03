@@ -278,7 +278,7 @@ class GenericCleaner(Generic[T]):
     """
 
     DEBUG = 0
-    debug_depth = 4
+    debug_depth = 2
     LOG = 0
     reg = Register[T]()
     _unnamed = 0
