@@ -31,7 +31,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
     # Final Methods
 
     @staticmethod
-    @reg(4, run_on_enumerators=False)
+    @reg(5, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
         deleted_cols, deleted_rows = set(
@@ -118,7 +118,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(3, run_on_enumerators=False)
+    @reg(4, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
         algo = PartialUnplacement(param.ghost)
@@ -150,8 +150,8 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
 
     @staticmethod
-    @reg(2, run_on_enumerators=False)
-    def insert_blank(param: Parameter) -> Parameter:
+    @reg(3, run_on_enumerators=False)
+    def insert_blank_size_1(param: Parameter) -> Parameter:
         """Inserts a blank col/row in between descents/ascents wherever possible"""
         if not param.requirements:
             return param
@@ -159,27 +159,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
         maps = param.col_map, param.row_map
         blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
         point_indices = param.point_cols, param.point_rows
-
-        def validate_two_cells(index1: int, index2: int, check_rows: bool) -> bool:
-            """Returns True if two adjacent cells are in point rows/cols with a
-            blank row/col adjacent to them mapping to the same place."""
-            indices = {index1, index2}
-            mapping_to = maps[check_rows][index1]
-            if mapping_to != maps[check_rows][index2] or not indices.issubset(
-                point_indices[check_rows]
-            ):
-                return False
-            if (
-                index1 - 1 in blank[check_rows]
-                and mapping_to == maps[check_rows][index1 - 1]
-            ):
-                return True
-            if (
-                index2 + 1 in blank[check_rows]
-                and mapping_to == maps[check_rows][index2 + 1]
-            ):
-                return True
-            return False
 
         def validate_one_cell(index: int, check_rows: bool) -> tuple[bool, bool]:
             """Returns True if a cell is in a point row/col
@@ -221,8 +200,47 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 valid = validate_one_cell(cell[1], True)
                 if valid[0]:
                     to_insert[1].add(cell[1] - valid[1])
+        if not any(to_insert):
+            return param
+        return param.unfuse_cols_and_rows(*to_insert)
 
-            elif req.pattern in (
+    @staticmethod
+    @reg(2, run_on_enumerators=False)
+    def insert_blank_size_2s(param: Parameter) -> Parameter:
+        """Inserts a blank col/row in between descents/ascents wherever possible"""
+        if not param.requirements:
+            return param
+        to_insert = [set[int](), set[int]()]
+        maps = param.col_map, param.row_map
+        blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
+        point_indices = param.point_cols, param.point_rows
+
+        def validate_two_cells(index1: int, index2: int, check_rows: bool) -> bool:
+            """Returns True if two adjacent cells are in point rows/cols with a
+            blank row/col adjacent to them mapping to the same place."""
+            indices = {index1, index2}
+            mapping_to = maps[check_rows][index1]
+            if mapping_to != maps[check_rows][index2] or not indices.issubset(
+                point_indices[check_rows]
+            ):
+                return False
+            if (
+                index1 - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index1 - 1]
+            ):
+                return True
+            if (
+                index2 + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index2 + 1]
+            ):
+                return True
+            return False
+
+        for req_list in param.requirements:
+            if not len(req_list) == 1:
+                continue
+            req = req_list[0]
+            if req.pattern in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
             ):
@@ -238,7 +256,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
                     to_insert[1].add(idx1)
         if not any(to_insert):
             return param
-        return param.unfuse_cols_and_rows(*to_insert)
+        return param.insert_cols_and_rows(*to_insert)
 
     # Internal Methods
 
