@@ -386,7 +386,7 @@ class GenericCleaner(Generic[T]):
         for func in cleaning_list:
             if not bool(new_cleaning_object):  # fix this
                 return new_cleaning_object
-            new_cleaning_object = cls._debug(log(func)(new_cleaning_object))
+            new_cleaning_object = cls._debug(log(func))(new_cleaning_object)
         return new_cleaning_object
 
     def tracked_cleanup(
