@@ -191,9 +191,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
             if index not in point_indices[check_rows]:
                 return False, False
             mapping_to = maps[check_rows][index]
-            for other_idx in range(param.dimensions[check_rows]):
-                if maps[not check_rows][other_idx] != mapping_to:
-                    return False, False
             negative = (
                 index - 1 in blank[check_rows]
                 and mapping_to == maps[check_rows][index - 1]
@@ -241,8 +238,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
                     to_insert[1].add(idx1)
         if not any(to_insert):
             return param
-
-        return param.insert_cols_and_rows(*to_insert)
+        return param.unfuse_cols_and_rows(*to_insert)
 
     # Internal Methods
 
