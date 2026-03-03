@@ -45,6 +45,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             temp = mappling.apply_to_all_parameters(
                 Parameter.update_active_cells, (mappling.tiling,)
             )
+            ParamCleaner.force_log_track(param_cleaner.logger)
             new_avoiders, new_containers, new_enumerators = temp.ace_parameters()
             for func in param_cleaner:
                 if getattr(func, "run_on_avoiders"):

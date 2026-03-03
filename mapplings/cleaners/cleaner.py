@@ -426,6 +426,12 @@ class GenericCleaner(Generic[T]):
         cls.debug_depth = depth
 
     @classmethod
+    def force_log_track(cls, logger: CleanerLog[T]) -> None:
+        """Used to change the currently tracked logger
+        without running its cleaner"""
+        cls._currently_tracking = logger
+
+    @classmethod
     def _debug_test(cls, original: T, new: T, depth: int) -> tuple[bool, str]:
         """The test used to compare objects in the debug function.
         String output is used as success/failure message"""
