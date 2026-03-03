@@ -279,7 +279,7 @@ class CleanerLog(Generic[T]):
                         )
                         assert results[0], (
                             f"Objects differ after {self.name}.{func.__name__}:"
-                            + f"\nInitial counts: {results[1]}\nClean counts: {results[1]}"
+                            + f"\nCheck Counts: {results[1]}"
                             + f"\nCheck GCP: {results[2]}"
                             + f"\n{cleaning_object}\n{new_object}"
                             + f"\n{repr(cleaning_object)}"
