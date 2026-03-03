@@ -274,13 +274,13 @@ class CleanerLog(Generic[T]):
                 self._update_log(func, elapsed_time, changed)
                 if changed:
                     if self.debug_level > 1:
-                        old_counts = cleaning_object.initial_conditions(
-                            self.debug_depth
+                        results = cleaning_object.compare_to(
+                            new_object, self.debug_depth
                         )
-                        new_counts = new_object.initial_conditions(self.debug_depth)
-                        assert old_counts == new_counts, (
-                            f"Counts differ after {self.name}.{func.__name__}:"
-                            + f"\nInitial counts: {old_counts}\nClean counts: {new_counts}"
+                        assert results[0], (
+                            f"Objects differ after {self.name}.{func.__name__}:"
+                            + f"\nInitial counts: {results[1]}\nClean counts: {results[1]}"
+                            + f"\nCheck GCP: {results[2]}"
                             + f"\n{cleaning_object}\n{new_object}"
                             + f"\n{repr(cleaning_object)}"
                         )
