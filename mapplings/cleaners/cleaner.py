@@ -427,6 +427,8 @@ class GenericCleaner(Generic[T]):
 
     @classmethod
     def _debug_test(cls, original: T, new: T, depth: int) -> tuple[bool, str]:
+        """The test used to compare objects in the debug function.
+        String output is used as success/failure message"""
         original_counts = original.initial_conditions(depth)
         new_counts = new.initial_conditions(depth)
         if original_counts != new_counts:
