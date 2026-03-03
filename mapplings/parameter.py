@@ -499,11 +499,9 @@ class Parameter(Tiling):
 
         return "".join(result)
 
-    def compare_to(
+    def compare_parameters(
         self, other: "Parameter", depth: int = 4
-    ) -> tuple[
-        bool, Optional[tuple[list[int], list[int]]], Optional[GriddedCayleyPerm]
-    ]:
+    ) -> tuple[bool, Optional[GriddedCayleyPerm]]:
         """Compares the gcps that live on self to the gcps on other up to size depth"""
 
         col_map = {
@@ -533,9 +531,9 @@ class Parameter(Tiling):
         while i < depth:
             for gcp in base.objects_of_size(i):
                 if temp_self.gcp_has_preimage(gcp) != temp_other.gcp_has_preimage(gcp):
-                    return False, None, gcp
+                    return False, gcp
             i += 1
-        return True, None, None
+        return True, None
 
     def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
         """Return gridded Cayley permutations of size n in the tiling."""
