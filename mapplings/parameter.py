@@ -416,40 +416,14 @@ class Parameter(Tiling):
 
         for col in cols:
             if col == -1:
-                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
-                    check_cells_in_row_col(col, True, True)
-                )
-                reqs_to_remove.extend(reqs_to_remove_here)
-                obs_to_remove.extend(obs_to_remove_here)
-                new_obs.extend(new_obs_here)
+                check_cells_in_row_col(col, True, True)
             else:
-                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
-                    check_cells_in_row_col(col, True)
-                )
-                reqs_to_remove.extend(reqs_to_remove_here)
-                obs_to_remove.extend(obs_to_remove_here)
-                new_obs.extend(new_obs_here)
-
+                check_cells_in_row_col(col, True)
         for row in rows:
             if row == -1:
-                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
-                    check_cells_in_row_col(row, False, True)
-                )
-                reqs_to_remove.extend(reqs_to_remove_here)
-                obs_to_remove.extend(obs_to_remove_here)
-                new_obs.extend(new_obs_here)
-
+                check_cells_in_row_col(row, False, True)
             else:
-                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
-                    check_cells_in_row_col(
-                        row,
-                        False,
-                    )
-                )
-                reqs_to_remove.extend(reqs_to_remove_here)
-                obs_to_remove.extend(obs_to_remove_here)
-                new_obs.extend(new_obs_here)
-
+                check_cells_in_row_col(row, False)
         new_obs = [ob for ob in new_obs if ob not in obs_to_remove]
         new_map = self.map_for_adding_cols_and_rows(cols, rows)
         return Parameter(
