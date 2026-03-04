@@ -371,115 +371,84 @@ class Parameter(Tiling):
         new_reqs = list(map_gcps.preimage_of_requirements(self.requirements))
         reqs_to_remove = []
         obs_to_remove = []
+
+        def check_cells_in_row_col(
+            col: int, is_col: bool, is_negative: bool = False
+        ) -> tuple[
+            list[GriddedCayleyPerm], list[GriddedCayleyPerm], list[GriddedCayleyPerm]
+        ]:
+            """Checks cells for point reqs in the given row/col.
+            If there are then adds point req to list of reqs to remove and any size 2
+            obs in that cell or going into an adjacent cell.
+            If not then adds point ob in that cell to the new obs."""
+            for row in range(new_dimensions[int(is_col)]):
+                if any(
+                    GriddedCayleyPerm(
+                        CayleyPermutation((0,)), ((col + int(is_negative), row),)
+                    )
+                    in req_list
+                    for req_list in new_reqs
+                ):
+                    reqs_to_remove.append(
+                        GriddedCayleyPerm(CayleyPermutation((0,)), ((col + 1, row),))
+                    )
+                    for ob in new_obs:
+                        if all(cell == (col + 1, row) for cell in ob.positions):
+                            obs_to_remove.append(ob)
+                        elif all(
+                            cell == (col + 2 * int(is_negative), row)
+                            for cell in ob.positions
+                        ):
+                            continue
+                        elif is_negative and all(
+                            cell in ((col, row), (col + 1, row))
+                            for cell in ob.positions
+                        ):
+                            obs_to_remove.append(ob)
+                        elif all(
+                            cell in ((col + 2, row), (col + 1, row))
+                            for cell in ob.positions
+                        ):
+                            obs_to_remove.append(ob)
+                else:
+                    new_obs.append(GriddedCayleyPerm((0,), ((col + 1, row),)))
+            return reqs_to_remove, obs_to_remove, new_obs
+
         for col in cols:
             if col == -1:
-                for row in range(new_dimensions[1]):
-                    if any(
-                        GriddedCayleyPerm(CayleyPermutation((0,)), ((col + 1, row),))
-                        in req_list
-                        for req_list in new_reqs
-                    ):
-                        reqs_to_remove.append(
-                            GriddedCayleyPerm(
-                                CayleyPermutation((0,)), ((col + 1, row),)
-                            )
-                        )
-                        for ob in new_obs:
-                            if all(cell == (col + 1, row) for cell in ob.positions):
-                                obs_to_remove.append(ob)
-                            elif all(cell == (col + 2, row) for cell in ob.positions):
-                                continue
-                            elif all(
-                                cell in ((col + 2, row), (col + 1, row))
-                                for cell in ob.positions
-                            ):
-                                obs_to_remove.append(ob)
-                    else:
-                        new_obs.append(GriddedCayleyPerm((0,), ((col + 1, row),)))
+                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
+                    check_cells_in_row_col(col, True, True)
+                )
+                reqs_to_remove.extend(reqs_to_remove_here)
+                obs_to_remove.extend(obs_to_remove_here)
+                new_obs.extend(new_obs_here)
             else:
-                for row in range(new_dimensions[1]):
-                    if any(
-                        GriddedCayleyPerm(CayleyPermutation((0,)), ((col, row),))
-                        in req_list
-                        for req_list in new_reqs
-                    ):
-                        reqs_to_remove.append(
-                            GriddedCayleyPerm(
-                                CayleyPermutation((0,)), ((col + 1, row),)
-                            )
-                        )
-                        for ob in new_obs:
-                            if all(cell == (col + 1, row) for cell in ob.positions):
-                                obs_to_remove.append(ob)
-                            elif all(cell == (col, row) for cell in ob.positions):
-                                continue
-                            elif all(
-                                cell in ((col, row), (col + 1, row))
-                                for cell in ob.positions
-                            ):
-                                obs_to_remove.append(ob)
-                            elif all(
-                                cell in ((col + 2, row), (col + 1, row))
-                                for cell in ob.positions
-                            ):
-                                obs_to_remove.append(ob)
-                    else:
-                        new_obs.append(GriddedCayleyPerm((0,), ((col + 1, row),)))
+                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
+                    check_cells_in_row_col(col, True)
+                )
+                reqs_to_remove.extend(reqs_to_remove_here)
+                obs_to_remove.extend(obs_to_remove_here)
+                new_obs.extend(new_obs_here)
+
         for row in rows:
             if row == -1:
-                for col in range(new_dimensions[0]):
-                    if any(
-                        GriddedCayleyPerm(CayleyPermutation((0,)), ((col, row + 1),))
-                        in req_list
-                        for req_list in new_reqs
-                    ):
-                        reqs_to_remove.append(
-                            GriddedCayleyPerm(
-                                CayleyPermutation((0,)), ((col, row + 1),)
-                            )
-                        )
-                        for ob in new_obs:
-                            if all(cell == (col, row + 1) for cell in ob.positions):
-                                obs_to_remove.append(ob)
-                            elif all(cell == (col, row + 2) for cell in ob.positions):
-                                continue
-                            elif all(
-                                cell in ((col, row + 2), (col, row + 1))
-                                for cell in ob.positions
-                            ):
-                                obs_to_remove.append(ob)
-                    else:
-                        new_obs.append(GriddedCayleyPerm((0,), ((col, row + 1),)))
+                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
+                    check_cells_in_row_col(row, False, True)
+                )
+                reqs_to_remove.extend(reqs_to_remove_here)
+                obs_to_remove.extend(obs_to_remove_here)
+                new_obs.extend(new_obs_here)
 
             else:
-                for col in range(new_dimensions[0]):
-                    if any(
-                        GriddedCayleyPerm(CayleyPermutation((0,)), ((col, row),))
-                        in req_list
-                        for req_list in new_reqs
-                    ):
-                        reqs_to_remove.append(
-                            GriddedCayleyPerm(
-                                CayleyPermutation((0,)), ((col, row + 1),)
-                            )
-                        )
-                        for ob in new_obs:
-                            if all(cell == (col, row + 1) for cell in ob.positions):
-                                obs_to_remove.append(ob)
-                            elif all(cell == (col, row) for cell in ob.positions):
-                                continue
-                            elif all(
-                                cell in ((col, row), (col, row + 1))
-                                for cell in ob.positions
-                            ):
-                                obs_to_remove.append(ob)
-                            elif all(
-                                cell in ((col, row + 2), (col, row + 1))
-                                for cell in ob.positions
-                            ):
-                                obs_to_remove.append(ob)
-                    else:
-                        new_obs.append(GriddedCayleyPerm((0,), ((col, row + 1),)))
+                reqs_to_remove_here, obs_to_remove_here, new_obs_here = (
+                    check_cells_in_row_col(
+                        row,
+                        False,
+                    )
+                )
+                reqs_to_remove.extend(reqs_to_remove_here)
+                obs_to_remove.extend(obs_to_remove_here)
+                new_obs.extend(new_obs_here)
 
         new_obs = [ob for ob in new_obs if ob not in obs_to_remove]
         new_map = self.map_for_adding_cols_and_rows(cols, rows)
