@@ -28,6 +28,20 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     all_loggers = {global_tracker}
 
+    # Cleaner Overrides
+
+    @classmethod
+    def _debug_test(cls, original, new, depth):
+        results = original.compare_parameters(new, depth)
+        if not results[0]:
+            return (
+                False,
+                f"\nCheck GCP: {results[1]}"
+                + f"\n{original}\n{new}"
+                + f"\n{repr(original)}",
+            )
+        return True, "Cleaning Sucessful"
+
     # Final Methods
 
     @staticmethod

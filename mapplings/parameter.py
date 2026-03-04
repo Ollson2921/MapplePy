@@ -570,6 +570,46 @@ class Parameter(Tiling):
         col_map = {i: image_cell[0] for i in range(col + 1)}
         return Parameter(ghost, RowColMap(col_map, {0: image_cell[1]}))
 
+    @staticmethod
+    def make_covincular(
+        pattern: tuple[int, ...], adjacency: Iterable[int], image_cell: Cell = (0, 0)
+    ) -> "Parameter":
+        """Returns a parameter equivilent to the vincular pattern mapping to image_cell"""
+        row_positions = list[int]()
+        row = 0 - int(0 in adjacency)
+        obs = set[GriddedCayleyPerm]()
+        for idx in range(len(pattern)):
+            if idx + 1 in adjacency:
+                row += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((0, row), (0, row))),
+                        GriddedCayleyPerm((0, 1), ((0, row), (0, row))),
+                        GriddedCayleyPerm((1, 0), ((0, row), (0, row))),
+                    }
+                )
+                row_positions.append(row)
+            elif idx in adjacency:
+                row += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((0, row), (0, row))),
+                        GriddedCayleyPerm((0, 1), ((0, row), (0, row))),
+                        GriddedCayleyPerm((1, 0), ((0, row), (0, row))),
+                    }
+                )
+                row_positions.append(row)
+                row += 1
+            else:
+                row_positions.append(row)
+        ghost = Tiling(
+            obs,
+            [[GriddedCayleyPerm(pattern, [(0, row) for row in row_positions])]],
+            (1, row + 1),
+        )
+        row_map = {i: image_cell[1] for i in range(row + 1)}
+        return Parameter(ghost, RowColMap({0: image_cell[0]}, row_map))
+
     def to_html_representation(self) -> str:
         """Returns an html representation of the tilings object
         Mimics code from original tilings"""
@@ -601,7 +641,7 @@ class Parameter(Tiling):
 
         return "".join(result)
 
-    def compare_to(
+    def compare_parameters(
         self, other: "Parameter", depth: int = 4
     ) -> tuple[bool, Optional[GriddedCayleyPerm]]:
         """Compares the gcps that live on self to the gcps on other up to size depth"""
