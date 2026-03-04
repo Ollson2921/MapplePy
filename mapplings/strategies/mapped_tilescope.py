@@ -15,7 +15,6 @@ from .tilescope_strategies import (
     MapplingVerticalInsertionEncodingPlacementFactory,
     MapplingHorizontalInsertionEncodingRequirementInsertionFactory,
     MapplingHorizontalInsertionEncodingPlacementFactory,
-    # CleaningStrategy,
     MapplingFactorStrategy,
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
@@ -28,6 +27,34 @@ class MappedTileScopePack(StrategyPack):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def atom_verification_point_placement(cls):
+        """
+        Create a point placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingPointPlacementFactory(),
+            ],
+            inferral_strats=[
+                # CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingCellInsertionFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+            ],
+            name="Point placements, only atom verification strategy",
+            symmetries=[],
+            iterative=False,
+        )
 
     @classmethod
     def no_param_ver_point_placement(cls):
@@ -85,6 +112,34 @@ class MappedTileScopePack(StrategyPack):
                 MapplingHorizontalInsertionEncodableVerificationStrategy(),
             ],
             name="Row and col placements, no parameterless verification strategy",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def atom_verification_row_and_col_placement(cls):
+        """
+        Create a row and column placement strategy pack for the given root mapped tiling.
+        """
+        return MappedTileScopePack(
+            initial_strats=[
+                MapplingFactorStrategy(),
+                MapplingLessThanOrEqualRowColSeparationStrategy(),
+            ],
+            inferral_strats=[
+                # CleaningStrategy(),
+                MapplingLessThanRowColSeparationStrategy(),
+            ],
+            expansion_strats=[
+                [
+                    MapplingRowPlacementFactory(),
+                    MapplingColPlacementFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+            ],
+            name="Row and col placements, only atom verification strategy",
             symmetries=[],
             iterative=False,
         )
