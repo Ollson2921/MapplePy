@@ -358,10 +358,11 @@ class Parameter(Tiling):
                 row_map[i + adjust] = i
         return RowColMap(col_map, row_map)
 
-    def unfuse_cols_and_rows(
+    def unfuse_cols_and_rows_for_insert_blank(
         self, cols: Iterable[int], rows: Iterable[int]
     ) -> "Parameter":
-        """Unfuses the param at all columns and rows and adjust the maps."""
+        """Unfuses the param at all columns and rows and makes added row/cols empty
+        unless adjacent to a point req, in which case it makes it blank."""
         new_dimensions = (
             self.dimensions[0] + len(tuple(cols)),
             self.dimensions[1] + len(tuple(rows)),

@@ -216,7 +216,7 @@ class ParamCleaner(GenericCleaner[Parameter]):
                     to_insert[1].add(cell[1] - valid[1])
         if not any(to_insert):
             return param
-        return param.unfuse_cols_and_rows(*to_insert)
+        return param.unfuse_cols_and_rows_for_insert_blank(*to_insert)
 
     @staticmethod
     @reg(2, run_on_enumerators=False)
