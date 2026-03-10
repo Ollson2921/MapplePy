@@ -169,8 +169,9 @@ class ParamCleaner(GenericCleaner[Parameter]):
         """Inserts a blank col/row in between descents/ascents wherever possible"""
         if not param.requirements:
             return param
-        to_insert: list[list[tuple[int, bool]], list[tuple[int, bool]]] = (
-            []
+        to_insert: tuple[list[tuple[int, bool]], list[tuple[int, bool]]] = (
+            [],
+            [],
         )  # each tuple is the idx of thing unfusing and if it unfuses on the right (above) or not
         maps = param.col_map, param.row_map
         blank = tuple(map(set[int], param.find_blank_columns_and_rows()))

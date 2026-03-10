@@ -418,7 +418,9 @@ class Parameter(Tiling):
         for row in rows:
             check_cells_in_row_col(row, False)
         new_obs = [ob for ob in new_obs if ob not in obs_to_remove]
-        new_map = self.map_for_adding_cols_and_rows(cols, rows)
+        new_map = self.map_for_adding_cols_and_rows(
+            [col for col, _ in cols], [row for row, _ in rows]
+        )
         return Parameter(
             Tiling(
                 new_obs,
