@@ -169,7 +169,9 @@ class ParamCleaner(GenericCleaner[Parameter]):
         """Inserts a blank col/row in between descents/ascents wherever possible"""
         if not param.requirements:
             return param
-        to_insert = [set[int](), set[int]()]
+        to_insert: list[list[tuple[int, bool]], list[tuple[int, bool]]] = (
+            []
+        )  # each tuple is the idx of thing unfusing and if it unfuses on the right (above) or not
         maps = param.col_map, param.row_map
         blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
         point_indices = param.point_cols, param.point_rows
@@ -209,11 +211,11 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 cell = req.positions[0]
                 valid = validate_one_cell(cell[0], False)
                 if valid[0]:
-                    to_insert[0].add(cell[0] - valid[1])
+                    to_insert[0].append((cell[0], valid[1]))
                     continue
                 valid = validate_one_cell(cell[1], True)
                 if valid[0]:
-                    to_insert[1].add(cell[1] - valid[1])
+                    to_insert[1].append((cell[1], valid[1]))
         if not any(to_insert):
             return param
         return param.unfuse_cols_and_rows_for_insert_blank(*to_insert)

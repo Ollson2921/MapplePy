@@ -359,7 +359,7 @@ class Parameter(Tiling):
         return RowColMap(col_map, row_map)
 
     def unfuse_cols_and_rows_for_insert_blank(
-        self, cols: Iterable[int], rows: Iterable[int]
+        self, cols: Iterable[tuple(int, bool)], rows: Iterable[tuple(int, bool)]
     ) -> "Parameter":
         """Unfuses the param at all columns and rows and makes added row/cols empty
         unless adjacent to a point req, in which case it makes it blank."""
@@ -367,14 +367,19 @@ class Parameter(Tiling):
             self.dimensions[0] + len(tuple(cols)),
             self.dimensions[1] + len(tuple(rows)),
         )
-        map_gcps = self.map_param_to_param_adding_cols_and_rows(cols, rows)
+        idx_cols_to_add = {idx for idx, _ in cols}
+        idx_rows_to_add = {idx for idx, _ in rows}
+        map_gcps = self.map_param_to_param_adding_cols_and_rows(
+            idx_cols_to_add, idx_rows_to_add
+        )
         new_obs = list(map_gcps.preimage_of_obstructions(self.obstructions))
         new_reqs = list(map_gcps.preimage_of_requirements(self.requirements))
+
         reqs_to_remove = []
         obs_to_remove = []
 
         def check_cells_in_row_col(
-            col: int, is_col: bool, is_negative: bool = False
+            col_position: tuple[int, bool], is_col: bool
         ) -> tuple[
             list[GriddedCayleyPerm], list[GriddedCayleyPerm], list[GriddedCayleyPerm]
         ]:
@@ -382,11 +387,12 @@ class Parameter(Tiling):
             If there are then adds point req to list of reqs to remove and any size 2
             obs in that cell or going into an adjacent cell.
             If not then adds point ob in that cell to the new obs."""
+            col_mapping_from, adjustment = col_position
+            col = col_mapping_from + int(adjustment)
+            other_col = col if adjustment else col + 1
             for row in range(new_dimensions[int(is_col)]):
                 if any(
-                    GriddedCayleyPerm(
-                        CayleyPermutation((0,)), ((col + int(is_negative), row),)
-                    )
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((col, row),))
                     in req_list
                     for req_list in new_reqs
                 ):
@@ -394,37 +400,23 @@ class Parameter(Tiling):
                         GriddedCayleyPerm(CayleyPermutation((0,)), ((col + 1, row),))
                     )
                     for ob in new_obs:
-                        if all(cell == (col + 1, row) for cell in ob.positions):
+                        if all(cell == (col, row) for cell in ob.positions):
                             obs_to_remove.append(ob)
-                        elif all(
-                            cell == (col + 2 * int(is_negative), row)
-                            for cell in ob.positions
-                        ):
+                        elif all(cell == (other_col, row) for cell in ob.positions):
                             continue
-                        elif is_negative and all(
-                            cell in ((col, row), (col + 1, row))
-                            for cell in ob.positions
-                        ):
-                            obs_to_remove.append(ob)
                         elif all(
-                            cell in ((col + 2, row), (col + 1, row))
+                            cell in ((col, row), (other_col, row))
                             for cell in ob.positions
                         ):
                             obs_to_remove.append(ob)
                 else:
-                    new_obs.append(GriddedCayleyPerm((0,), ((col + 1, row),)))
+                    new_obs.append(GriddedCayleyPerm((0,), ((col, row),)))
             return reqs_to_remove, obs_to_remove, new_obs
 
         for col in cols:
-            if col == -1:
-                check_cells_in_row_col(col, True, True)
-            else:
-                check_cells_in_row_col(col, True)
+            check_cells_in_row_col(col, True)
         for row in rows:
-            if row == -1:
-                check_cells_in_row_col(row, False, True)
-            else:
-                check_cells_in_row_col(row, False)
+            check_cells_in_row_col(row, False)
         new_obs = [ob for ob in new_obs if ob not in obs_to_remove]
         new_map = self.map_for_adding_cols_and_rows(cols, rows)
         return Parameter(
