@@ -359,7 +359,7 @@ class Parameter(Tiling):
         return RowColMap(col_map, row_map)
 
     def unfuse_cols_and_rows_for_insert_blank(
-        self, cols: Iterable[tuple(int, bool)], rows: Iterable[tuple(int, bool)]
+        self, cols: Iterable[tuple[int, bool]], rows: Iterable[tuple[int, bool]]
     ) -> "Parameter":
         """Unfuses the param at all columns and rows and makes added row/cols empty
         unless adjacent to a point req, in which case it makes it blank."""
