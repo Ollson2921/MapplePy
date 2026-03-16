@@ -379,7 +379,10 @@ class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStr
         self, comb_class: MappedTiling
     ) -> tuple[MappedTiling, ...]:
         """Updates base tiling, avoiding parameters, and containing parameters
-        based on obstruction transitivity."""
+        based on obstruction transitivity.
+
+        TODO: As we're adding obstructions, we should simplify the parameter's tilings
+        too. Should this happen when simplify=True for a mappling?"""
         new_bt_obs = ObstructionTransitivity(comb_class).new_obs()
         found_new_obs = bool(new_bt_obs)
         new_av_params, found_new = self.obs_trans_for_param_list(
