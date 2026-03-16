@@ -19,6 +19,7 @@ from .tilescope_strategies import (
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
+    MapplingObstructionTransitivityStrategy,
 )
 
 
