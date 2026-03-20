@@ -98,6 +98,7 @@ class AbstractMTRowColSeparation:
                     i + total_extensions[0][param.map.col_map[i] + 1],
                     j + total_extensions[1][param.map.row_map[j] + 1],
                 )
+
         inequalities = self.separation.column_row_inequalities()
         cells_to_move = set(pair[0] for pair in inequalities[0])
         for base_cell in cells_to_move:
@@ -151,27 +152,24 @@ class AbstractMTRowColSeparation:
 
     def make_new_parameter(self, param: Parameter) -> Parameter:
         """Returns the adjusted param after row/col separation"""
-        param_extensions = self.parameter_extensions(param)
-        total_extensions = self.total_extensions(param_extensions)
-        new_dimensions = (
-            param.ghost.dimensions[0] + total_extensions[0][-1],
-            param.ghost.dimensions[1] + total_extensions[1][-1],
-        )
-        cell_map = self.cell_map(total_extensions, param)
-        if len(self.base_extensions[0]) > 1:
-            if not self.check_valid_map(cell_map, param, 1):
-                return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
-        if len(self.base_extensions[1]) > 1:
-            if not self.check_valid_map(cell_map, param, 0):
-                return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
-        new_obstructions = [
-            self.transform_gcp(cell_map, ob) for ob in param.obstructions
-        ]
-        new_requirements = [
-            [self.transform_gcp(cell_map, req) for req in req_list]
-            for req_list in param.requirements
-        ]
-        new_ghost = Tiling(new_obstructions, new_requirements, new_dimensions)
+        rc_map = self.separation.row_col_map.preimage_map()
+        reverse_col_map = {}
+        count = 0
+        for og_col in param.col_map:
+            intermediate_col = param.col_map[og_col]
+            for _ in rc_map[0][intermediate_col]:
+                reverse_col_map[count] = og_col
+                count += 1
+        count = 0
+        reverse_row_map = {}
+        for og_row in param.row_map:
+            intermediate_row = param.row_map[og_row]
+            for _ in rc_map[1][intermediate_row]:
+                reverse_row_map[count] = og_row
+                count += 1
+        reverse_map = RowColMap(reverse_col_map, reverse_row_map)
+        obs, reqs = reverse_map.preimage_of_tiling(param.ghost)
+        new_ghost = Tiling(obs, reqs, (len(reverse_col_map), len(reverse_row_map)))
         new_map = RowColMap(
             self.make_new_map(param, 0),
             self.make_new_map(param, 1),
@@ -202,10 +200,6 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
     Allow cells to interleave in the top/bottom rows when
     separating cells in a row.
     """
-
-    def separation_algo(self, tiling: Tiling) -> LessThanRowColSeparation:
-        """Returns the row/col separation map."""
-        return LessThanRowColSeparation(tiling)
 
     def separation_map(
         self, row_order: Optional[list[set[Cell]]] = None
@@ -278,4 +272,19 @@ class MTLTORERowColSeparation(AbstractMTRowColSeparation):
             for e_list in self.enumeration_parameters
         ]
         for base in self.separation.row_col_separation():
+            new_avoiders = ParameterList(
+                [
+                    param.back_map_point_obstructions_from_tiling(base)
+                    for param in new_avoiders
+                ]
+            )
+            new_containers = [
+                ParameterList(
+                    [
+                        param.back_map_point_obstructions_from_tiling(base)
+                        for param in c_list
+                    ]
+                )
+                for c_list in new_containers
+            ]
             yield MappedTiling(base, new_avoiders, new_containers, new_enumerators)
