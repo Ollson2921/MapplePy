@@ -1,34 +1,47 @@
 """Module for row and column separating mapped tilings and related strategies."""
 
+import abc
 from itertools import combinations
 from functools import cached_property
-from typing import Iterator
+from typing import Iterator, Optional
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope.strategies.row_column_separation import (
     LessThanRowColSeparation,
     LessThanOrEqualRowColSeparation,
+    AbstractSeparation,
 )
 from ..mapped_tiling import MappedTiling, Parameter, ParameterList
 
+Cell = tuple[int, int]
 
-class MTLTRowColSeparation:
+
+class AbstractMTRowColSeparation:
     """
     When separating, cells must be strictly above/below each other.
     """
 
-    def __init__(self, mapped_tiling: MappedTiling):
+    def __init__(
+        self,
+        mapped_tiling: MappedTiling,
+        row_order: Optional[list[set[Cell]]] = None,
+    ):
         self.mapped_tiling = mapped_tiling
         self.tiling = mapped_tiling.tiling
         self.avoiding_parameters = mapped_tiling.avoiding_parameters
         self.containing_parameters = mapped_tiling.containing_parameters
         self.enumeration_parameters = mapped_tiling.enumerating_parameters
-        self.separation = self.separation_map()
-        self.preimage_map = self.separation.row_col_map.preimage_map()
+        self.separation = self.separation_map(row_order=row_order)
 
-    def separation_map(self) -> LessThanRowColSeparation:
+    @cached_property
+    def preimage_map(self) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
+        return self.separation.row_col_map.preimage_map()
+
+    @abc.abstractmethod
+    def separation_map(
+        self, row_order: Optional[list[set[Cell]]] = None
+    ) -> AbstractSeparation:
         """Returns the row/col separation map."""
-        return LessThanRowColSeparation(self.tiling)
 
     @cached_property
     def base_extensions(self) -> tuple[list[int], list[int]]:
@@ -183,6 +196,23 @@ class MTLTRowColSeparation:
                     return False
         return True
 
+
+class MTLTRowColSeparation(AbstractMTRowColSeparation):
+    """
+    Allow cells to interleave in the top/bottom rows when
+    separating cells in a row.
+    """
+
+    def separation_algo(self, tiling: Tiling) -> LessThanRowColSeparation:
+        """Returns the row/col separation map."""
+        return LessThanRowColSeparation(tiling)
+
+    def separation_map(
+        self, row_order: Optional[list[set[Cell]]] = None
+    ) -> LessThanRowColSeparation:
+        """Returns the row/col separation map."""
+        return LessThanRowColSeparation(self.tiling, row_order=row_order)
+
     def separate(self) -> Iterator[MappedTiling]:
         """Returns the row/col separated mapping"""
         if self.separation.row_col_map.is_identity():
@@ -205,7 +235,7 @@ class MTLTRowColSeparation:
     @staticmethod
     def separate_parameter(param: Parameter) -> Iterator[Parameter]:
         """Row/Col separates a parameter and adjusts the map without altering the base tiling"""
-        separation = LessThanOrEqualRowColSeparation(param.ghost)
+        separation = LessThanRowColSeparation(param.ghost)
         separation_map = separation.row_col_map
         new_col_map = {
             i: param.map.col_map[separation_map.col_map[i]]
@@ -219,12 +249,33 @@ class MTLTRowColSeparation:
             yield Parameter(parameter, RowColMap(new_col_map, new_row_map))
 
 
-class MTLTORERowColSeparation(MTLTRowColSeparation):
+class MTLTORERowColSeparation(AbstractMTRowColSeparation):
     """
     Allow cells to interleave in the top/bottom rows when
     separating cells in a row.
     """
 
-    def separation_map(self) -> LessThanOrEqualRowColSeparation:
+    def separation_map(
+        self, row_order: Optional[list[set[Cell]]] = None
+    ) -> LessThanOrEqualRowColSeparation:
         """Returns the row/col separation map."""
-        return LessThanOrEqualRowColSeparation(self.tiling)
+        return LessThanOrEqualRowColSeparation(self.tiling, row_order=row_order)
+
+    def separate(self) -> Iterator[MappedTiling]:
+        """Returns the row/col separated mapping"""
+        if self.separation.row_col_map.is_identity():
+            yield self.mapped_tiling
+            return
+        new_avoiders = ParameterList(
+            [self.make_new_parameter(param) for param in self.avoiding_parameters]
+        )
+        new_containers = [
+            ParameterList([self.make_new_parameter(param) for param in c_list])
+            for c_list in self.containing_parameters
+        ]
+        new_enumerators = [
+            ParameterList([self.make_new_parameter(param) for param in e_list])
+            for e_list in self.enumeration_parameters
+        ]
+        for base in self.separation.row_col_separation():
+            yield MappedTiling(base, new_avoiders, new_containers, new_enumerators)

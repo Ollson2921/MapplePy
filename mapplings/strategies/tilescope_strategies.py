@@ -9,14 +9,16 @@ from tilescope.strategies import (
     AbstractRequirementPlacementStrategy,
     AbstractLessThanRowColSeparationStrategy,
     AbstractLessThanOrEqualRowColSeparationStrategy,
+    AbstractLessThanOrEqualRowColSeparationFactory,
     AbstractCellInsertionFactory,
     AbstractPointPlacementFactory,
     AbstractRowInsertionFactory,
     AbstractColInsertionFactory,
     AbstractRequirementInsertionStrategy,
 )
+from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
 
-from tilescope.strategies.point_placements import (
+from gridded_cayley_permutations.point_placements import (
     DIR_LEFT_BOT,
     DIR_RIGHT_BOT,
     DIR_LEFT_TOP,
@@ -376,8 +378,33 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 
     cleaner = MTCleaner.make_full_cleaner("LEQ Separation Cleaner")
 
+    def algorithm(self, comb_class):
+        """Returns the algorithm for finding the row and column separation."""
+        return MTLTORERowColSeparation(comb_class, self.row_order)
+
     def decomposition_function(self, comb_class):
-        algo = MTLTORERowColSeparation(comb_class)
+        algo = self.algorithm(comb_class)
         if algo.separation.row_col_map.is_identity():
             raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))
+
+
+class MapplingLessThanOrEqualRowColSeparationFactory(
+    AbstractLessThanOrEqualRowColSeparationFactory
+):
+    """A factory for making less than or equal row/col separation strategies."""
+
+    def algorithm(self, comb_class: MappedTiling) -> LessThanOrEqualRowColSeparation:
+        """The algorithm for finding the row and column separation."""
+        return LessThanOrEqualRowColSeparation(comb_class.tiling)
+
+    def __call__(
+        self, comb_class: MappedTiling
+    ) -> Iterator[MapplingLessThanOrEqualRowColSeparationStrategy]:
+        """Finds max expansion and if any row separates more than 2 cells then
+        it merges them together so that each row splits into at most 2 rows
+        (plus a point row between them) and yields all possible ways of doing this."""
+        for row_order in self.row_separations(comb_class):
+            yield MapplingLessThanOrEqualRowColSeparationStrategy(
+                row_order=row_order,
+            )
