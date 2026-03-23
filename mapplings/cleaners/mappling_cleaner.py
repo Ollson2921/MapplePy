@@ -72,7 +72,10 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                         for e_list in new_enumerators
                     ]
             return MappedTiling(
-                mappling.tiling, new_avoiders, new_containers, new_enumerators
+                mappling.tiling,
+                new_avoiders,
+                new_containers,
+                new_enumerators,
             )
 
         return _clean_parameters
@@ -93,6 +96,13 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             if any(
                 not avoider.ghost.active_cells
                 for avoider in mappling.avoiding_parameters
+            ):
+                return MappedTiling.empty_mappling()
+            if any(
+                (
+                    all(container.positive_cells() for container in c_list)
+                    for c_list in mappling.containing_parameters
+                )
             ):
                 return MappedTiling.empty_mappling()
             return MappedTiling(
@@ -158,7 +168,10 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             if new_e_list:
                 new_enumerators.append(e_list)
         return MappedTiling(
-            mappling.tiling, new_avoiders, new_containers, new_enumerators
+            mappling.tiling,
+            new_avoiders,
+            new_containers,
+            new_enumerators,
         )
 
     @staticmethod

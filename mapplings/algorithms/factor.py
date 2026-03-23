@@ -84,7 +84,7 @@ class ILFactorNormal(Factor):
     """Does IL factoring with 00 obs as normal"""
 
     @cached_property
-    def find_factors_as_cells(self):
+    def find_factors_as_cells(self) -> tuple[tuple[Cell, ...], ...]:
         self.combine_cells_in_obs_and_reqs()
         self.combine_cells_from_parameters()
         factors = []
@@ -99,16 +99,16 @@ class ILFactorNormal(Factor):
 
     def make_enumerators(self):
         """Creates the enumerators needed for interleaving"""
-        factor_rows_and_cols = (
-            map(tuple, map(set, zip(*factor))) for factor in self.find_factors_as_cells
-        )
-        factor_rows_and_cols = tuple(
-            map(lambda x: tuple(chain.from_iterable(x)), zip(*factor_rows_and_cols))
-        )
+        cols_in_factors = list[int]()
+        rows_in_factors = list[int]()
+        for factor in self.find_factors_as_cells:
+            f_cols, f_rows = map(set, zip(*factor))
+            cols_in_factors += list(f_cols)
+            rows_in_factors += list(f_rows)
         new_enumerators = set()
         dimensions = self.tiling.dimensions
         for row in range(dimensions[1]):
-            if factor_rows_and_cols[1].count(row) > 1:
+            if rows_in_factors.count(row) > 1:
                 new_enumerators.add(
                     ParameterList(
                         (
@@ -123,7 +123,7 @@ class ILFactorNormal(Factor):
                     )
                 )
         for col in range(dimensions[0]):
-            if factor_rows_and_cols[0].count(col) > 1:
+            if cols_in_factors.count(col) > 1:
                 new_enumerators.add(
                     ParameterList(
                         (
@@ -157,11 +157,18 @@ class ILFactorInverted(ILFactorNormal):
         new_obs = set()
         for row in range(self.tiling.dimensions[1]):
             for col1, col2 in combinations(range(self.tiling.dimensions[0]), 2):
-                new_obs.add(GriddedCayleyPerm((0, 0), ((col1, row), (col2, row))))
+                cell1, cell2 = (col1, row), (col2, row)
+                if cell1 in self.cells_dict and cell2 in self.cells_dict:
+                    new_obs.add(GriddedCayleyPerm((0, 0), (cell1, cell2)))
         new_obs.symmetric_difference_update(set(self.tiling.obstructions))
         for gcp in new_obs:
             if not self.point_row_ob(gcp):
                 for cell, cell2 in combinations((gcp.find_active_cells()), 2):
+
+                    if cell2 not in self.cells_dict:
+                        print(cell, cell2)
+                        print(self.tiling)
+                        print(gcp)
                     self.combine_cells(cell, cell2)
         for cell, cell2 in chain.from_iterable(
             combinations(

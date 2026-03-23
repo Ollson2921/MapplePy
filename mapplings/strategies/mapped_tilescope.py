@@ -19,6 +19,11 @@ from .tilescope_strategies import (
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
+    # ParamPlacementFactory,
+    # AvoiderExorcismFactory,
+    # ParameterInsertionFactory,
+    MapplingILFactorStrategy,
+    MapplingInvertedILFactorStrategy,
 )
 
 
@@ -364,6 +369,63 @@ class MappedTileScopePack(StrategyPack):
                 MapplingHorizontalInsertionEncodableVerificationStrategy(),
             ],
             name="Row and col placements",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def parameter_tomfoolery(cls, rootmt: MappedTiling):
+        """
+        Create a row and column placement strategy pack which initially
+        makes all cells positive.
+        """
+        return MappedTileScopePack(
+            initial_strats=[MapplingFactorStrategy()],
+            inferral_strats=[],
+            expansion_strats=[
+                [
+                    MapplingLessThanRowColSeparationStrategy(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+                NoParameterVerificationStrategy(rootmt),
+                # MapplingVerticalInsertionEncodableVerificationStrategy(),
+                # MapplingHorizontalInsertionEncodableVerificationStrategy(),
+            ],
+            name="Param Nonsense",
+            symmetries=[],
+            iterative=False,
+        )
+
+    @classmethod
+    def pack_for_1_32(
+        cls,
+    ):
+        """Pack to get the 1-32 tree"""
+        return MappedTileScopePack(
+            initial_strats=[
+                # MapplingFactorStrategy(),
+                MapplingInvertedILFactorStrategy(),
+                MapplingILFactorStrategy(),
+            ],
+            inferral_strats=[
+                MapplingCellInsertionFactory(),
+                # ParamPlacementFactory(),
+            ],
+            expansion_strats=[
+                [
+                    # ParameterInsertionFactory(ParameterList({special_param})),
+                    MapplingPointPlacementFactory(),
+                ]
+            ],
+            ver_strats=[
+                AtomStrategy(),
+                # NoParameterVerificationStrategy(rootmt),
+                MapplingVerticalInsertionEncodableVerificationStrategy(),
+                MapplingHorizontalInsertionEncodableVerificationStrategy(),
+            ],
+            name="1-32",
             symmetries=[],
             iterative=False,
         )
