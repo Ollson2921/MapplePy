@@ -2,9 +2,9 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
 from mapplings import Parameter, MappedTiling, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
-from mapplings.strategies.tilescope_strategies import MapplingLessThanOrEqualRowColSeparationFactory
-
-
+from mapplings.strategies.tilescope_strategies import (
+    MapplingLessThanOrEqualRowColSeparationFactory,
+)
 
 
 def test_ltoreq_rc_separation_factory_one_big_separation():
@@ -39,7 +39,9 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
 
     param = Parameter(
         Tiling(
-            (GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 0), (0, 0))),), (), (1, 1)
+            (GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 0), (0, 0))),),
+            (),
+            (1, 1),
         ),
         RowColMap({0: 0}, {0: 1}),
     )
@@ -49,8 +51,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
     out = set()
     for strat in MapplingLessThanOrEqualRowColSeparationFactory()(mt):
         out.add(strat(mt).children)
-        for child in strat(mt).children:
-
 
     separated = {
         (
