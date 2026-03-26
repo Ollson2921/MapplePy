@@ -272,19 +272,4 @@ class MTLTORERowColSeparation(AbstractMTRowColSeparation):
             for e_list in self.enumeration_parameters
         ]
         for base in self.separation.row_col_separation():
-            new_avoiders = ParameterList(
-                [
-                    param.back_map_point_obstructions_from_tiling(base)
-                    for param in new_avoiders
-                ]
-            )
-            new_containers = [
-                ParameterList(
-                    [
-                        param.back_map_point_obstructions_from_tiling(base)
-                        for param in c_list
-                    ]
-                )
-                for c_list in new_containers
-            ]
             yield MappedTiling(base, new_avoiders, new_containers, new_enumerators)
