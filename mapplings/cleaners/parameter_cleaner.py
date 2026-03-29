@@ -3,7 +3,7 @@
 from typing import Iterator, Iterable
 from itertools import chain
 from cayley_permutations import CayleyPermutation
-from gridded_cayley_permutations.row_col_map import RowColMap
+from gridded_cayley_permutations import RowColMap, GriddedCayleyPerm
 from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
@@ -66,6 +66,16 @@ class ParamCleaner(GenericCleaner[Parameter]):
             temp.dimensions,
         )
         return Parameter(new_ghost, temp.map)
+
+    @staticmethod
+    @reg(5, run_on_enumerators=False)
+    def full_merge_fusion(param: Parameter) -> Parameter:
+        """Merge fuse rows and columns in both directions"""
+        temp = ParamCleaner._merge_fusion(param, True, True)
+        temp = ParamCleaner._merge_fusion(temp, True, False)
+        temp = ParamCleaner._merge_fusion(temp, False, False)
+        temp = ParamCleaner._merge_fusion(temp, False, True)
+        return temp
 
     @staticmethod
     @reg(0)
@@ -258,6 +268,93 @@ class ParamCleaner(GenericCleaner[Parameter]):
     # Internal Methods
 
     @staticmethod
+    def _merge_fusion(
+        param: Parameter, fuse_rows: bool, positive_direction: bool
+    ) -> Parameter:
+        direction = (-1, 1)[positive_direction]
+        max_index = param.dimensions[fuse_rows] - 1
+        to_fuse = set[int]()
+        index = (max_index, 0)[positive_direction]
+        sorted_obs = param.obs_by_col_and_row()[fuse_rows]
+        sorted_reqs = param.reqs_by_col_and_row()[fuse_rows]
+        param_map = (param.col_map, param.row_map)[fuse_rows]
+        default_maps = {i: i for i in range(param.dimensions[0])}, {
+            i: i for i in range(param.dimensions[1])
+        }
+        temp_tiling = Tiling(param.obstructions, [], param.dimensions)
+        while 0 <= index + direction <= max_index:
+            if index + direction in to_fuse:
+                index += direction
+                continue
+            if param_map[index] != param_map[index + direction]:
+                index += direction
+                continue
+            check_reqs = set(sorted_reqs[index] | sorted_reqs[index + direction])
+            req_positions = tuple(
+                set(chain.from_iterable(req.positions for req in req_list))
+                for req_list in check_reqs
+            )
+            if any(
+                not (
+                    all(pos[fuse_rows] == index for pos in positions)
+                    or all(pos[fuse_rows] == index + direction for pos in positions)
+                )
+                for positions in req_positions
+            ):
+                index += direction
+                continue
+            temp_maps = tuple(default_maps)
+            temp_maps[fuse_rows][index + direction] = index
+            fuse_map = RowColMap(*temp_maps)
+            check_obs = (
+                set(fuse_map.preimage_of_obstructions(sorted_obs[index]))
+                - sorted_obs[index]
+            )
+            if any(temp_tiling.gcp_in_tiling(ob) for ob in check_obs):
+                index += direction
+                continue
+            index += direction
+            to_fuse.add(index)
+        if not to_fuse:
+            return param
+        if any(sorted_reqs[index] for index in to_fuse):
+            if fuse_rows:
+                temp_map = ParamCleaner._make_adjustment_map(
+                    param, [], to_fuse, not positive_direction
+                )
+            else:
+                temp_map = ParamCleaner._make_adjustment_map(
+                    param, to_fuse, [], not positive_direction
+                )
+            if any(sorted_reqs[index] for index in to_fuse):
+                new_reqs = tuple(
+                    chain.from_iterable(
+                        [
+                            temp_map.map_requirements(sorted_reqs[index])
+                            for index in to_fuse
+                        ]
+                    )
+                )
+            else:
+                new_reqs = tuple[tuple[GriddedCayleyPerm, ...], ...]()
+        else:
+            new_reqs = tuple[tuple[GriddedCayleyPerm, ...], ...]()
+
+        if fuse_rows:
+            temp = param.delete_rows_and_columns([], to_fuse)
+            return Parameter(
+                Tiling(
+                    temp.obstructions, temp.requirements + new_reqs, temp.dimensions
+                ),
+                temp.map,
+            )
+        temp = param.delete_rows_and_columns(to_fuse, [])
+        return Parameter(
+            Tiling(temp.obstructions, temp.requirements + new_reqs, temp.dimensions),
+            temp.map,
+        )
+
+    @staticmethod
     def _find_indixes_to_fuse(param: Parameter, fuse_rows: bool) -> Iterator[int]:
         """Yields all indices that can be fused"""
         maps = param.col_map, param.row_map
@@ -274,21 +371,29 @@ class ParamCleaner(GenericCleaner[Parameter]):
         original_param: Parameter,
         deleted_cols: Iterable[int],
         deleted_rows: Iterable[int],
+        reverse_direction: bool = False,
     ) -> RowColMap:
         """Makes a map from original param to that param after cols and rows are deleted"""
         col_correction, row_correction = dict[int, int](), dict[int, int]()
         adjust = 0
-        for i in range(original_param.dimensions[0]):
+        direction = (1, -1)[reverse_direction]
+        indices = tuple(range(original_param.dimensions[0]))
+        if reverse_direction:
+            indices = tuple(reversed(indices))
+        for i in indices:
             if i in deleted_cols:
-                col_correction[i] = col_correction[i - 1]
-                adjust += 1
+                col_correction[i] = col_correction[i - direction]
+                adjust += direction
             else:
-                col_correction[i] = i - adjust
+                col_correction[i] = i - adjust * direction
         adjust = 0
-        for i in range(original_param.dimensions[1]):
+        indices = tuple(range(original_param.dimensions[1]))
+        if reverse_direction:
+            indices = tuple(reversed(indices))
+        for i in indices:
             if i in deleted_rows:
-                row_correction[i] = row_correction[i - 1]
-                adjust += 1
+                row_correction[i] = row_correction[i - direction]
+                adjust += direction
             else:
-                row_correction[i] = i - adjust
+                row_correction[i] = i - adjust * direction
         return RowColMap(col_correction, row_correction)
