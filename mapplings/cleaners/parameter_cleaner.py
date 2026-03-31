@@ -3,12 +3,13 @@
 from typing import Iterator, Iterable
 from itertools import chain
 from cayley_permutations import CayleyPermutation
-from gridded_cayley_permutations import RowColMap, GriddedCayleyPerm
+from gridded_cayley_permutations import RowColMap
 from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
 
 from .cleaner import GenericCleaner, Register, CleanerLog
+from .unbalanced_fusion import UnbalancedFusion
 
 
 class ParamCleaner(GenericCleaner[Parameter]):
@@ -69,12 +70,10 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     @staticmethod
     @reg(5, run_on_enumerators=False)
-    def full_merge_fusion(param: Parameter) -> Parameter:
-        """Merge fuse rows and columns in both directions"""
-        temp = ParamCleaner._merge_fusion(param, True, True)
-        temp = ParamCleaner._merge_fusion(temp, True, False)
-        temp = ParamCleaner._merge_fusion(temp, False, False)
-        temp = ParamCleaner._merge_fusion(temp, False, True)
+    def unbalanced_fusion(param: Parameter) -> Parameter:
+        """Performs unbalanced fusion in all ways"""
+        temp = UnbalancedFusion.auto_fuse(param, True)
+        temp = UnbalancedFusion.auto_fuse(temp, False)
         return temp
 
     @staticmethod
@@ -205,48 +204,12 @@ class ParamCleaner(GenericCleaner[Parameter]):
                 return True
             return False
 
-        def validate_one_cell(index: int, check_rows: bool) -> tuple[bool, bool]:
-            """Returns True if a cell is in a point row/col
-            with a blank row/col adjacent to it mapping to the
-            same place.
-            Returns false if both adjacent row/cols are blank.
-            A second bool is used to determine which direction to insert the new row/col
-            """
-            if index not in point_indices[check_rows]:
-                return False, False
-            mapping_to = maps[check_rows][index]
-            negative = (
-                index - 1 in blank[check_rows]
-                and mapping_to == maps[check_rows][index - 1]
-            )
-            positive = (
-                index + 1 in blank[check_rows]
-                and mapping_to == maps[check_rows][index + 1]
-            )
-            if negative and not positive:
-                return True, False
-            if positive and not negative:
-                return True, True
-            return False, False
-
         for req_list in param.requirements:
             if not len(req_list) == 1:
                 continue
             req = req_list[0]
-            if (
-                req.pattern == CayleyPermutation((0,))
-                and req.positions[0][1] not in param.point_rows
-            ):
-                cell = req.positions[0]
-                valid = validate_one_cell(cell[0], False)
-                if valid[0]:
-                    to_insert[0].add(cell[0] - valid[1])
-                    continue
-                valid = validate_one_cell(cell[1], True)
-                if valid[0]:
-                    to_insert[1].add(cell[1] - valid[1])
 
-            elif req.pattern in (
+            if req.pattern in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
             ):
@@ -266,94 +229,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
         return param.insert_cols_and_rows(*to_insert)
 
     # Internal Methods
-
-    @staticmethod
-    def _merge_fusion(
-        param: Parameter, fuse_rows: bool, positive_direction: bool
-    ) -> Parameter:
-        direction = (-1, 1)[positive_direction]
-        max_index = param.dimensions[fuse_rows] - 1
-        to_fuse = set[int]()
-        index = (max_index, 0)[positive_direction]
-        sorted_obs = param.obs_by_col_and_row()[fuse_rows]
-        sorted_reqs = param.reqs_by_col_and_row()[fuse_rows]
-        param_map = (param.col_map, param.row_map)[fuse_rows]
-        default_maps = {i: i for i in range(param.dimensions[0])}, {
-            i: i for i in range(param.dimensions[1])
-        }
-        temp_tiling = Tiling(param.obstructions, [], param.dimensions)
-        while 0 <= index + direction <= max_index:
-            if index + direction in to_fuse:
-                index += direction
-                continue
-            if param_map[index] != param_map[index + direction]:
-                index += direction
-                continue
-            check_reqs = set(sorted_reqs[index] | sorted_reqs[index + direction])
-            req_positions = tuple(
-                set(chain.from_iterable(req.positions for req in req_list))
-                for req_list in check_reqs
-            )
-            if any(
-                not (
-                    all(pos[fuse_rows] == index for pos in positions)
-                    or all(pos[fuse_rows] == index + direction for pos in positions)
-                )
-                for positions in req_positions
-            ):
-                index += direction
-                continue
-            temp_maps = tuple(default_maps)
-            temp_maps[fuse_rows][index + direction] = index
-            fuse_map = RowColMap(*temp_maps)
-            check_obs = (
-                set(fuse_map.preimage_of_obstructions(sorted_obs[index]))
-                - sorted_obs[index]
-            )
-            if any(temp_tiling.gcp_in_tiling(ob) for ob in check_obs):
-                index += direction
-                continue
-            index += direction
-            to_fuse.add(index)
-        if not to_fuse:
-            return param
-        if any(sorted_reqs[index] for index in to_fuse):
-            if fuse_rows:
-                temp_map = ParamCleaner._make_adjustment_map(
-                    param, [], to_fuse, not positive_direction
-                )
-            else:
-                temp_map = ParamCleaner._make_adjustment_map(
-                    param, to_fuse, [], not positive_direction
-                )
-            if any(sorted_reqs[index] for index in to_fuse):
-                new_reqs = tuple(
-                    chain.from_iterable(
-                        [
-                            temp_map.map_requirements(sorted_reqs[index])
-                            for index in to_fuse
-                        ]
-                    )
-                )
-            else:
-                new_reqs = tuple[tuple[GriddedCayleyPerm, ...], ...]()
-        else:
-            new_reqs = tuple[tuple[GriddedCayleyPerm, ...], ...]()
-
-        if fuse_rows:
-            temp = param.delete_rows_and_columns([], to_fuse)
-            return Parameter(
-                Tiling(
-                    temp.obstructions, temp.requirements + new_reqs, temp.dimensions
-                ),
-                temp.map,
-            )
-        temp = param.delete_rows_and_columns(to_fuse, [])
-        return Parameter(
-            Tiling(temp.obstructions, temp.requirements + new_reqs, temp.dimensions),
-            temp.map,
-        )
-
     @staticmethod
     def _find_indixes_to_fuse(param: Parameter, fuse_rows: bool) -> Iterator[int]:
         """Yields all indices that can be fused"""

@@ -115,7 +115,7 @@ class Parameter(Tiling):
             if not new_req_list:
                 return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
             new_reqs.append(new_req_list)
-        temp = Parameter(Tiling(new_obs, new_reqs, self.dimensions), self.map)
+        temp = Parameter(Tiling(new_obs, new_reqs, self.dimensions, False), self.map)
         temp.active_cells = self.active_cells
         return temp
 
