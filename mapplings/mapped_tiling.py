@@ -12,7 +12,6 @@ from typing import (
 )
 from collections import defaultdict
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-
 from .parameter import Parameter
 from .parameter_list import ParameterList
 
@@ -76,19 +75,9 @@ class MappedTiling(Tiling):
         """
         if not self.avoiding_parameters:
             return False
-        len_one_cont_params = [
-            contain_list
-            for contain_list in self.containing_parameters
-            if len(contain_list) == 1
-        ]
-        if not len_one_cont_params:
-            return False
-        if any(
-            avoiding_parameter in contain_list
-            for contain_list in len_one_cont_params
-            for avoiding_parameter in self.avoiding_parameters
-        ):
-            return True
+        for c_list in self.containing_parameters:
+            if all(param in self.avoiding_parameters for param in c_list):
+                return True
         return False
 
     @classmethod
@@ -108,13 +97,14 @@ class MappedTiling(Tiling):
         return self.tiling.is_atom() and not self.has_parameters()
 
     def minimum_size_of_object(self) -> int:
-        """Return the minimum size of object in the tiling."""
+        """Return the minimum size of gcps on the mappling
+        (or a lower bound)."""
         assert not self.is_empty()
-        i = 0
-        while True:
-            for _ in self.objects_of_size(i):
-                return i
-            i += 1
+        working_minimum = self.tiling.minimum_size_of_object()
+        for param_list in self.containing_parameters:
+            param_list_min = min(param.minimum_size_of_object() for param in param_list)
+            working_minimum = max(working_minimum, param_list_min)
+        return working_minimum
 
     def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
         """Return gridded Cayley permutations of size n in the tiling."""
@@ -145,7 +135,11 @@ class MappedTiling(Tiling):
         Returns True if the tiling is empty or there is a contradiction between
         containing and avoiding parameters.
         """
-        return self.tiling.is_empty() or self.parameters_are_contradictory()
+        return (
+            self.tiling.is_empty()
+            or self.parameters_are_contradictory()
+            or any(len(c_list) == 0 for c_list in self.containing_parameters)
+        )
 
     # requirement insertion functions
 
@@ -195,6 +189,20 @@ class MappedTiling(Tiling):
             for e_list in self.enumerating_parameters
         ]
         return MappedTiling(self.tiling, new_avoiders, new_containers, new_enumerators)
+
+    # html stuff
+    def to_html_representation(self):
+        """Create an HTML string representing the mappling"""
+        base = super().to_html_representation()
+        if self.avoiding_parameters:
+            base += f'<br>{self.avoiding_parameters.html_dropdown("Avoiding Parameters", "red")}'
+        for i, c_list in enumerate(self.containing_parameters):
+            base += f'<br>{c_list.html_dropdown(f"Containing Parameters {i}", "blue")}'
+        for i, e_list in enumerate(self.enumerating_parameters):
+            base += (
+                f'<br>{e_list.html_dropdown(f"Enumerating Parameters {i}", "green")}'
+            )
+        return base
 
     # json methods
 
@@ -256,17 +264,29 @@ class MappedTiling(Tiling):
 
     def __str__(self) -> str:
         """Return a string representation of the MappedTiling."""
-        return (
-            "Base tiling: \n"
-            + str(self.tiling)
-            + "\nAvoiding parameters:\n"
-            + "\n".join([str(p) for p in self.avoiding_parameters])
-            + "\nContaining parameters:\n"
-            + "\nNew containing parameters list \n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.containing_parameters]
+        string = "Base tiling: \n" + str(self.tiling)
+        if self.avoiding_parameters:
+            string += "\nAvoiding parameters:\n" + "\n".join(
+                [str(p) for p in sorted(self.avoiding_parameters)]
             )
-            + "\nEnumerating parameters:\n"
-            + "\nNew enumerating parameters list\n".join(
-                ["\n".join([str(p) for p in ps]) for ps in self.enumerating_parameters]
+        if self.containing_parameters:
+            string += (
+                "\nContaining parameters:\n"
+                + "\nNew containing parameters list \n".join(
+                    [
+                        "\n".join([str(p) for p in sorted(ps)])
+                        for ps in self.containing_parameters
+                    ]
+                )
             )
-        )
+        if self.enumerating_parameters:
+            string += (
+                "\nEnumerating parameters:\n"
+                + "\nNew enumerating parameters list\n".join(
+                    [
+                        "\n".join([str(p) for p in sorted(ps)])
+                        for ps in self.enumerating_parameters
+                    ]
+                )
+            )
+        return string

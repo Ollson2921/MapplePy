@@ -1,10 +1,11 @@
-"""Strategies and pack for mapplings tilescope."""
+"""Strategies for mapplings tilescope."""
 
 from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.point_placements import Directions
+from gridded_cayley_permutations.point_placements import DIRECTIONS
 from tilescope.strategies import (
     FactorStrategy,
+    ShuffleFactorStrategy,
     RequirementPlacementStrategy,
     LessThanRowColSeparationStrategy,
     LessThanOrEqualRowColSeparationStrategy,
@@ -23,18 +24,37 @@ from tilescope.strategies.point_placements import (
     DIR_LEFT,
     DIR_RIGHT,
 )
-from comb_spec_searcher import StrategyPack, DisjointUnionStrategy, AtomStrategy
+from comb_spec_searcher import (
+    DisjointUnionStrategy,
+    CombinatorialSpecificationSearcher,
+)
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling
 from mapplings.algorithms import (
     MTRequirementPlacement,
     Factor,
+    ILFactorNormal,
+    ILFactorInverted,
     LTORERowColSeparationMT,
     LTRowColSeparationMT,
 )
-from mapplings.cleaners import MTCleaner
-from .verification_strategy import NoParameterVerificationStrategy
+from mapplings.cleaners import MTCleaner, ParamCleaner
+
+
+MTCleaner.global_log_toggle(1)
+temp = CombinatorialSpecificationSearcher.status
+
+
+def new_status(self, elaborate: bool) -> str:
+    """Overwrites CSS status method"""
+    output = (
+        temp(self, elaborate) + MTCleaner.status_update() + ParamCleaner.status_update()
+    )
+    return output
+
+
+CombinatorialSpecificationSearcher.status = new_status  # type: ignore
 
 
 class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
@@ -42,8 +62,38 @@ class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
     A strategy for placing requirements in a mapped tiling.
     """
 
+    cleaner = MTCleaner.make_full_cleaner("Req Placement Cleaner")
+
     def algorithm(self, tiling):
         return MTRequirementPlacement(tiling)
+
+    def decomposition_function(self, comb_class):
+        return tuple(
+            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+        )
+
+
+class MapplingRequirementInsertionStrategy(RequirementInsertionStrategy):
+    """Mappling version of RequirementInsertionStrategy with a cleaner"""
+
+    cleaner = MTCleaner.make_full_cleaner("Req Insertion Cleaner")
+
+    def decomposition_function(self, comb_class):
+        return tuple(
+            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+        )
+
+
+class MapplingCellInsertionFactory(CellInsertionFactory):
+    """Factory for inserting points into active cells of a tiling."""
+
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementInsertionStrategy]:
+        for cell in comb_class.active_cells:
+            gcps = (GriddedCayleyPerm(CayleyPermutation([0]), (cell,)),)
+            strategy = MapplingRequirementInsertionStrategy(gcps, ignore_parent=False)
+            yield strategy
 
 
 class MapplingPointPlacementFactory(PointPlacementFactory):
@@ -55,7 +105,7 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
         self, comb_class: Tiling
     ) -> Iterator[MapplingRequirementPlacementStrategy]:
         for cell in comb_class.positive_cells():
-            for direction in Directions:
+            for direction in DIRECTIONS:
                 gcps = (GriddedCayleyPerm(CayleyPermutation([0]), (cell,)),)
                 indices = (0,)
                 yield MapplingRequirementPlacementStrategy(gcps, indices, direction)
@@ -66,7 +116,9 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
 class MapplingRowPlacementFactory(RowInsertionFactory):
     """A factory for placing the minimum points in the rows of tilings."""
 
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementPlacementStrategy]:
         not_point_rows = set(range(comb_class.dimensions[1])) - comb_class.point_rows
         for row in not_point_rows:
             all_gcps = []
@@ -100,18 +152,20 @@ class MapplingColPlacementFactory(ColInsertionFactory):
 
 
 class MapplingVerticalInsertionEncodingRequirementInsertionFactory(
-    CellInsertionFactory
+    MapplingCellInsertionFactory
 ):
     """A factory for making columns positive in mapplings for vertical insertion encoding."""
 
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementInsertionStrategy]:
         for col in range(comb_class.dimensions[0]):
             if not comb_class.col_is_positive(col):
                 gcps = tuple(
                     GriddedCayleyPerm(CayleyPermutation([0]), [cell])
                     for cell in comb_class.cells_in_col(col)
                 )
-                yield RequirementInsertionStrategy(gcps, ignore_parent=True)
+                yield MapplingRequirementInsertionStrategy(gcps, ignore_parent=True)
                 return
 
     @classmethod
@@ -127,7 +181,9 @@ class MapplingVerticalInsertionEncodingRequirementInsertionFactory(
 class MapplingVerticalInsertionEncodingPlacementFactory(MapplingRowPlacementFactory):
     """A factory for placing the bottom leftmost points in mapplings."""
 
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementPlacementStrategy]:
         cells = comb_class.active_cells
         gcps = tuple(
             GriddedCayleyPerm(CayleyPermutation([0]), [cell]) for cell in cells
@@ -145,18 +201,20 @@ class MapplingVerticalInsertionEncodingPlacementFactory(MapplingRowPlacementFact
 
 
 class MapplingHorizontalInsertionEncodingRequirementInsertionFactory(
-    CellInsertionFactory
+    MapplingCellInsertionFactory
 ):
     """A factory for making rows positive in mapplings for horizontal insertion encoding."""
 
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementInsertionStrategy]:
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementInsertionStrategy]:
         for row in range(comb_class.dimensions[1]):
             if not comb_class.row_is_positive(row):
                 gcps = tuple(
                     GriddedCayleyPerm(CayleyPermutation([0]), [cell])
                     for cell in comb_class.cells_in_row(row)
                 )
-                yield RequirementInsertionStrategy(gcps, ignore_parent=True)
+                yield MapplingRequirementInsertionStrategy(gcps, ignore_parent=True)
 
     @classmethod
     def from_dict(
@@ -197,6 +255,8 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
     A strategy for cleaning a mapped tiling.
     """
 
+    cleaner = MTCleaner.make_full_cleaner("Cleaner Strategy")
+
     def __init__(
         self,
         ignore_parent: bool = True,
@@ -204,6 +264,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         possibly_empty: bool = True,
         workable: bool = True,
     ):
+
         super().__init__(
             ignore_parent=ignore_parent,
             inferrable=inferrable,
@@ -212,7 +273,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         )
 
     def decomposition_function(self, comb_class):
-        return (MTCleaner.full_cleanup(comb_class),)
+        return (self.__class__.cleaner(comb_class),)
 
     def formal_step(self) -> str:
         return "Clean mappling"
@@ -233,19 +294,63 @@ class MapplingFactorStrategy(FactorStrategy):
     A strategy for finding factors in a mapped tiling.
     """
 
+    cleaner = MTCleaner([], "Factoring Cleaner")
+
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
         factors = Factor(comb_class).find_factors()
         if len(factors) <= 1:
             raise StrategyDoesNotApply
+        factors = tuple(map(self.__class__.cleaner, factors))
         return factors
+
+
+# pylint:disable=too-many-ancestors
+class MapplingILFactorStrategy(ShuffleFactorStrategy):
+    """
+    A strategy for finding interleaving factors in a mapped tiling.
+    """
+
+    cleaner = MTCleaner.make_full_cleaner("IL Factoring Cleaner")
+
+    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
+        factors = ILFactorNormal(comb_class).find_factors()
+        if len(factors) <= 1:
+            raise StrategyDoesNotApply
+        factors = tuple(map(self.__class__.cleaner, factors))
+        return factors
+
+    def formal_step(self) -> str:
+        return "Factor the mappling into interleaving factors"
+
+
+class MapplingInvertedILFactorStrategy(ShuffleFactorStrategy):
+    """
+    A strategy for finding interleaving factors in a mapped tiling by inverting 00 obstructions
+    """
+
+    cleaner = MTCleaner.make_full_cleaner("Inverted IL Factoring Cleaner")
+
+    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
+        factors = ILFactorInverted(comb_class).find_factors()
+        if len(factors) <= 1:
+            raise StrategyDoesNotApply
+        factors = tuple(map(self.__class__.cleaner, factors))
+        return factors
+
+    def formal_step(self) -> str:
+        return "Invert obstructions and factor the mappling into interleaving factors"
 
 
 class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy):
     """A strategy for separating rows and columns with less than constraints."""
 
+    cleaner = MTCleaner.make_full_cleaner("LT Separation Cleaner")
+
     def decomposition_function(self, comb_class):
         algo = LTRowColSeparationMT(comb_class)
-        return (next(algo.separate()),)
+        if algo.separation.row_col_map.is_identity():
+            raise StrategyDoesNotApply
+        return tuple(map(self.__class__.cleaner, algo.separate()))
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
@@ -253,205 +358,10 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 ):
     """A strategy for separating rows and columns with less than or equal constraints."""
 
+    cleaner = MTCleaner.make_full_cleaner("LEQ Separation Cleaner")
+
     def decomposition_function(self, comb_class):
         algo = LTORERowColSeparationMT(comb_class)
-        return tuple(algo.separate())
-
-
-class MappedTileScopePack(StrategyPack):
-    """A strategy pack for mapplings tilescope."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @classmethod
-    def no_param_ver_point_placement(cls):
-        """
-        Create a point placement strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
-                MapplingPointPlacementFactory(),
-            ],
-            inferral_strats=[
-                CleaningStrategy(),
-                MapplingLessThanRowColSeparationStrategy(),
-            ],
-            expansion_strats=[
-                [
-                    CellInsertionFactory(),
-                ]
-            ],
-            ver_strats=[AtomStrategy()],
-            name="Point placements",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def point_placement(cls, rootmt):
-        """
-        Create a point placement strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
-                MapplingPointPlacementFactory(),
-            ],
-            inferral_strats=[
-                CleaningStrategy(),
-                MapplingLessThanRowColSeparationStrategy(),
-            ],
-            expansion_strats=[
-                [
-                    CellInsertionFactory(),
-                ]
-            ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
-            name="Point placements",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def row_placement(cls, rootmt):
-        """
-        Create a row placement strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
-            ],
-            inferral_strats=[
-                CleaningStrategy(),
-                MapplingLessThanRowColSeparationStrategy(),
-            ],
-            expansion_strats=[
-                [
-                    MapplingRowPlacementFactory(),
-                ]
-            ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
-            name="Row placements",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def col_placement(cls, rootmt):
-        """
-        Create a column placement strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
-            ],
-            inferral_strats=[
-                CleaningStrategy(),
-                MapplingLessThanRowColSeparationStrategy(),
-            ],
-            expansion_strats=[
-                [
-                    MapplingColPlacementFactory(),
-                ]
-            ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
-            name="Column placements",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def row_and_col_placement(cls, rootmt):
-        """
-        Create a row and column placement strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
-            ],
-            inferral_strats=[
-                CleaningStrategy(),
-                MapplingLessThanRowColSeparationStrategy(),
-            ],
-            expansion_strats=[
-                [
-                    MapplingRowPlacementFactory(),
-                    MapplingColPlacementFactory(),
-                ]
-            ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
-            name="Point placements",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def point_row_and_col_placement(cls, rootmt):
-        """
-        Create a point, row and column placement strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
-                MapplingPointPlacementFactory(),
-            ],
-            inferral_strats=[
-                CleaningStrategy(),
-                MapplingLessThanRowColSeparationStrategy(),
-            ],
-            expansion_strats=[
-                [
-                    CellInsertionFactory(),
-                    MapplingRowPlacementFactory(),
-                    MapplingColPlacementFactory(),
-                ]
-            ],
-            ver_strats=[AtomStrategy(), NoParameterVerificationStrategy(rootmt)],
-            name="Point placements",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def vertical_insertion_encoding(cls):
-        """
-        Create a vertical insertion encoding strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingVerticalInsertionEncodingRequirementInsertionFactory(),
-            ],
-            inferral_strats=[CleaningStrategy()],
-            expansion_strats=[[MapplingVerticalInsertionEncodingPlacementFactory()]],
-            ver_strats=[AtomStrategy()],
-            name="Vertical Insertion Encoding",
-            symmetries=[],
-            iterative=False,
-        )
-
-    @classmethod
-    def horizontal_insertion_encoding(cls):
-        """
-        Create a horizontal insertion encoding strategy pack for the given root mapped tiling.
-        """
-        return MappedTileScopePack(
-            initial_strats=[
-                MapplingFactorStrategy(),
-                MapplingHorizontalInsertionEncodingRequirementInsertionFactory(),
-            ],
-            inferral_strats=[CleaningStrategy()],
-            expansion_strats=[[MapplingHorizontalInsertionEncodingPlacementFactory()]],
-            ver_strats=[AtomStrategy()],
-            name="Horizontal Insertion Encoding",
-            symmetries=[],
-            iterative=False,
-        )
+        if algo.separation.row_col_map.is_identity():
+            raise StrategyDoesNotApply
+        return tuple(map(self.__class__.cleaner, algo.separate()))

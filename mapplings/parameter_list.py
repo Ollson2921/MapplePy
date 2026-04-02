@@ -19,6 +19,8 @@ Cell = tuple[int, int]
 FuncTypeT = TypeVar("FuncTypeT")
 ArgsType = TypeVarTuple("ArgsType")
 
+OPEN_DISPLAY = "open"  # Change to "open" for fully expanded html trees
+
 
 class ParameterList(frozenset[Parameter]):
     """A tiling (called a ghost) mapping to a base tiling."""
@@ -67,7 +69,7 @@ class ParameterList(frozenset[Parameter]):
         """Removes parameters with empty ghost"""
         return ParameterList(param for param in self if not param.is_empty())
 
-    def simple_remove_redundant(self) -> "ParameterList":
+    def simple_remove_redundant(self, reverse: bool = False) -> "ParameterList":
         """Removes any parameter implied by another through a basic check"""
         exclude = set[Parameter]()
         for param0, param1 in combinations(self, 2):
@@ -80,8 +82,29 @@ class ParameterList(frozenset[Parameter]):
             if param0.map != temp_param.map:
                 continue
             if param0.ghost.is_subset(temp_param.ghost):
-                exclude.add(param1)
+                if reverse:
+                    exclude.add(param0)
+                else:
+                    exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
+
+    def to_html(self) -> str:
+        """Returns a html of all parameters in self seperated by a line"""
+        return "<br>".join((param.to_html_representation() for param in sorted(self)))
+
+    def html_dropdown(self, label: str, border_color: str = "grey") -> str:
+        """Makes a cute html dropdown for the parameter list"""
+        style = f"""
+            border : 1px solid;
+            border-color : {border_color};
+            background-color : white;
+            padding-left : 5px;
+            padding-right : 29px;
+            """
+        return (
+            f'<details {OPEN_DISPLAY} style = "{style}"><summary>{label}</summary>'
+            + f"<br>{self.to_html()}</details>"
+        )
 
     def to_jsonable(self) -> dict:
         """Dictionary version of self for json serialization."""

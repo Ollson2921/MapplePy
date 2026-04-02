@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from copy import copy
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Optional
 from itertools import product, chain
 
 from cayley_permutations import CayleyPermutation
@@ -12,6 +12,7 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations.factors import Factors
 
 Cell = tuple[int, int]
+Objects = defaultdict[tuple[int, ...], list[GriddedCayleyPerm]]
 
 
 class Parameter(Tiling):
@@ -19,6 +20,7 @@ class Parameter(Tiling):
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-public-methods
     def __init__(self, ghost: Tiling, row_col_map: RowColMap):
         self.map = row_col_map
         self.row_map = row_col_map.row_map
@@ -27,6 +29,11 @@ class Parameter(Tiling):
         super().__init__(
             ghost.obstructions, ghost.requirements, ghost.dimensions, False
         )
+
+    @classmethod
+    def empty_parameter(cls) -> "Parameter":
+        """Returns an empty parameter."""
+        return Parameter(Tiling.empty_tiling(), RowColMap({}, {}))
 
     def image_cells(self) -> set[Cell]:
         """Gives the cells to which the parameter maps"""
@@ -53,7 +60,7 @@ class Parameter(Tiling):
         """Determines if the sub-gridding of the gcp that lives in the image region
         has a preimage on the ghost"""
         sub_gridding = gcp.sub_gridded_cayley_perm(self.image_cells())
-        if not sub_gridding.positions and not self.positive_cells():
+        if not sub_gridding.positions and not self.requirements:
             return True
         for preimage in self.map.preimage_of_gridded_cperm(sub_gridding):
             if self.gcp_in_tiling(preimage):
@@ -112,6 +119,83 @@ class Parameter(Tiling):
         temp.active_cells = self.active_cells
         return temp
 
+    def find_blank_columns_and_rows_in_param(
+        self, tiling: Tiling
+    ) -> tuple[list[int], list[int]]:
+        """Collect all obstructions and requirements. Any obs that imply point rows or cols
+        ignore. Any that are implied by the tiling ignore. Then for the cells of gcps
+        left, can't remove rows or columns that have any of these cells, remove all others.
+        """
+        point_cells = self.point_cells()
+        if self.dimensions == (0, 0):
+            return [], []
+        if not self.obstructions and not self.requirements:
+            return list(range(self.dimensions[0])), list(range(self.dimensions[1]))
+        point_obs: set[GriddedCayleyPerm] = set()
+        point_cols = set(cell[0] for cell in point_cells)
+        for ob in self.obstructions:
+            if ob.pattern == CayleyPermutation(
+                (0, 1)
+            ) or ob.pattern == CayleyPermutation((1, 0)):
+                if (
+                    ob.positions[0][1] in self.point_rows
+                    and ob.positions[1][1] in self.point_rows
+                ):
+                    point_obs.add(ob)
+                elif (
+                    ob.positions[0] in point_cells
+                    and ob.positions[1] == ob.positions[0]
+                ):
+                    point_obs.add(ob)
+            elif (
+                ob.pattern == CayleyPermutation((0, 0))
+                and ob.positions[0] == ob.positions[1]
+                and ob.positions[0] in point_cells
+            ):
+                point_obs.add(ob)
+            elif (
+                ob.pattern == CayleyPermutation((0,))
+                and ob.positions[0][0] in point_cols
+            ):
+                point_obs.add(ob)
+        not_point_obs = set(self.obstructions) - point_obs
+        gcps_to_remove = set()
+        for ob in not_point_obs:
+            mapped_ob = self.map.map_gridded_cperm(ob)
+            if mapped_ob in tiling.obstructions:
+                gcps_to_remove.add(ob)
+        final_obs_dont_ignore = not_point_obs - gcps_to_remove
+        dont_ignore_cols = set(
+            cell[0]
+            for gcp in chain(final_obs_dont_ignore, *self.requirements)
+            for cell in gcp.positions
+        )
+        dont_ignore_rows = set(
+            cell[1]
+            for gcp in chain(final_obs_dont_ignore, *self.requirements)
+            for cell in gcp.positions
+        )
+        blank_rows = [
+            row for row in range(self.dimensions[1]) if row not in dont_ignore_rows
+        ]
+        blank_cols = [
+            col for col in range(self.dimensions[0]) if col not in dont_ignore_cols
+        ]
+        return blank_cols, blank_rows
+
+    def delete_blank_row_cols_in_param(self, base_tiling: Tiling) -> "Parameter":
+        """Deletes all blank rows and columns in the parameter."""
+        blank_cols, blank_rows = self.find_blank_columns_and_rows_in_param(base_tiling)
+        cols_to_remove = set()
+        rows_to_remove = set()
+        for i in range(self.dimensions[0] - 1):
+            if i in blank_cols and i + 1 in blank_cols:
+                cols_to_remove.add(i + 1)
+        for j in range(self.dimensions[1] - 1):
+            if j in blank_rows and j + 1 in blank_rows:
+                rows_to_remove.add(j + 1)
+        return self.delete_rows_and_columns(cols_to_remove, rows_to_remove)
+
     def find_empty_rows_and_columns(self):
         if not self.active_cells:
             return tuple(range(self.dimensions[0])), tuple(range(self.dimensions[1]))
@@ -157,6 +241,59 @@ class Parameter(Tiling):
             new_row_map[key] = temp_param.row_map[key] = value - adjust
         return Parameter(temp_param.ghost, RowColMap(new_col_map, new_row_map))
 
+    def insert_cols_and_rows(
+        self, cols: Iterable[int], rows: Iterable[int]
+    ) -> "Parameter":
+        """Inserts a blank col or col at each index.
+        New col/row gets map data from the col/row at the given index."""
+        col_adjust = {
+            i: i + sum((j < i for j in cols)) for i in range(self.dimensions[0])
+        }
+        row_adjust = {
+            i: i + sum((j < i for j in rows)) for i in range(self.dimensions[1])
+        }
+        adjust = RowColMap(col_adjust, row_adjust)
+        new_obs = adjust.map_gridded_cperms(self.obstructions)
+        new_reqs = adjust.map_requirements(self.requirements)
+        new_col_map = dict[int, int]()
+        new_row_map = dict[int, int]()
+        new_dimensions = (
+            self.dimensions[0] + len(tuple(cols)),
+            self.dimensions[1] + len(tuple(rows)),
+        )
+        tweak = 0
+
+        for i in range(new_dimensions[0]):
+            if i - tweak - 1 in cols:
+                if i - tweak - 1 == -1:
+                    new_col_map[i] = self.col_map[0]
+                    tweak += 1
+                    continue
+                new_col_map[i] = new_col_map[i - 1]
+                tweak += 1
+            else:
+                new_col_map[i] = self.col_map[i - tweak]
+        tweak = 0
+        for i in range(new_dimensions[1]):
+            if i - tweak - 1 in rows:
+                if i - tweak - 1 == -1:
+                    new_row_map[i] = self.row_map[0]
+                    tweak += 1
+                    continue
+                new_row_map[i] = new_row_map[i - 1]
+                tweak += 1
+            else:
+                new_row_map[i] = self.row_map[i - tweak]
+        return Parameter(
+            Tiling(
+                new_obs,
+                new_reqs,
+                new_dimensions,
+                False,
+            ),
+            RowColMap(new_col_map, new_row_map),
+        )
+
     def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
         """Returns the parameter containing only the specified cells"""
         cols, rows = zip(*cells)
@@ -166,7 +303,7 @@ class Parameter(Tiling):
 
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""
-        factor_cells = Factors(self.ghost).find_factors_as_cells()
+        factor_cells = Factors(self.ghost).find_factors_as_cells
         find_images = self.map.image_rows_and_cols
         factor_image_rows_and_cols = list(
             (find_images(*zip(*factor)) for factor in factor_cells)
@@ -251,6 +388,184 @@ class Parameter(Tiling):
                 return True
         return False
 
+    @staticmethod
+    def make_vincular(
+        pattern: tuple[int, ...], adjacency: Iterable[int], image_cell: Cell = (0, 0)
+    ) -> "Parameter":
+        """Returns a parameter equivilent to the vincular pattern mapping to image_cell"""
+        col_positions = list[int]()
+        col = 0 - int(0 in adjacency)
+        obs = set[GriddedCayleyPerm]()
+        for idx in range(len(pattern)):
+            if idx + 1 in adjacency:
+                col += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((0, 1), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((1, 0), ((col, 0), (col, 0))),
+                    }
+                )
+                col_positions.append(col)
+            elif idx in adjacency:
+                col += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((0, 1), ((col, 0), (col, 0))),
+                        GriddedCayleyPerm((1, 0), ((col, 0), (col, 0))),
+                    }
+                )
+                col_positions.append(col)
+                col += 1
+            else:
+                col_positions.append(col)
+        ghost = Tiling(
+            obs,
+            [[GriddedCayleyPerm(pattern, [(col, 0) for col in col_positions])]],
+            (col + 1, 1),
+        )
+        col_map = {i: image_cell[0] for i in range(col + 1)}
+        return Parameter(ghost, RowColMap(col_map, {0: image_cell[1]}))
+
+    @staticmethod
+    def make_covincular(
+        pattern: tuple[int, ...], adjacency: Iterable[int], image_cell: Cell = (0, 0)
+    ) -> "Parameter":
+        """Returns a parameter equivilent to the vincular pattern mapping to image_cell"""
+        row_positions = list[int]()
+        row = 0 - int(0 in adjacency)
+        obs = set[GriddedCayleyPerm]()
+        for idx in range(len(pattern)):
+            if idx + 1 in adjacency:
+                row += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((0, row), (0, row))),
+                        GriddedCayleyPerm((0, 1), ((0, row), (0, row))),
+                        GriddedCayleyPerm((1, 0), ((0, row), (0, row))),
+                    }
+                )
+                row_positions.append(row)
+            elif idx in adjacency:
+                row += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((0, row), (0, row))),
+                        GriddedCayleyPerm((0, 1), ((0, row), (0, row))),
+                        GriddedCayleyPerm((1, 0), ((0, row), (0, row))),
+                    }
+                )
+                row_positions.append(row)
+                row += 1
+            else:
+                row_positions.append(row)
+        ghost = Tiling(
+            obs,
+            [[GriddedCayleyPerm(pattern, [(0, row) for row in row_positions])]],
+            (1, row + 1),
+        )
+        row_map = {i: image_cell[1] for i in range(row + 1)}
+        return Parameter(ghost, RowColMap({0: image_cell[0]}, row_map))
+
+    def to_html_representation(self) -> str:
+        """Returns an html representation of the tilings object
+        Mimics code from original tilings"""
+        rc_style = """
+            border: 0;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            background-color : white;
+            color : grey;
+            """
+        dim_i, dim_j = self.dimensions
+        result = self._html_table()
+        result.insert(-1, "<tr>")
+        result.insert(-1, f"<th style='{rc_style}'>")
+        result.insert(-1, " ")
+        result.insert(-1, "</th>")
+        for j in range(dim_i):
+            result.insert(-1, f"<th style='{rc_style}'>")
+            result.insert(-1, str(self.col_map[j]))
+            result.insert(-1, "</th>")
+        result.insert(-1, "</tr>")
+        row_width = 3 * (dim_i) + 2
+        for i in range(dim_j):
+            index = (i) * (row_width + 3) + 2
+            result.insert(index, "</th>")
+            result.insert(index, str(self.row_map[dim_j - i - 1]))
+            result.insert(index, f"<th style='{rc_style}'>")
+
+        return "".join(result)
+
+    def compare_parameters(
+        self, other: "Parameter", depth: int = 4
+    ) -> tuple[bool, Optional[GriddedCayleyPerm]]:
+        """Compares the gcps that live on self to the gcps on other up to size depth"""
+
+        col_map = {
+            val: key
+            for key, val in enumerate(
+                sorted(set(self.col_map.values()) | set(other.col_map.values()))
+            )
+        }
+        row_map = {
+            val: key
+            for key, val in enumerate(
+                sorted(set(self.row_map.values()) | set(other.row_map.values()))
+            )
+        }
+        self_reduction = RowColMap(
+            {key: col_map[val] for key, val in self.col_map.items()},
+            {key: row_map[val] for key, val in self.row_map.items()},
+        )
+        other_reduction = RowColMap(
+            {key: col_map[val] for key, val in other.col_map.items()},
+            {key: row_map[val] for key, val in other.row_map.items()},
+        )
+        temp_self = Parameter(self.ghost, self_reduction)
+        temp_other = Parameter(other.ghost, other_reduction)
+        base = Tiling([], [], (len(col_map), len(row_map)))
+        i = 0
+        while i < depth:
+            for gcp in base.objects_of_size(i):
+                if temp_self.gcp_has_preimage(gcp) != temp_other.gcp_has_preimage(gcp):
+                    return False, gcp
+            i += 1
+        return True, None
+
+    def objects_of_size(self, n, **parameters) -> Iterator[GriddedCayleyPerm]:
+        """Return gridded Cayley permutations of size n in the tiling."""
+        for val in self.get_objects(n).values():
+            yield from val
+
+    def get_objects(self, n: int) -> Objects:
+        """Return the objects of size n in the tiling."""
+        objects = defaultdict(list)
+        col_map = {
+            val: key for key, val in enumerate(sorted(set(self.col_map.values())))
+        }
+        row_map = {
+            val: key for key, val in enumerate(sorted(set(self.row_map.values())))
+        }
+        map_reduction = RowColMap(
+            {key: col_map[val] for key, val in self.col_map.items()},
+            {key: row_map[val] for key, val in self.row_map.items()},
+        )
+        temp = Parameter(self.ghost, map_reduction)
+        base = Tiling([], [], (len(col_map), len(row_map)))
+        for gcp in base.objects_of_size(n):
+            if temp.gcp_has_preimage(gcp):
+                param = self.get_parameters(gcp)
+                objects[param].append(gcp)
+        return objects
+
+    def get_parameters(self, obj: GriddedCayleyPerm) -> tuple[int, ...]:
+        """Parameters are not what you think!!! This is specific to
+        combinatorical class parameters"""
+        return (1,)
+
     # dunder methods
 
     def to_jsonable(self) -> dict:
@@ -289,12 +604,54 @@ class Parameter(Tiling):
     def __leq__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (self.ghost, self.map) <= (other.ghost, other.map)
+        return (self.map, self.ghost) <= (other.map, other.ghost)
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Parameter):
             return NotImplemented
-        return (self.ghost, self.map) < (other.ghost, other.map)
+        return (self.map, self.ghost) < (other.map, other.ghost)
 
-    def __str__(self) -> str:
-        return str(self.map) + "\n" + str(self.ghost)
+    def _string_table(self) -> list[str]:
+        """Creates a list of strings for each row of the __str__ grid"""
+        if self.dimensions == (0, 0):
+            return ["┌ ┐", " ε ", "└ ┘"]
+        cell_labels = self.cell_labels
+
+        # Style
+        for cell in self.empty_cells():
+            cell_labels[cell] = "░"
+            if cell in self.point_rows:
+                cell_labels[cell] = "#"
+        row_separator = "├" + ("┼─" * self.dimensions[0] + "┤")[1:]
+        internal_row = "├" + ("┼ " * self.dimensions[0] + "┤")[1:]
+        top_row = "┌" + ("┬─" * self.dimensions[0])[1:] + "┐"
+        bottom_row = "└" + ("┴─" * self.dimensions[0])[1:] + "┘"
+
+        # Make Table
+        final_table = [row_separator]
+        for row in range(self.dimensions[1]):
+            new_row = "│"
+            for col in range(self.dimensions[0]):
+                cell_end = "│"
+                if col < self.dimensions[0] - 1:
+                    if self.col_map[col] == self.col_map[col + 1]:
+                        cell_end = " "
+                label = " "
+                if (col, row) in cell_labels:
+                    label = self.cell_labels[(col, row)]
+                new_row += label + cell_end
+            separator = row_separator
+            if row < self.dimensions[1] - 1:
+                if self.row_map[row] == self.row_map[row + 1]:
+                    separator = internal_row
+            new_row += f"{self.row_map[row]}"
+            if row in self.point_rows:
+                new_row += "*"
+            final_table += [new_row, separator]
+        final_table.reverse()
+        final_table[0] = top_row
+        final_table[-1] = bottom_row
+        final_table.append(
+            " " + " ".join((str(value) for _, value in self.col_map.items()))
+        )
+        return final_table

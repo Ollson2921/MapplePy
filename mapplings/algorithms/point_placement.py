@@ -75,7 +75,7 @@ class MTRequirementPlacement:
         n, m = parameter.dimensions
         new_n = n + 1
         row_map = {i: i for i in range(m)}
-        col_map = {i: i for i in range(col)}
+        col_map = {i: i for i in range(col + 1)}
         col_map.update({i: i - 1 for i in range(col + 1, new_n)})
         obs, reqs = RowColMap(col_map, row_map).preimage_of_tiling(parameter.ghost)
         return Tiling(obs, reqs, (new_n, m))
@@ -214,7 +214,8 @@ class MTRequirementPlacement:
                 self.mappling.avoiding_parameters, cell
             )
             new_containing_parameters = self.update_list_of_param_lists(
-                self.mappling.containing_parameters, cell
+                self.mappling.containing_parameters,
+                cell,
             )
             new_enumeration_parameters = self.update_list_of_param_lists(
                 self.mappling.enumerating_parameters, cell
@@ -228,7 +229,9 @@ class MTRequirementPlacement:
         return self.directionless_dict[cell]
 
     def update_list_of_param_lists(
-        self, param_lists: Iterable[ParameterList], cell: Tuple[int, int]
+        self,
+        param_lists: Iterable[ParameterList],
+        cell: Tuple[int, int],
     ) -> list[ParameterList]:
         """Doing directionless point placements in a list of parameter lists and updating maps."""
         new_param_lists = []
@@ -266,7 +269,6 @@ class MTRequirementPlacement:
                 else:
                     new_map = self.map_for_param_unchanged(parameter, cell)
                     new_param_list.append(Parameter(parameter.ghost, new_map))
-
         return ParameterList(new_param_list)
 
     def new_parameter_from_point_placed_tiling(

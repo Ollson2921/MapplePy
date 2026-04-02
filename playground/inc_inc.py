@@ -2,7 +2,7 @@ from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from mapplings import MappedTiling, Parameter, ParameterList
 from gridded_cayley_permutations.row_col_map import RowColMap
-from mapplings.strategies.tilescope_strategies import MappedTileScopePack
+from mapplings.strategies.mapped_tilescope import MappedTileScopePack
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 
 ghost = Tiling(

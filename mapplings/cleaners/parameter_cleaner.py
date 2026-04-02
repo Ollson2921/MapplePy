@@ -1,12 +1,14 @@
 """Module with the parameter cleaner"""
 
-from typing import Iterable
+from typing import Iterator, Iterable
+from itertools import chain
+from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
-from gridded_cayley_permutations.unplacement import PointUnplacement
+from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
 
-from .cleaner import GenericCleaner, Register
+from .cleaner import GenericCleaner, Register, CleanerLog
 
 
 class ParamCleaner(GenericCleaner[Parameter]):
@@ -16,20 +18,54 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     DEBUG = 0
     reg = Register[Parameter](
-        "param_register",
         run_on_avoiders=True,
         run_on_containers=True,
         run_on_enumerators=True,
     )
+    global_tracker = CleanerLog[Parameter](
+        reg.registered_functions, name="Global Tracker"
+    )
+
+    all_loggers = {global_tracker}
+
+    # Cleaner Overrides
+
+    @classmethod
+    def _debug_test(cls, original, new, depth):
+        results = original.compare_parameters(new, depth)
+        if not results[0]:
+            return (
+                False,
+                f"\nCheck GCP: {results[1]}"
+                + f"\n{original}\n{new}"
+                + f"\n{repr(original)}",
+            )
+        return True, "Cleaning Sucessful"
+
     # Final Methods
 
     @staticmethod
-    @reg(3, run_on_enumerators=False)
+    @reg(4, run_on_enumerators=False)
     def reduce_by_fusion(param: Parameter) -> Parameter:
         """Fuses valid rows and columns"""
-        return ParamCleaner._fuse_valid_rows_or_cols(
-            ParamCleaner._fuse_valid_rows_or_cols(param, True), False
+        deleted_cols, deleted_rows = set(
+            ParamCleaner._find_indixes_to_fuse(param, False)
+        ), set(ParamCleaner._find_indixes_to_fuse(param, True))
+        temp = Parameter(
+            Tiling(param.obstructions, [], param.dimensions, False), param.map
+        ).delete_rows_and_columns(deleted_cols, deleted_rows)
+        if not param.requirements:
+            return temp
+        new_ghost = Tiling(
+            temp.obstructions,
+            [
+                ParamCleaner._make_adjustment_map(
+                    param, deleted_cols, deleted_rows
+                ).map_gridded_cperms(param.minimal_gridded_cperms())
+            ],
+            temp.dimensions,
         )
+        return Parameter(new_ghost, temp.map)
 
     @staticmethod
     @reg(0)
@@ -54,105 +90,205 @@ class ParamCleaner(GenericCleaner[Parameter]):
     @reg(1, run_on_enumerators=False)
     def remove_blank_rows_and_cols(param: Parameter) -> Parameter:
         """Deletes all rows and cols which have no obs or reqs"""
-        columns, rows = param.find_blank_columns_and_rows()
-        cols_to_remove, rows_to_remove = set(), set()
-        if param.positive_cells():
-            positive_cols, positive_rows = map(set, zip(*param.positive_cells()))
-        else:
-            positive_cols, positive_rows = set(), set()
 
-        def check_for_blank(columns: Iterable[int], image: int, check_rows: bool):
-            for col in columns:
-                if check_rows:
-                    if col in rows_to_remove:
-                        break
-                    if param.row_map[col] == image and col not in positive_rows:
-                        rows_to_remove.add(col)
-                    else:
-                        break
-                else:
-                    if col in cols_to_remove:
-                        break
-                    if param.col_map[col] == image and col not in positive_cols:
-                        cols_to_remove.add(column)
-                    else:
-                        break
+        try:
+            blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
+        except ValueError:
+            return param
+        col_preimages, row_preimages = param.map.preimage_map()
+        try:
+            splits = param.requirement_columns_and_rows()
+        except ValueError:
+            splits = (set[int](), set[int]())
 
-        for column in columns:
-            image_col = param.map.col_map[column]
-            cols_to_remove.add(column)
-            check_for_blank(range(column - 1, -1, -1), image_col, False)
-            check_for_blank(range(column + 1, param.dimensions[0]), image_col, False)
-        for blank_row in rows:
-            image_row = param.row_map[blank_row]
-            rows_to_remove.add(blank_row)
-            check_for_blank(range(blank_row - 1, -1, -1), image_row, True)
-            check_for_blank(range(blank_row + 1, param.dimensions[1]), image_row, True)
+        def to_remove(
+            preimages: dict[int, tuple[int, ...]], find_rows: bool
+        ) -> Iterator[set[int]]:
+            for preimage in sorted(preimages.values()):
+                if not set(preimage) & blank[find_rows]:
+                    continue
+                if not splits[find_rows]:
+                    yield set(preimage)
+                    continue
+                slice_start = 0
+                for i, check in enumerate(preimage):
+                    if check in splits[find_rows]:
+                        section = set(preimage[slice_start:i])
+                        slice_start = i + 1
+                        try:
+                            yield section - {tuple(section & blank[find_rows])[0]}
+                        except IndexError:
+                            pass
+                if slice_start == 0:
+                    yield set(preimage)
+
+        cols_to_remove = set(chain(*to_remove(col_preimages, False)))
+        rows_to_remove = set(chain(*to_remove(row_preimages, True)))
         if (
             len(cols_to_remove) == param.dimensions[0]
             or len(rows_to_remove) == param.dimensions[1]
         ):
-            return Parameter(Tiling([], [], (1, 1)), RowColMap({0: 0}, {0: 0}))
+            return Parameter(Tiling([], [], (0, 0)), RowColMap({}, {}))
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     @staticmethod
-    @reg(2, run_on_enumerators=False)
+    @reg(3, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
-        found = True
-        new_param = Parameter(param.ghost, param.map)
-        while found:
-            found = False
-            for cell in new_param.point_cells():
-                algo = PointUnplacement(new_param.ghost, cell)
-                if not algo.cell_in_valid_region():
+        algo = PartialUnplacement(param.ghost)
+        points = param.single_value_cells()
+        cells, cols, rows = set[tuple[int, int]](), set[int](), set[int]()
+        for cell in points:
+            valid = algo.cell_in_valid_region(cell)
+            if valid[0] and param.col_map[cell[0] - 1] == param.col_map[cell[0] + 1]:
+                cells.add(cell)
+                cols.add(cell[0])
+            if valid[1] and param.row_map[cell[1] - 1] == param.row_map[cell[1] + 1]:
+                cells.add(cell)
+                rows.add(cell[1])
+        unplace_cols, unplace_rows = algo.fusable_check(cells, cols, rows)
+        if not (unplace_cols or unplace_rows):
+            return param
+        new_ghost = algo.unplace(unplace_cols, unplace_rows)
+        col_preimages, row_preimages = algo.adjustment_map(
+            unplace_cols, unplace_rows
+        ).preimage_map()
+        new_col_map = {
+            i: param.col_map[col_preimages[i][0]]
+            for i in range(new_ghost.dimensions[0])
+        }
+        new_row_map = {
+            i: param.row_map[row_preimages[i][0]]
+            for i in range(new_ghost.dimensions[1])
+        }
+        return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+
+    @staticmethod
+    @reg(2, run_on_enumerators=False)
+    def insert_blank(param: Parameter) -> Parameter:
+        """Inserts a blank col/row in between descents/ascents wherever possible"""
+        if not param.requirements:
+            return param
+        to_insert = [set[int](), set[int]()]
+        maps = param.col_map, param.row_map
+        blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
+        point_indices = param.point_cols, param.point_rows
+
+        def validate_two_cells(index1: int, index2: int, check_rows: bool) -> bool:
+            """Returns True if two adjacent cells are in point rows/cols with a
+            blank row/col adjacent to them mapping to the same place."""
+            indices = {index1, index2}
+            mapping_to = maps[check_rows][index1]
+            if mapping_to != maps[check_rows][index2] or not indices.issubset(
+                point_indices[check_rows]
+            ):
+                return False
+            if (
+                index1 - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index1 - 1]
+            ):
+                return True
+            if (
+                index2 + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index2 + 1]
+            ):
+                return True
+            return False
+
+        def validate_one_cell(index: int, check_rows: bool) -> tuple[bool, bool]:
+            """Returns True if a cell is in a point row/col
+            with a blank row/col adjacent to it mapping to the
+            same place.
+            Returns false if both adjacent row/cols are blank.
+            A second bool is used to determine which direction to insert the new row/col
+            """
+            if index not in point_indices[check_rows]:
+                return False, False
+            mapping_to = maps[check_rows][index]
+            negative = (
+                index - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index - 1]
+            )
+            positive = (
+                index + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index + 1]
+            )
+            if negative and not positive:
+                return True, False
+            if positive and not negative:
+                return True, True
+            return False, False
+
+        for req_list in param.requirements:
+            if not len(req_list) == 1:
+                continue
+            req = req_list[0]
+            if (
+                req.pattern == CayleyPermutation((0,))
+                and req.positions[0][1] not in param.point_rows
+            ):
+                cell = req.positions[0]
+                valid = validate_one_cell(cell[0], False)
+                if valid[0]:
+                    to_insert[0].add(cell[0] - valid[1])
                     continue
-                if (
-                    not new_param.col_map[cell[0] - 1]
-                    == new_param.col_map[cell[0]]
-                    == new_param.col_map[cell[0] + 1]
-                ):
+                valid = validate_one_cell(cell[1], True)
+                if valid[0]:
+                    to_insert[1].add(cell[1] - valid[1])
+
+            elif req.pattern in (
+                CayleyPermutation((0, 1)),
+                CayleyPermutation((1, 0)),
+            ):
+                cell1, cell2 = req.positions
+                if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
                     continue
-                if (
-                    not new_param.row_map[cell[1] - 1]
-                    == new_param.row_map[cell[1]]
-                    == new_param.row_map[cell[1] + 1]
+                if cell1[0] + 1 == cell2[0] and validate_two_cells(
+                    cell1[0], cell2[0], False
                 ):
-                    continue
-                check_reqs = algo.intersecting_req_list()
-                if PointUnplacement(new_param.ghost, cell).point_can_be_unplaced(
-                    check_reqs
-                ):
-                    new_param = new_param.unplace_point(cell)
-                    found = True
-                    break
-        return new_param
+                    to_insert[0].add(cell1[0])
+                idx1, idx2 = sorted([cell1[1], cell2[1]])
+                if idx1 + 1 == idx2 and validate_two_cells(idx1, idx2, True):
+                    to_insert[1].add(idx1)
+        if not any(to_insert):
+            return param
+
+        return param.insert_cols_and_rows(*to_insert)
 
     # Internal Methods
 
     @staticmethod
-    def _fuse_valid_rows_or_cols(param: Parameter, fuse_rows: bool) -> Parameter:
-        """fully fuses rows or cols of the parameter if they are fusable and map to the same index.
-        direction = 0 for cols, directions = 1 for rows"""
-        new_ghost = param.ghost
-        new_maps = [param.col_map, param.row_map]
-        old_idx, new_idx, extend = 0, 0, 1
-        while old_idx + extend < param.dimensions[fuse_rows]:
-            if new_maps[fuse_rows][old_idx] == new_maps[fuse_rows][old_idx + extend]:
-                if new_ghost.is_fusable(fuse_rows, new_idx):
-                    if fuse_rows:
-                        new_ghost = new_ghost.delete_rows([new_idx])
-                    else:
-                        new_ghost = new_ghost.delete_columns([new_idx])
-                    del new_maps[fuse_rows][old_idx + extend]
-                    extend += 1
-                    continue
-            old_idx += extend
-            new_idx += 1
-            extend = 1
-        new_direction_map = {
-            idx: new_maps[fuse_rows][value]
-            for idx, value in enumerate(new_maps[fuse_rows].keys())
-        }
-        new_maps[fuse_rows] = new_direction_map
-        return Parameter(new_ghost, RowColMap(*new_maps))
+    def _find_indixes_to_fuse(param: Parameter, fuse_rows: bool) -> Iterator[int]:
+        """Yields all indices that can be fused"""
+        maps = param.col_map, param.row_map
+        temp = Parameter(
+            Tiling(param.obstructions, [], param.dimensions, False), param.map
+        )
+        for i in range(param.dimensions[fuse_rows] - 1):
+            if maps[fuse_rows][i] == maps[fuse_rows][i + 1]:
+                if temp.is_fusable(fuse_rows, i):
+                    yield i + 1
+
+    @staticmethod
+    def _make_adjustment_map(
+        original_param: Parameter,
+        deleted_cols: Iterable[int],
+        deleted_rows: Iterable[int],
+    ) -> RowColMap:
+        """Makes a map from original param to that param after cols and rows are deleted"""
+        col_correction, row_correction = dict[int, int](), dict[int, int]()
+        adjust = 0
+        for i in range(original_param.dimensions[0]):
+            if i in deleted_cols:
+                col_correction[i] = col_correction[i - 1]
+                adjust += 1
+            else:
+                col_correction[i] = i - adjust
+        adjust = 0
+        for i in range(original_param.dimensions[1]):
+            if i in deleted_rows:
+                row_correction[i] = row_correction[i - 1]
+                adjust += 1
+            else:
+                row_correction[i] = i - adjust
+        return RowColMap(col_correction, row_correction)
