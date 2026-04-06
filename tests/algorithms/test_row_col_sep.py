@@ -52,22 +52,38 @@ def test_less_than_row_col_separation():
             (2, 4),
         ),
         ParameterList(
-            [
-                Parameter(
-                    Tiling(
-                        (),
-                        (
-                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),),
-                            (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),),
+            frozenset(
+                {
+                    Parameter(
+                        Tiling(
+                            (),
+                            (
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                ),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                ),
+                            ),
+                            (2, 2),
                         ),
-                        (2, 2),
-                    ),
-                    RowColMap({0: 0, 1: 1}, {0: 0, 1: 2}),
-                )
-            ]
+                        RowColMap({0: 0, 1: 1}, {0: 0, 1: 2}),
+                    )
+                }
+            )
         ),
-        ParameterList([]),
-        ParameterList([]),
+        (),
+        (),
     )
 
     all_separated = list(MTLTRowColSeparation(mt).separate())
@@ -118,9 +134,44 @@ def test_less_than_row_col_separation_rows():
                 {
                     Parameter(
                         Tiling(
-                            (GriddedCayleyPerm(CayleyPermutation(()), ()),), (), (0, 0)
+                            (),
+                            (
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                ),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                ),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((2, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 0),)
+                                    ),
+                                ),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((2, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 1),)
+                                    ),
+                                ),
+                            ),
+                            (4, 2),
                         ),
-                        RowColMap({}, {}),
+                        RowColMap({0: 0, 1: 0, 2: 1, 3: 1}, {0: 0, 1: 1}),
                     )
                 }
             )
@@ -188,9 +239,74 @@ def test_less_than__or_equal_row_col_separation_cols():
                 {
                     Parameter(
                         Tiling(
-                            (GriddedCayleyPerm(CayleyPermutation(()), ()),), (), (0, 0)
+                            (),
+                            (
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
+                                    ),
+                                ),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 3), (1, 3), (1, 3)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 3), (1, 3), (1, 4)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 3), (1, 3), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 3), (1, 4)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 3), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 4), (1, 4)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 4), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 5), (1, 3), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 5), (1, 4), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 5), (1, 5), (1, 5)),
+                                    ),
+                                ),
+                            ),
+                            (2, 6),
                         ),
-                        RowColMap({}, {}),
+                        RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}),
                     )
                 }
             )
@@ -206,9 +322,74 @@ def test_less_than__or_equal_row_col_separation_cols():
                 {
                     Parameter(
                         Tiling(
-                            (GriddedCayleyPerm(CayleyPermutation(()), ()),), (), (0, 0)
+                            (),
+                            (
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
+                                    ),
+                                ),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 3), (1, 3), (1, 3)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 3), (1, 3), (1, 4)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 3), (1, 3), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 3), (1, 4)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 3), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 4), (1, 4)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 4), (1, 4), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 5), (1, 3), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 5), (1, 4), (1, 5)),
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0, 2)),
+                                        ((1, 5), (1, 5), (1, 5)),
+                                    ),
+                                ),
+                            ),
+                            (2, 6),
                         ),
-                        RowColMap({}, {}),
+                        RowColMap({0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}),
                     )
                 }
             )
@@ -217,10 +398,10 @@ def test_less_than__or_equal_row_col_separation_cols():
         (),
     )
 
-    all_separated = list(MTLTORERowColSeparation(mt).separate())
+    all_separated = set(MTLTORERowColSeparation(mt).separate())
     assert len(all_separated) == 2
-    assert all_separated[0] == sep1
-    assert all_separated[1] == sep2
+    assert sep1 in all_separated
+    assert sep2 in all_separated
 
 
 def test_less_than_or_equal_row_col_separation():
@@ -270,12 +451,24 @@ def test_less_than_or_equal_row_col_separation():
                             (
                                 (
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((0, 5),)
                                     ),
                                 ),
                                 (
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 2),)
                                     ),
                                 ),
                             ),
@@ -317,12 +510,24 @@ def test_less_than_or_equal_row_col_separation():
                             (
                                 (
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((0, 5),)
                                     ),
                                 ),
                                 (
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 2),)
                                     ),
                                 ),
                             ),
@@ -337,10 +542,10 @@ def test_less_than_or_equal_row_col_separation():
         (),
     )
 
-    all_separated = list(MTLTORERowColSeparation(original_mt).separate())
+    all_separated = set(MTLTORERowColSeparation(original_mt).separate())
     assert len(all_separated) == 2
-    assert all_separated[0] == separated_1
-    assert all_separated[1] == separated_2
+    assert separated_1 in all_separated
+    assert separated_2 in all_separated
 
 
 def test_relative_order_active_cells_rows():
@@ -402,7 +607,7 @@ def test_relative_order_active_cells_rows():
         (),
     )
 
-    assert list(MTLTRowColSeparation(mt).separate()) == [
+    separation = [
         MappedTiling(
             Tiling(
                 (
@@ -417,11 +622,95 @@ def test_relative_order_active_cells_rows():
                     {
                         Parameter(
                             Tiling(
-                                (GriddedCayleyPerm(CayleyPermutation(()), ()),),
-                                (),
-                                (0, 0),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((2, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 0), (1, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 0), (1, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((2, 1), (2, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((2, 1), (3, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((3, 1), (3, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (1, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 0), (1, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 1), (2, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 1), (3, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 1), (3, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 0), (1, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 0), (1, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 1), (2, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 1), (3, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 1), (3, 1))
+                                    ),
+                                ),
+                                (
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((1, 0),)
+                                        ),
+                                    ),
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((2, 1),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((3, 1),)
+                                        ),
+                                    ),
+                                ),
+                                (4, 2),
                             ),
-                            RowColMap({}, {}),
+                            RowColMap({0: 0, 1: 0, 2: 1, 3: 1}, {0: 0, 1: 1}),
                         )
                     }
                 )
@@ -430,6 +719,8 @@ def test_relative_order_active_cells_rows():
             (),
         )
     ]
+
+    assert list(MTLTRowColSeparation(mt).separate()) == separation
 
 
 def test_relative_order_active_cells_cols():
@@ -499,28 +790,317 @@ def test_relative_order_active_cells_cols():
             Tiling(
                 (
                     GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
                     GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 1),)),
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 2),)),
                 ),
                 (),
-                (2, 2),
+                (2, 3),
             ),
             ParameterList(
                 frozenset(
                     {
                         Parameter(
                             Tiling(
-                                (GriddedCayleyPerm(CayleyPermutation(()), ()),),
-                                (),
-                                (0, 0),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 2),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 5))
+                                    ),
+                                ),
+                                (
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 1),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 2),)
+                                        ),
+                                    ),
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 3),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 4),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 5),)
+                                        ),
+                                    ),
+                                ),
+                                (2, 6),
                             ),
-                            RowColMap({}, {}),
+                            RowColMap(
+                                {0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}
+                            ),
                         )
                     }
                 )
             ),
             (),
             (),
-        )
+        ),
+        MappedTiling(
+            Tiling((GriddedCayleyPerm(CayleyPermutation(()), ()),), (), (2, 3)),
+            ParameterList(
+                frozenset(
+                    {
+                        Parameter(
+                            Tiling(
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 2),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 5))
+                                    ),
+                                ),
+                                (
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 1),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 2),)
+                                        ),
+                                    ),
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 3),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 4),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 5),)
+                                        ),
+                                    ),
+                                ),
+                                (2, 6),
+                            ),
+                            RowColMap(
+                                {0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}
+                            ),
+                        )
+                    }
+                )
+            ),
+            (),
+            (),
+        ),
     ]
 
     assert list(MTLTRowColSeparation(mt).separate()) == separated
@@ -602,11 +1182,145 @@ def test_relative_order_cols_LORE():
                     {
                         Parameter(
                             Tiling(
-                                (GriddedCayleyPerm(CayleyPermutation(()), ()),),
-                                (),
-                                (0, 0),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 2),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 5))
+                                    ),
+                                ),
+                                (
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 1),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 2),)
+                                        ),
+                                    ),
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 3),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 4),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 5),)
+                                        ),
+                                    ),
+                                ),
+                                (2, 6),
                             ),
-                            RowColMap({}, {}),
+                            RowColMap(
+                                {0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}
+                            ),
                         )
                     }
                 )
@@ -637,11 +1351,145 @@ def test_relative_order_cols_LORE():
                     {
                         Parameter(
                             Tiling(
-                                (GriddedCayleyPerm(CayleyPermutation(()), ()),),
-                                (),
-                                (0, 0),
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((0, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 1),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 2),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 0)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 0), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 1), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 4), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 5), (1, 5))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 1), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 0))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 1))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 4), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 4))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 5), (1, 5))
+                                    ),
+                                ),
+                                (
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 0),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 1),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((0, 2),)
+                                        ),
+                                    ),
+                                    (
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 3),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 4),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((1,)), ((1, 5),)
+                                        ),
+                                    ),
+                                ),
+                                (2, 6),
                             ),
-                            RowColMap({}, {}),
+                            RowColMap(
+                                {0: 0, 1: 1}, {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 2}
+                            ),
                         )
                     }
                 )
@@ -1128,28 +1976,37 @@ def test_double_expansion_param():
                             Tiling(
                                 (
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 7),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 9),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 10),)
-                                    ),
-                                    GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((3, 0),)
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 3),)
+                                        CayleyPermutation((0,)), ((3, 1),)
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((3, 4),)
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((3, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 6),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 7),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 8),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 9),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 10),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 11),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((3, 12),)
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((3, 13),)
@@ -1164,10 +2021,28 @@ def test_double_expansion_param():
                                         CayleyPermutation((0,)), ((5, 2),)
                                     ),
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((5, 3),)
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((5, 4),)
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((5, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((5, 8),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((5, 9),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((5, 10),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((5, 11),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((5, 12),)
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((5, 13),)
@@ -1185,34 +2060,148 @@ def test_double_expansion_param():
                                         CayleyPermutation((0,)), ((7, 3),)
                                     ),
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((7, 4),)
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((7, 5),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((7, 6),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((7, 7),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((7, 10),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((7, 11),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((7, 12),)
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((7, 13),)
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (2, 1))
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 2))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (3, 1))
+                                        CayleyPermutation((0, 1)), ((0, 2), (0, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (4, 1))
+                                        CayleyPermutation((0, 1)), ((0, 2), (1, 2))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (6, 1))
+                                        CayleyPermutation((0, 1)), ((0, 2), (1, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (8, 1))
+                                        CayleyPermutation((0, 1)), ((0, 3), (0, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 6), (0, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 6), (0, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 6), (1, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 6), (1, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 7), (0, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 7), (1, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 8), (0, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 8), (0, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 8), (1, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 8), (1, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 9), (0, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((0, 9), (1, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 2), (1, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 2), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 6), (1, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 6), (1, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 7), (1, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 8), (1, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 8), (1, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((1, 9), (1, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (2, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (2, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (3, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 2), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((2, 3), (2, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (4, 3))
+                                        CayleyPermutation((0, 1)), ((2, 3), (3, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (5, 3))
+                                        CayleyPermutation((0, 1)), ((2, 3), (4, 3))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((2, 3), (6, 3))
@@ -1221,46 +2210,151 @@ def test_double_expansion_param():
                                         CayleyPermutation((0, 1)), ((2, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (2, 4))
+                                        CayleyPermutation((0, 1)), ((2, 6), (2, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (4, 4))
+                                        CayleyPermutation((0, 1)), ((2, 6), (2, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (6, 4))
+                                        CayleyPermutation((0, 1)), ((2, 6), (4, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (7, 4))
+                                        CayleyPermutation((0, 1)), ((2, 6), (4, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (8, 4))
+                                        CayleyPermutation((0, 1)), ((2, 6), (5, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (3, 1))
+                                        CayleyPermutation((0, 1)), ((2, 6), (5, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (4, 1))
+                                        CayleyPermutation((0, 1)), ((2, 6), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (6, 1))
+                                        CayleyPermutation((0, 1)), ((2, 6), (6, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (8, 1))
+                                        CayleyPermutation((0, 1)), ((2, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 1), (4, 1))
+                                        CayleyPermutation((0, 1)), ((2, 6), (8, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 1), (6, 1))
+                                        CayleyPermutation((0, 1)), ((2, 7), (2, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 1), (8, 1))
+                                        CayleyPermutation((0, 1)), ((2, 7), (4, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 7), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (2, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 8), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 9), (2, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 9), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((2, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (3, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 2), (8, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 3), (3, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 3), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 3), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((3, 3), (8, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 2), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 2), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 2), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((4, 3), (4, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 3), (5, 3))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((4, 3), (6, 3))
@@ -1269,31 +2363,115 @@ def test_double_expansion_param():
                                         CayleyPermutation((0, 1)), ((4, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (4, 4))
+                                        CayleyPermutation((0, 1)), ((4, 6), (4, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (6, 4))
+                                        CayleyPermutation((0, 1)), ((4, 6), (4, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (7, 4))
+                                        CayleyPermutation((0, 1)), ((4, 6), (5, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (8, 4))
+                                        CayleyPermutation((0, 1)), ((4, 6), (5, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((5, 3), (5, 3))
+                                        CayleyPermutation((0, 1)), ((4, 6), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((5, 3), (6, 3))
+                                        CayleyPermutation((0, 1)), ((4, 6), (6, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((5, 3), (8, 3))
+                                        CayleyPermutation((0, 1)), ((4, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 1), (6, 1))
+                                        CayleyPermutation((0, 1)), ((4, 6), (8, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 1), (8, 1))
+                                        CayleyPermutation((0, 1)), ((4, 7), (4, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 7), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 8), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 9), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((4, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 6), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 6), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 6), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 6), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 6), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 6), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 7), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((5, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 2), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 2), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((6, 3), (6, 3))
@@ -1302,606 +2480,875 @@ def test_double_expansion_param():
                                         CayleyPermutation((0, 1)), ((6, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 4), (6, 4))
+                                        CayleyPermutation((0, 1)), ((6, 6), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 4), (7, 4))
+                                        CayleyPermutation((0, 1)), ((6, 6), (6, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 4), (8, 4))
+                                        CayleyPermutation((0, 1)), ((6, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((7, 4), (7, 4))
+                                        CayleyPermutation((0, 1)), ((6, 6), (8, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((7, 4), (8, 4))
+                                        CayleyPermutation((0, 1)), ((6, 7), (6, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((8, 1), (8, 1))
+                                        CayleyPermutation((0, 1)), ((6, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 8), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 8), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 8), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((6, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((7, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((7, 8), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((7, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((7, 8), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((7, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((7, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((8, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0, 1)), ((8, 2), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((8, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((8, 4), (8, 4))
+                                        CayleyPermutation((0, 1)), ((8, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (2, 1))
+                                        CayleyPermutation((0, 1)), ((8, 6), (8, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (3, 1))
+                                        CayleyPermutation((0, 1)), ((8, 7), (8, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (4, 1))
+                                        CayleyPermutation((0, 1)), ((8, 8), (8, 8))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (6, 1))
+                                        CayleyPermutation((0, 1)), ((8, 8), (8, 9))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (8, 1))
+                                        CayleyPermutation((0, 1)), ((8, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (1, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (2, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (0, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (0, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (1, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (2, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (2, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (3, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 3), (8, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (0, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (1, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (2, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (4, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 6), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (0, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (0, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (1, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (1, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (2, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (2, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (4, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (4, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (0, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (1, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (0, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (0, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (1, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (1, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (2, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((0, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 2), (1, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 2), (2, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 2), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (1, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (1, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (2, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (2, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (3, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 3), (8, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 6), (1, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 6), (2, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 6), (4, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 6), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 6), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 6), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (1, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (1, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (2, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (2, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (4, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (4, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 8), (1, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 8), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 8), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (1, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (1, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (2, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((1, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 2), (2, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 2), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 3), (2, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((2, 3), (2, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 3), (4, 3))
+                                        CayleyPermutation((1, 0)), ((2, 3), (3, 2))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 3), (5, 3))
+                                        CayleyPermutation((1, 0)), ((2, 3), (3, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (2, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (4, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (6, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (3, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (4, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (4, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 3), (4, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 3), (5, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (4, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (6, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((5, 3), (5, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((5, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((5, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 4), (6, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((7, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((7, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((8, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((8, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((8, 4), (8, 4))
-                                    ),
-                                ),
-                                (
-                                    (
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((3, 1),)
-                                        ),
-                                    ),
-                                    (
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((5, 3),)
-                                        ),
-                                    ),
-                                    (
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((7, 4),)
-                                        ),
-                                    ),
-                                ),
-                                (9, 14),
-                            ),
-                            RowColMap(
-                                {0: 0, 1: 1, 2: 3, 3: 3, 4: 3, 5: 3, 6: 3, 7: 3, 8: 3},
-                                {
-                                    0: 0,
-                                    1: 0,
-                                    2: 0,
-                                    3: 0,
-                                    4: 0,
-                                    5: 0,
-                                    6: 1,
-                                    7: 1,
-                                    8: 1,
-                                    9: 1,
-                                    10: 1,
-                                    11: 1,
-                                    12: 3,
-                                    13: 4,
-                                },
-                            ),
-                        )
-                    }
-                )
-            ),
-            (),
-            (),
-        )
-    ]
-    separation = [
-        MappedTiling(
-            Tiling(
-                (
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 1),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 4),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 2),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 3),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 4),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 0),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 1),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 3),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 4),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 1),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 2),)),
-                    GriddedCayleyPerm(CayleyPermutation((0,)), ((3, 3),)),
-                    GriddedCayleyPerm(CayleyPermutation((0, 0)), ((0, 3), (0, 3))),
-                    GriddedCayleyPerm(CayleyPermutation((0, 0)), ((1, 1), (1, 1))),
-                    GriddedCayleyPerm(CayleyPermutation((0, 0)), ((2, 2), (2, 2))),
-                    GriddedCayleyPerm(CayleyPermutation((0, 0)), ((3, 0), (3, 0))),
-                    GriddedCayleyPerm(CayleyPermutation((0, 0)), ((3, 4), (3, 4))),
-                    GriddedCayleyPerm(CayleyPermutation((0, 1)), ((2, 2), (2, 2))),
-                    GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 3), (0, 3))),
-                    GriddedCayleyPerm(CayleyPermutation((1, 0)), ((2, 2), (2, 2))),
-                    GriddedCayleyPerm(CayleyPermutation((1, 0)), ((3, 4), (3, 4))),
-                    GriddedCayleyPerm(
-                        CayleyPermutation((0, 2, 1)), ((1, 1), (1, 1), (1, 1))
-                    ),
-                    GriddedCayleyPerm(
-                        CayleyPermutation((0, 2, 1)), ((3, 0), (3, 0), (3, 0))
-                    ),
-                    GriddedCayleyPerm(
-                        CayleyPermutation((0, 2, 1)), ((3, 0), (3, 4), (3, 0))
-                    ),
-                ),
-                ((GriddedCayleyPerm(CayleyPermutation((0,)), ((2, 2),)),),),
-                (4, 5),
-            ),
-            ParameterList(
-                frozenset(
-                    {
-                        Parameter(
-                            Tiling(
-                                (
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 7),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 9),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 10),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 0),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 3),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 4),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 5),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((3, 13),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((5, 0),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((5, 1),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((5, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((5, 4),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((5, 5),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((5, 13),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((7, 0),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((7, 1),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((7, 2),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((7, 3),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((7, 5),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((7, 13),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (2, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (3, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (4, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (2, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (4, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (5, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (2, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (4, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (6, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (3, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (4, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((3, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 1), (4, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 3), (4, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 3), (5, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (4, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (6, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((4, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((5, 3), (5, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((5, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((5, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 3), (6, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 4), (6, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((6, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((7, 4), (7, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((7, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((8, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((8, 3), (8, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((8, 4), (8, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (2, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (3, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (4, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (6, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (8, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 3), (2, 3))
+                                        CayleyPermutation((1, 0)), ((2, 3), (4, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((2, 3), (4, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 3), (5, 3))
+                                        CayleyPermutation((1, 0)), ((2, 3), (6, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((2, 3), (6, 3))
                                     ),
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 3), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((2, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (2, 4))
+                                        CayleyPermutation((1, 0)), ((2, 6), (2, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (4, 4))
+                                        CayleyPermutation((1, 0)), ((2, 6), (4, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (6, 4))
+                                        CayleyPermutation((1, 0)), ((2, 6), (5, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (7, 4))
+                                        CayleyPermutation((1, 0)), ((2, 6), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 4), (8, 4))
+                                        CayleyPermutation((1, 0)), ((2, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (3, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (2, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (4, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (2, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (6, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (4, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 1), (8, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (4, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (4, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (5, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (6, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (5, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 1), (8, 1))
+                                        CayleyPermutation((1, 0)), ((2, 7), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 7), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 8), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 8), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (2, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (2, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((2, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 2), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (3, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (3, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (4, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (6, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((3, 3), (8, 3))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 2), (4, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 3), (4, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((4, 3), (4, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 3), (5, 3))
+                                        CayleyPermutation((1, 0)), ((4, 3), (6, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((4, 3), (6, 3))
                                     ),
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 3), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((4, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (4, 4))
+                                        CayleyPermutation((1, 0)), ((4, 6), (4, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (6, 4))
+                                        CayleyPermutation((1, 0)), ((4, 6), (5, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (7, 4))
+                                        CayleyPermutation((1, 0)), ((4, 6), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 4), (8, 4))
+                                        CayleyPermutation((1, 0)), ((4, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((5, 3), (5, 3))
+                                        CayleyPermutation((1, 0)), ((4, 7), (4, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((5, 3), (6, 3))
+                                        CayleyPermutation((1, 0)), ((4, 7), (4, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((5, 3), (8, 3))
+                                        CayleyPermutation((1, 0)), ((4, 7), (5, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 1), (6, 1))
+                                        CayleyPermutation((1, 0)), ((4, 7), (5, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 1), (8, 1))
+                                        CayleyPermutation((1, 0)), ((4, 7), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 7), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 8), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (4, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (4, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((4, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 6), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 6), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 6), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 7), (5, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 7), (5, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 7), (6, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 7), (6, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 7), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((5, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 2), (6, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 3), (6, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((6, 3), (6, 3))
                                     ),
                                     GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 3), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((6, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 4), (6, 4))
+                                        CayleyPermutation((1, 0)), ((6, 6), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 4), (7, 4))
+                                        CayleyPermutation((1, 0)), ((6, 6), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((6, 4), (8, 4))
+                                        CayleyPermutation((1, 0)), ((6, 7), (6, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((7, 4), (7, 4))
+                                        CayleyPermutation((1, 0)), ((6, 7), (6, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((7, 4), (8, 4))
+                                        CayleyPermutation((1, 0)), ((6, 7), (8, 6))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((8, 1), (8, 1))
+                                        CayleyPermutation((1, 0)), ((6, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 8), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 9), (6, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 9), (6, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 9), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((6, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((7, 8), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((7, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((7, 9), (7, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((7, 9), (7, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((7, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((7, 9), (8, 9))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 2), (8, 2))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 3), (8, 2))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((8, 3), (8, 3))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((8, 4), (8, 4))
+                                        CayleyPermutation((1, 0)), ((8, 6), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 7), (8, 6))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 7), (8, 7))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 8), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 9), (8, 8))
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((1, 0)), ((8, 9), (8, 9))
                                     ),
                                 ),
                                 (
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((3, 1),)
+                                            CayleyPermutation((0,)), ((3, 2),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((3, 3),)
                                         ),
                                     ),
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((5, 3),)
+                                            CayleyPermutation((0,)), ((5, 6),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((5, 7),)
                                         ),
                                     ),
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0,)), ((7, 4),)
+                                            CayleyPermutation((0,)), ((7, 8),)
+                                        ),
+                                        GriddedCayleyPerm(
+                                            CayleyPermutation((0,)), ((7, 9),)
                                         ),
                                     ),
                                 ),

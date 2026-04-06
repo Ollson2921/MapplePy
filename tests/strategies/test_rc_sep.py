@@ -77,9 +77,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                             CayleyPermutation((1, 0, 2)), ((0, 2), (0, 0), (0, 2))
                         ),
                         GriddedCayleyPerm(
-                            CayleyPermutation((2, 1, 0)), ((2, 1), (2, 1), (2, 1))
-                        ),
-                        GriddedCayleyPerm(
                             CayleyPermutation((1, 0, 2, 0)),
                             ((0, 2), (0, 2), (0, 2), (0, 2)),
                         ),
@@ -94,19 +91,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                 Tiling(
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0, 2, 1)),
-                                            ((0, 0), (0, 0), (0, 0)),
-                                        ),
-                                    ),
-                                    (),
-                                    (1, 1),
-                                ),
-                                RowColMap({0: 0}, {0: 2}),
-                            ),
-                            Parameter(
-                                Tiling(
-                                    (
-                                        GriddedCayleyPerm(
                                             CayleyPermutation((0, 1)), ((0, 0), (0, 0))
                                         ),
                                     ),
@@ -114,7 +98,7 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                     (1, 1),
                                 ),
                                 RowColMap({0: 0}, {0: 2}),
-                            ),
+                            )
                         }
                     )
                 ),
@@ -168,12 +152,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                             CayleyPermutation((1, 0, 2)), ((0, 3), (0, 0), (0, 3))
                         ),
                         GriddedCayleyPerm(
-                            CayleyPermutation((2, 1, 0)), ((2, 1), (2, 1), (2, 1))
-                        ),
-                        GriddedCayleyPerm(
-                            CayleyPermutation((2, 1, 0)), ((2, 2), (2, 1), (2, 1))
-                        ),
-                        GriddedCayleyPerm(
                             CayleyPermutation((1, 0, 2, 0)),
                             ((0, 3), (0, 2), (0, 3), (0, 2)),
                         ),
@@ -206,23 +184,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                 Tiling(
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0, 2, 1)),
-                                            ((0, 0), (0, 1), (0, 1)),
-                                        ),
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0, 2, 1)),
-                                            ((0, 1), (0, 1), (0, 1)),
-                                        ),
-                                    ),
-                                    (),
-                                    (1, 2),
-                                ),
-                                RowColMap({0: 0}, {0: 2, 1: 3}),
-                            ),
-                            Parameter(
-                                Tiling(
-                                    (
-                                        GriddedCayleyPerm(
                                             CayleyPermutation((0, 1)), ((0, 0), (0, 1))
                                         ),
                                         GriddedCayleyPerm(
@@ -233,7 +194,7 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                     (1, 2),
                                 ),
                                 RowColMap({0: 0}, {0: 2, 1: 3}),
-                            ),
+                            )
                         }
                     )
                 ),
@@ -265,9 +226,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                             CayleyPermutation((1, 0, 2)), ((0, 2), (0, 0), (0, 2))
                         ),
                         GriddedCayleyPerm(
-                            CayleyPermutation((2, 1, 0)), ((2, 1), (2, 1), (2, 1))
-                        ),
-                        GriddedCayleyPerm(
                             CayleyPermutation((1, 0, 2, 0)),
                             ((0, 2), (0, 2), (0, 2), (0, 2)),
                         ),
@@ -286,19 +244,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                 Tiling(
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0, 2, 1)),
-                                            ((0, 0), (0, 0), (0, 0)),
-                                        ),
-                                    ),
-                                    (),
-                                    (1, 1),
-                                ),
-                                RowColMap({0: 0}, {0: 2}),
-                            ),
-                            Parameter(
-                                Tiling(
-                                    (
-                                        GriddedCayleyPerm(
                                             CayleyPermutation((0, 1)), ((0, 0), (0, 0))
                                         ),
                                     ),
@@ -306,7 +251,7 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                     (1, 1),
                                 ),
                                 RowColMap({0: 0}, {0: 2}),
-                            ),
+                            )
                         }
                     )
                 ),
@@ -363,12 +308,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                             CayleyPermutation((1, 0, 2)), ((0, 3), (0, 2), (0, 3))
                         ),
                         GriddedCayleyPerm(
-                            CayleyPermutation((2, 1, 0)), ((2, 1), (2, 1), (2, 1))
-                        ),
-                        GriddedCayleyPerm(
-                            CayleyPermutation((2, 1, 0)), ((2, 2), (2, 1), (2, 1))
-                        ),
-                        GriddedCayleyPerm(
                             CayleyPermutation((1, 0, 2, 0)),
                             ((0, 3), (0, 3), (0, 3), (0, 3)),
                         ),
@@ -393,23 +332,6 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                 Tiling(
                                     (
                                         GriddedCayleyPerm(
-                                            CayleyPermutation((0, 2, 1)),
-                                            ((0, 0), (0, 1), (0, 1)),
-                                        ),
-                                        GriddedCayleyPerm(
-                                            CayleyPermutation((0, 2, 1)),
-                                            ((0, 1), (0, 1), (0, 1)),
-                                        ),
-                                    ),
-                                    (),
-                                    (1, 2),
-                                ),
-                                RowColMap({0: 0}, {0: 2, 1: 3}),
-                            ),
-                            Parameter(
-                                Tiling(
-                                    (
-                                        GriddedCayleyPerm(
                                             CayleyPermutation((0, 1)), ((0, 0), (0, 1))
                                         ),
                                         GriddedCayleyPerm(
@@ -420,7 +342,7 @@ def test_ltoreq_rc_separation_factory_one_big_separation():
                                     (1, 2),
                                 ),
                                 RowColMap({0: 0}, {0: 2, 1: 3}),
-                            ),
+                            )
                         }
                     )
                 ),
