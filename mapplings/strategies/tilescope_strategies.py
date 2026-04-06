@@ -8,7 +8,7 @@ from tilescope.strategies import (
     ShuffleFactorStrategy,
     RequirementPlacementStrategy,
     LessThanRowColSeparationStrategy,
-    LessThanOrEqualRowColSeparationStrategy,
+    AbstractLessThanOrEqualRowColSeparationStrategy,
     CellInsertionFactory,
     PointPlacementFactory,
     RowInsertionFactory,
@@ -354,7 +354,7 @@ class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy)
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
-    LessThanOrEqualRowColSeparationStrategy
+    AbstractLessThanOrEqualRowColSeparationStrategy
 ):
     """A strategy for separating rows and columns with less than or equal constraints."""
 

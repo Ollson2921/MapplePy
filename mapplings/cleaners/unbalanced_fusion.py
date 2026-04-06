@@ -66,7 +66,6 @@ class UnbalancedFusion:
             if self.check_obs(index, fuse_rows, merge_direction) and self.check_reqs(
                 index, fuse_rows, merge_direction
             ):
-                print("yay")
                 yield index + merge_direction
             index += merge_direction
 
@@ -92,7 +91,7 @@ class UnbalancedFusion:
     def check_reqs(self, index: int, fuse_rows: bool, merge_direction: int) -> bool:
         """Validates the requirements"""
         temp_maps = list(self.default_maps)
-        temp_maps[fuse_rows][index + merge_direction] = index
+        temp_maps[fuse_rows][index] = index + merge_direction
         preimage_map = RowColMap(*temp_maps)
         obs = self.sorted_obs[fuse_rows][index + merge_direction]
         isolated_obs = {
@@ -103,6 +102,9 @@ class UnbalancedFusion:
         combined_obs = obs | self.sorted_obs[fuse_rows][index]
         for req_list in self.sorted_reqs[fuse_rows][index + merge_direction]:
             for req in req_list:
+                relevant_positions = set(pos[fuse_rows] for pos in req.positions)
+                if relevant_positions != {index + merge_direction}:
+                    return False
                 subreq = req.sub_gridded_cayley_perm(
                     (
                         pos
@@ -117,11 +119,7 @@ class UnbalancedFusion:
                             for pre_ob in isolated_obs[ob]
                         ):
                             return False
-                preimgaes = preimage_map.preimage_of_gridded_cperm(req)
-                relevant_positions = set(pos[fuse_rows] for pos in req.positions)
-                if index in relevant_positions:
-                    if not all(pre_req.avoids(obs) for pre_req in preimgaes):
-                        return False
+                
         return True
 
     def make_adjustment_map(
