@@ -43,34 +43,19 @@ class AbstractMTRowColSeparation:
     ) -> AbstractSeparation:
         """Returns the row/col separation map."""
 
-    def make_new_map(
-        self,
-        param: Parameter,
-        direction: int,
-    ) -> dict[int, int]:
-        """Makes the RowColMap from a new parameter to the new base tiling"""
-        mapping_to = []
-        for item in self.preimage_map[direction].items():
-            if direction:
-                preimages = param.map.preimages_of_row(item[0])
-            else:
-                preimages = param.map.preimages_of_col(item[0])
-            for i in range(len(item[1])):
-                for _ in preimages:
-                    mapping_to.append(item[1][i])
-        return {n: mapping_to[n] for n in range(len(mapping_to))}
-
     def make_new_parameter_maps(
         self, param: Parameter, rows: bool, interleaving: bool = False
-    ) -> Parameter:
+    ) -> Iterator[tuple[dict[int, int], list[int], dict[int, int]]]:
         """Returns maps between old param and possible new params
         Each is in a tuple with indices of point rows to add obs for."""
         base_map = self.preimage_map
         base_rows_or_cols = (
             set(param.col_map.values()) if not rows else set(param.row_map.values())
         )
-        reverse_col_maps: list[tuple[dict[int, int], list[int]]] = [({}, [])]
-        # all possible row/col maps, each in a tuple with a list of indices in param where point rows have been added (where applicable). When this is not needed, used to count the number of rows/cols added.
+        reverse_col_maps: list[tuple[dict[int, int], list[int], dict[int, int]]] = [
+            ({}, [], {})
+        ]
+        # all possible row/col maps, each in a tuple with a list of indices in param where point rows have been added (where applicable). When this is not needed, used to count the number of rows/cols added. And new map to bt.
 
         for bt_col in base_rows_or_cols:
             all_cols_to_map = (
@@ -81,37 +66,46 @@ class AbstractMTRowColSeparation:
             base_mapping_to = base_map[int(rows)][bt_col]
             if len(base_mapping_to) < 2:  # col didn't separate
                 new_reverse_col_maps = []
-                for reverse_col_map, point_rows_added in reverse_col_maps:
+                for reverse_col_map, point_rows_added, param_map in reverse_col_maps:
                     new_reverse_col_map = reverse_col_map.copy()
+                    new_param_map = param_map.copy()
                     for og_col in all_cols_to_map:
-                        new_reverse_col_map[
+                        new_col = (
                             og_col
                             + len(point_rows_added)
                             + len(point_rows_added) * int(interleaving)
-                        ] = og_col
-                    new_reverse_col_maps.append((new_reverse_col_map, point_rows_added))
+                        )
+                        new_reverse_col_map[new_col] = og_col
+                        new_param_map[new_col] = base_mapping_to[0]
+                    new_reverse_col_maps.append(
+                        (new_reverse_col_map, point_rows_added, new_param_map)
+                    )
                 reverse_col_maps = new_reverse_col_maps
             else:  # col did separate
                 # choose a col to add a point row in, map everything above to the top of separation and everything below to the bottom of separation
                 new_reverse_col_maps = []
                 for col in all_cols_to_map:
-                    for reverse_col_map, point_rows_added in reverse_col_maps:
+                    for (
+                        reverse_col_map,
+                        point_rows_added,
+                        param_map,
+                    ) in reverse_col_maps:
                         new_reverse_col_map = reverse_col_map.copy()
                         new_point_rows_added = point_rows_added.copy()
+                        new_param_map = param_map.copy()
                         for og_col in all_cols_to_map:
+                            new_col = (
+                                og_col
+                                + len(new_point_rows_added)
+                                + len(new_point_rows_added) * int(interleaving)
+                            )
                             if og_col <= col:
-                                new_reverse_col_map[
-                                    og_col
-                                    + len(new_point_rows_added)
-                                    + len(new_point_rows_added) * int(interleaving)
-                                ] = og_col
+                                new_reverse_col_map[new_col] = og_col
+                                new_param_map[new_col] = base_mapping_to[0]
                             if col == og_col:
-                                new_reverse_col_map[
-                                    og_col
-                                    + len(new_point_rows_added)
-                                    + len(new_point_rows_added) * int(interleaving)
-                                    + 1
-                                ] = og_col
+                                new_col = new_col + 1
+                                new_reverse_col_map[new_col] = og_col
+                                new_param_map[new_col] = base_mapping_to[1]
                                 new_point_rows_added.append(col + 1)
                                 if interleaving:
                                     new_reverse_col_map[
@@ -119,45 +113,35 @@ class AbstractMTRowColSeparation:
                                         + len(new_point_rows_added)
                                         + len(new_point_rows_added) * int(interleaving)
                                     ] = og_col
+                                    new_param_map[new_col + 1] = base_mapping_to[2]
                             if og_col > col:
-                                new_reverse_col_map[
-                                    og_col
-                                    + len(new_point_rows_added)
-                                    + len(new_point_rows_added) * int(interleaving)
-                                ] = og_col
+                                new_reverse_col_map[new_col] = og_col
+                                new_param_map[new_col] = base_mapping_to[
+                                    1 + int(interleaving)
+                                ]
                     new_reverse_col_maps.append(
-                        (new_reverse_col_map, new_point_rows_added)
+                        (new_reverse_col_map, new_point_rows_added, new_param_map)
                     )
                 reverse_col_maps = new_reverse_col_maps
         return reverse_col_maps
 
     def make_new_parameter(self, param: Parameter, LEQ: bool) -> Iterator[Parameter]:
         """Returns the adjusted param after row/col separation"""
-        for row_map, rows_added in self.make_new_parameter_maps(
+        for row_map, rows_added, param_row_map in self.make_new_parameter_maps(
             param, rows=True, interleaving=LEQ
         ):
-            for col_map, _ in self.make_new_parameter_maps(
+            for col_map, _, param_col_map in self.make_new_parameter_maps(
                 param, rows=False, interleaving=False
             ):
                 rc_map = RowColMap(col_map, row_map)
-                print(rc_map)
-                print(rows_added)
                 obs, reqs = rc_map.preimage_of_tiling(param.ghost)
                 new_ghost = Tiling(obs, reqs, (len(col_map), len(row_map)))
                 if LEQ:
                     for point_row in rows_added:
                         new_ghost = new_ghost.add_point_row(point_row)
-                new_row_map = {i: param.row_map[row_map[i]] for i in row_map}
-                new_col_map = {i: param.col_map[col_map[i]] for i in col_map}
-                print(new_row_map, new_col_map)
-                new_map = RowColMap(new_col_map, new_row_map)
+                new_map = RowColMap(param_col_map, param_row_map)
 
                 yield Parameter(new_ghost, new_map)
-
-    def implied_obs(self, param: Parameter) -> set[GriddedCayleyPerm]:
-        """Makes sure any gcps on new param are consistent on old param - the obs
-        that were implied by row and col orders."""
-        pass
 
     def update_params(
         self, LEQ: bool
