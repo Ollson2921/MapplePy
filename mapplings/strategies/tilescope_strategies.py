@@ -2,7 +2,15 @@
 
 from typing import Iterator
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
-from gridded_cayley_permutations.point_placements import DIRECTIONS
+from gridded_cayley_permutations.point_placements import (
+    DIRECTIONS,
+    DIR_LEFT_BOT,
+    DIR_RIGHT_BOT,
+    DIR_LEFT_TOP,
+    DIR_RIGHT_TOP,
+    DIR_LEFT,
+    DIR_RIGHT,
+)
 from tilescope.strategies import (
     AbstractFactorStrategy,
     AbstractShuffleFactorStrategy,
@@ -18,14 +26,7 @@ from tilescope.strategies import (
 )
 from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
 
-from gridded_cayley_permutations.point_placements import (
-    DIR_LEFT_BOT,
-    DIR_RIGHT_BOT,
-    DIR_LEFT_TOP,
-    DIR_RIGHT_TOP,
-    DIR_LEFT,
-    DIR_RIGHT,
-)
+
 from comb_spec_searcher import (
     DisjointUnionStrategy,
     CombinatorialSpecificationSearcher,
