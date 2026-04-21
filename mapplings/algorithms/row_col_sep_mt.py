@@ -3,7 +3,7 @@
 import abc
 from functools import cached_property
 from typing import Iterator, Optional
-from gridded_cayley_permutations import Tiling
+from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope.strategies.row_column_separation import (
     LessThanRowColSeparation,
@@ -124,16 +124,23 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         param_to_param_map: dict[int, int] = {}
         param_to_bt_map: dict[int, int] = {}
         new_param_col = 0
-        count = 0
+        count = -1
+        bt_count = 0
+        old_bt_mapping_to = None
         for n in range(param.dimensions[int(rows)]):
             bt_mapping_to = self.preimage_map[int(rows)][
                 param.col_map[n] if not rows else param.row_map[n]
             ]
-            for bt_col in bt_mapping_to:
-                param_to_bt_map[new_param_col] = bt_col
-                param_to_param_map[new_param_col] = count
+            if len(bt_mapping_to) > 1 and old_bt_mapping_to == bt_mapping_to:
+                bt_count += 1
+            else:
+                bt_count = 0
+                count += 1
+            for i in range(len(bt_mapping_to)):
+                param_to_bt_map[new_param_col] = bt_mapping_to[bt_count]
+                param_to_param_map[new_param_col] = i + count
                 new_param_col += 1
-            count += 1
+            old_bt_mapping_to = bt_mapping_to
         return (param_to_bt_map, param_to_param_map)
 
     @staticmethod
