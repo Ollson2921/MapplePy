@@ -33,9 +33,6 @@ from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling
 from mapplings.algorithms import (
     MTRequirementPlacement,
-    Factor,
-    ILFactorNormal,
-    ILFactorInverted,
     LTORERowColSeparationMT,
     LTRowColSeparationMT,
 )
@@ -287,58 +284,6 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
 
     def backward_map(self, comb_class, objs, children=None):
         raise NotImplementedError
-
-
-class MapplingFactorStrategy(FactorStrategy):
-    """
-    A strategy for finding factors in a mapped tiling.
-    """
-
-    cleaner = MTCleaner([], "Factoring Cleaner")
-
-    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = Factor(comb_class).find_factors()
-        if len(factors) <= 1:
-            raise StrategyDoesNotApply
-        factors = tuple(map(self.__class__.cleaner, factors))
-        return factors
-
-
-# pylint:disable=too-many-ancestors
-class MapplingILFactorStrategy(ShuffleFactorStrategy):
-    """
-    A strategy for finding interleaving factors in a mapped tiling.
-    """
-
-    cleaner = MTCleaner.make_full_cleaner("IL Factoring Cleaner")
-
-    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = ILFactorNormal(comb_class).find_factors()
-        if len(factors) <= 1:
-            raise StrategyDoesNotApply
-        factors = tuple(map(self.__class__.cleaner, factors))
-        return factors
-
-    def formal_step(self) -> str:
-        return "Factor the mappling into interleaving factors"
-
-
-class MapplingInvertedILFactorStrategy(ShuffleFactorStrategy):
-    """
-    A strategy for finding interleaving factors in a mapped tiling by inverting 00 obstructions
-    """
-
-    cleaner = MTCleaner.make_full_cleaner("Inverted IL Factoring Cleaner")
-
-    def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = ILFactorInverted(comb_class).find_factors()
-        if len(factors) <= 1:
-            raise StrategyDoesNotApply
-        factors = tuple(map(self.__class__.cleaner, factors))
-        return factors
-
-    def formal_step(self) -> str:
-        return "Invert obstructions and factor the mappling into interleaving factors"
 
 
 class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy):

@@ -15,11 +15,11 @@ from .tilescope_strategies import (
     MapplingVerticalInsertionEncodingPlacementFactory,
     MapplingHorizontalInsertionEncodingRequirementInsertionFactory,
     MapplingHorizontalInsertionEncodingPlacementFactory,
-    MapplingFactorStrategy,
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
     MapplingCellInsertionFactory,
 )
+from .factor import MapplingFactorStrategy
 
 
 class MappedTileScopePack(StrategyPack):

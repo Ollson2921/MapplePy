@@ -1,7 +1,7 @@
 from gridded_cayley_permutations import GriddedCayleyPerm, Tiling
 from mapplings import MappedTiling
 from mapplings.strategies import MappedTileScopePack
-from mapplings.strategies.tilescope_strategies import MapplingILFactorStrategy
+from mapplings.strategies.factor import MapplingILFactorStrategy
 from comb_spec_searcher import CombinatorialSpecificationSearcher
 from comb_spec_searcher import AtomStrategy
 from mapplings.cleaners import MTCleaner, ParamCleaner
@@ -20,8 +20,7 @@ pack = MappedTileScopePack.point_placement(mappling)
 pack = pack.add_initial(MapplingILFactorStrategy(ignore_parent=True), apply_first=True)
 pack = pack.add_verification(AtomStrategy(), replace=True)
 
-css = TrackedSearcher(mappling, pack, max_cvs=1)
-
+css = TrackedSearcher(mappling, pack, max_cvs=1, debug=True)
 spec = css.auto_search(status_update=30)
 spec.show(verbose=True)
 
