@@ -2,8 +2,10 @@
 
 import abc
 from functools import cached_property
+from itertools import combinations
 from typing import Iterator, Optional
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope.strategies.row_column_separation import (
     LessThanRowColSeparation,
@@ -105,14 +107,82 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         col_param_to_bt_map, col_param_param_map = self.make_new_parameter_maps(
             param, rows=False
         )
+        n, m = (len(col_param_to_bt_map), len(row_param_to_bt_map))
         rc_map = RowColMap(col_param_param_map, row_param_param_map)
         obs, reqs = rc_map.preimage_of_tiling(param.ghost)
+        implied_obs = self.implied_obs(rc_map, (n, m))
         new_ghost = Tiling(
-            obs,
+            obs + implied_obs,
             reqs,
-            (len(col_param_to_bt_map), len(row_param_to_bt_map)),
+            (n, m),
         )
         yield Parameter(new_ghost, RowColMap(col_param_to_bt_map, row_param_to_bt_map))
+
+    def implied_obs(
+        self, param_map: RowColMap, dimensions: tuple[int, int]
+    ) -> tuple[GriddedCayleyPerm]:
+        """The obstructions that were previously implied by GCPs being consistent."""
+        col_map, row_map = param_map.preimage_map()
+        n, m = dimensions
+        implied_obs = []
+        row_pairs = self.row_or_col_pairs(row_map)
+        col_pairs = self.row_or_col_pairs(col_map)
+        for row1, row2 in row_pairs:
+            for col1, col2 in combinations(range(n), 2):
+                implied_obs.append(
+                    GriddedCayleyPerm(
+                        CayleyPermutation((0, 1)),
+                        ((col1, row1), (col2, row2)),
+                    )
+                )
+                implied_obs.append(
+                    GriddedCayleyPerm(
+                        CayleyPermutation((1, 0)),
+                        ((col1, row2), (col2, row1)),
+                    )
+                )
+        for col1, col2 in col_pairs:
+            for row1, row2 in combinations(range(m), 2):
+                implied_obs.append(
+                    GriddedCayleyPerm(
+                        CayleyPermutation((0, 1)),
+                        ((col1, row1), (col2, row2)),
+                    )
+                )
+                implied_obs.append(
+                    GriddedCayleyPerm(
+                        CayleyPermutation((1, 0)),
+                        ((col2, row1), (col1, row2)),
+                    )
+                )
+        return tuple(implied_obs)
+
+    def row_or_col_pairs(
+        self, row_map: dict[int, tuple[int, ...]]
+    ) -> set[tuple[int, int]]:
+        """Finds the pairs of rows or columns to add implied obstructions to."""
+        row_pairs = set()
+        sorted_rows = set()
+        for row in row_map:
+            if row in sorted_rows:
+                continue
+            if len(row_map[row]) > 1:
+                initial_row = row_map[row][0]
+                for next_row in row_map[row][1:]:
+                    if next_row != initial_row + 1:
+                        for skipped_row in range(initial_row + 1, next_row):
+                            row_pairs.add((skipped_row, next_row))
+                            sorted_rows.add(skipped_row)
+                            mapping_to = row_map[skipped_row][-1]
+                            for other_rows in range(
+                                row_map[skipped_row][0] + 1, mapping_to
+                            ):
+                                if other_rows < next_row:
+                                    row_pairs.add((other_rows, mapping_to))
+                                else:
+                                    break
+                    initial_row = next_row
+        return row_pairs
 
     def make_new_parameter_maps(
         self,
