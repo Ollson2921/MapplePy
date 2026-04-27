@@ -52,7 +52,8 @@ class Parameter(Tiling):
 
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
-        for gcp in self.map.preimage_of_gridded_cperm(gcperm):
+        subgcp = gcperm.sub_gridded_cayley_perm(self.image_cells())
+        for gcp in self.map.preimage_of_gridded_cperm(subgcp):
             if self.gcp_in_tiling(gcp):
                 yield gcp
 

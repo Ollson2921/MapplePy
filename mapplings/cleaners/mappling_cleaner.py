@@ -63,7 +63,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                         )
                         for c_list in new_containers
                     ]
-                if getattr(func, "run_on_containers"):
+                if getattr(func, "run_on_enumerators"):
                     new_enumerators = [
                         ParameterList(
                             param.update_active_cells(mappling.tiling)

@@ -128,6 +128,19 @@ class MappedTiling(Tiling):
             for param_list in self.enumerating_parameters
         )
 
+    @property
+    def extra_parameters(self):
+        return tuple(f"k_{i}" for i in range(len(self.enumerating_parameters)))
+
+    def remove_enumerators(self) -> "MappedTiling":
+        return MappedTiling(
+            self.tiling,
+            self.avoiding_parameters,
+            self.containing_parameters,
+            [],
+            simplify=False,
+        )
+
     def is_empty(self) -> bool:
         """
         Assume this is run after all cleanup functions have been applied.
