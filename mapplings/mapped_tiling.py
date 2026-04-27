@@ -1,5 +1,7 @@
 """Module with the mapped tiling class."""
 
+from functools import reduce
+from operator import mul
 from typing import (
     Iterable,
     List,
@@ -12,6 +14,7 @@ from typing import (
 )
 from collections import defaultdict
 from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+import sympy
 from .parameter import Parameter
 from .parameter_list import ParameterList
 
@@ -140,6 +143,27 @@ class MappedTiling(Tiling):
             [],
             simplify=False,
         )
+
+    def initial_conditions(self, check: int = 6) -> List[sympy.Expr]:
+        """
+        Returns a list with the initial conditions to size `check` of the
+        CombinatorialClass.
+
+        TODO: this can be on CombinatorialClass
+        """
+        res = [sympy.Number(0) for _ in range(check + 1)]
+        for n in range(check + 1):
+            for obj in self.objects_of_size(n):
+                param = self.get_parameters(obj)
+                res[n] += reduce(
+                    mul,
+                    [
+                        sympy.var(k) ** val
+                        for k, val in zip(self.extra_parameters, param)
+                    ],
+                    sympy.Number(1),
+                )
+        return res
 
     def is_empty(self) -> bool:
         """
