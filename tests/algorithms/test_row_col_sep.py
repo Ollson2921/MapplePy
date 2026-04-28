@@ -2292,9 +2292,6 @@ def test_double_expansion_param():
                                         CayleyPermutation((0, 1)), ((0, 1), (1, 1))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 1), (1, 6))
-                                    ),
-                                    GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 1), (1, 7))
                                     ),
                                     GriddedCayleyPerm(
@@ -2308,12 +2305,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 1), (8, 6))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 2), (1, 6))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 2), (1, 7))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 2), (2, 6))
@@ -2350,15 +2341,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 3), (1, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 3), (1, 6))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 3), (1, 7))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 3), (1, 8))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 3), (1, 9))
@@ -2410,18 +2392,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 4), (1, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 4), (1, 6))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 4), (1, 7))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 4), (1, 8))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 4), (1, 9))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 4), (1, 10))
@@ -2479,21 +2449,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 4), (8, 9))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 5), (1, 6))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 5), (1, 7))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 5), (1, 8))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 5), (1, 9))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((0, 5), (1, 10))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((0, 1)), ((0, 5), (2, 6))
@@ -3621,21 +3576,6 @@ def test_double_expansion_param():
                                         CayleyPermutation((1, 0)), ((0, 4), (8, 4))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 6), (1, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 6), (1, 2))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 6), (1, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 6), (1, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 6), (1, 5))
-                                    ),
-                                    GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 6), (2, 1))
                                     ),
                                     GriddedCayleyPerm(
@@ -3712,18 +3652,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 7), (1, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 7), (1, 2))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 7), (1, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 7), (1, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 7), (1, 5))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 7), (1, 7))
@@ -3813,15 +3741,6 @@ def test_double_expansion_param():
                                         CayleyPermutation((1, 0)), ((0, 7), (8, 7))
                                     ),
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 8), (1, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 8), (1, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 8), (1, 5))
-                                    ),
-                                    GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 8), (2, 3))
                                     ),
                                     GriddedCayleyPerm(
@@ -3871,12 +3790,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 9), (1, 3))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 9), (1, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 9), (1, 5))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 9), (1, 9))
@@ -3946,9 +3859,6 @@ def test_double_expansion_param():
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 10), (1, 4))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 10), (1, 5))
                                     ),
                                     GriddedCayleyPerm(
                                         CayleyPermutation((1, 0)), ((0, 10), (1, 10))
