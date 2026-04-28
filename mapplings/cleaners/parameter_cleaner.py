@@ -28,6 +28,20 @@ class ParamCleaner(GenericCleaner[Parameter]):
 
     all_loggers = {global_tracker}
 
+    # Cleaner Overrides
+
+    @classmethod
+    def _debug_test(cls, original, new, depth):
+        results = original.compare_parameters(new, depth)
+        if not results[0]:
+            return (
+                False,
+                f"\nCheck GCP: {results[1]}"
+                + f"\n{original}\n{new}"
+                + f"\n{repr(original)}",
+            )
+        return True, "Cleaning Sucessful"
+
     # Final Methods
 
     @staticmethod
@@ -160,35 +174,81 @@ class ParamCleaner(GenericCleaner[Parameter]):
         blank = tuple(map(set[int], param.find_blank_columns_and_rows()))
         point_indices = param.point_cols, param.point_rows
 
-        def validate(index1: int, index2: int, check_rows: bool) -> bool:
-            indeices = {index1, index2}
-            if maps[check_rows][index1] != maps[check_rows][index2]:
+        def validate_two_cells(index1: int, index2: int, check_rows: bool) -> bool:
+            """Returns True if two adjacent cells are in point rows/cols with a
+            blank row/col adjacent to them mapping to the same place."""
+            indices = {index1, index2}
+            mapping_to = maps[check_rows][index1]
+            if mapping_to != maps[check_rows][index2] or not indices.issubset(
+                point_indices[check_rows]
+            ):
                 return False
-            if not indeices.issubset(point_indices[check_rows]):
-                return False
-            if {index1 - 1, index2 + 1} & blank[check_rows]:
+            if (
+                index1 - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index1 - 1]
+            ):
+                return True
+            if (
+                index2 + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index2 + 1]
+            ):
                 return True
             return False
+
+        def validate_one_cell(index: int, check_rows: bool) -> tuple[bool, bool]:
+            """Returns True if a cell is in a point row/col
+            with a blank row/col adjacent to it mapping to the
+            same place.
+            Returns false if both adjacent row/cols are blank.
+            A second bool is used to determine which direction to insert the new row/col
+            """
+            if index not in point_indices[check_rows]:
+                return False, False
+            mapping_to = maps[check_rows][index]
+            negative = (
+                index - 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index - 1]
+            )
+            positive = (
+                index + 1 in blank[check_rows]
+                and mapping_to == maps[check_rows][index + 1]
+            )
+            if negative and not positive:
+                return True, False
+            if positive and not negative:
+                return True, True
+            return False, False
 
         for req_list in param.requirements:
             if not len(req_list) == 1:
                 continue
             req = req_list[0]
-            if req.pattern not in (
+            if (
+                req.pattern == CayleyPermutation((0,))
+                and req.positions[0][1] not in param.point_rows
+            ):
+                cell = req.positions[0]
+                valid = validate_one_cell(cell[0], False)
+                if valid[0]:
+                    to_insert[0].add(cell[0] - valid[1])
+                    continue
+                valid = validate_one_cell(cell[1], True)
+                if valid[0]:
+                    to_insert[1].add(cell[1] - valid[1])
+
+            elif req.pattern in (
                 CayleyPermutation((0, 1)),
                 CayleyPermutation((1, 0)),
             ):
-                continue
-            cell1, cell2 = req.positions
-            if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
-                continue
-            if cell1[0] + 1 == cell2[0]:
-                if validate(cell1[0], cell2[0], False):
-                    to_insert[0].add(cell1[0])
+                cell1, cell2 = req.positions
+                if (cell1[0] != cell2[0]) and (cell1[1] != cell2[1]):
                     continue
-            idx1, idx2 = sorted([cell1[1], cell2[1]])
-            if idx1 + 1 == idx2:
-                if validate(idx1, idx2, True):
+                if cell1[0] + 1 == cell2[0] and validate_two_cells(
+                    cell1[0], cell2[0], False
+                ):
+                    to_insert[0].add(cell1[0])
+                idx1, idx2 = sorted([cell1[1], cell2[1]])
+                if idx1 + 1 == idx2 and validate_two_cells(idx1, idx2, True):
                     to_insert[1].add(idx1)
         if not any(to_insert):
             return param

@@ -265,6 +265,10 @@ class Parameter(Tiling):
 
         for i in range(new_dimensions[0]):
             if i - tweak - 1 in cols:
+                if i - tweak - 1 == -1:
+                    new_col_map[i] = self.col_map[0]
+                    tweak += 1
+                    continue
                 new_col_map[i] = new_col_map[i - 1]
                 tweak += 1
             else:
@@ -272,6 +276,10 @@ class Parameter(Tiling):
         tweak = 0
         for i in range(new_dimensions[1]):
             if i - tweak - 1 in rows:
+                if i - tweak - 1 == -1:
+                    new_row_map[i] = self.row_map[0]
+                    tweak += 1
+                    continue
                 new_row_map[i] = new_row_map[i - 1]
                 tweak += 1
             else:
@@ -420,6 +428,46 @@ class Parameter(Tiling):
         col_map = {i: image_cell[0] for i in range(col + 1)}
         return Parameter(ghost, RowColMap(col_map, {0: image_cell[1]}))
 
+    @staticmethod
+    def make_covincular(
+        pattern: tuple[int, ...], adjacency: Iterable[int], image_cell: Cell = (0, 0)
+    ) -> "Parameter":
+        """Returns a parameter equivilent to the vincular pattern mapping to image_cell"""
+        row_positions = list[int]()
+        row = 0 - int(0 in adjacency)
+        obs = set[GriddedCayleyPerm]()
+        for idx in range(len(pattern)):
+            if idx + 1 in adjacency:
+                row += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((0, row), (0, row))),
+                        GriddedCayleyPerm((0, 1), ((0, row), (0, row))),
+                        GriddedCayleyPerm((1, 0), ((0, row), (0, row))),
+                    }
+                )
+                row_positions.append(row)
+            elif idx in adjacency:
+                row += 1
+                obs.update(
+                    {
+                        GriddedCayleyPerm((0, 0), ((0, row), (0, row))),
+                        GriddedCayleyPerm((0, 1), ((0, row), (0, row))),
+                        GriddedCayleyPerm((1, 0), ((0, row), (0, row))),
+                    }
+                )
+                row_positions.append(row)
+                row += 1
+            else:
+                row_positions.append(row)
+        ghost = Tiling(
+            obs,
+            [[GriddedCayleyPerm(pattern, [(0, row) for row in row_positions])]],
+            (1, row + 1),
+        )
+        row_map = {i: image_cell[1] for i in range(row + 1)}
+        return Parameter(ghost, RowColMap({0: image_cell[0]}, row_map))
+
     def to_html_representation(self) -> str:
         """Returns an html representation of the tilings object
         Mimics code from original tilings"""
@@ -451,7 +499,7 @@ class Parameter(Tiling):
 
         return "".join(result)
 
-    def compare_to(
+    def compare_parameters(
         self, other: "Parameter", depth: int = 4
     ) -> tuple[bool, Optional[GriddedCayleyPerm]]:
         """Compares the gcps that live on self to the gcps on other up to size depth"""
