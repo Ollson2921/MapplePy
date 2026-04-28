@@ -252,7 +252,7 @@ class MTLTORERowColSeparation(AbstractMTRowColSeparation):
         """Returns maps between old param and possible new params
         Each is in a tuple with indices of point rows to add obs for."""
         # pylint: disable=too-many-nested-blocks
-        # pylint: disable=too-many-local-variables
+        # pylint: disable=too-many-locals
         base_map = self.preimage_map
         base_rows_or_cols = (
             set(param.col_map.values()) if not rows else set(param.row_map.values())
