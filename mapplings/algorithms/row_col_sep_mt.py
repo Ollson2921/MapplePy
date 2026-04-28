@@ -4,8 +4,8 @@ import abc
 from functools import cached_property
 from itertools import combinations
 from typing import Iterator, Optional
-from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from cayley_permutations import CayleyPermutation
+from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from gridded_cayley_permutations.row_col_map import RowColMap
 from tilescope.strategies.row_column_separation import (
     LessThanRowColSeparation,
@@ -120,7 +120,7 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
 
     def implied_obs(
         self, param_map: RowColMap, dimensions: tuple[int, int]
-    ) -> tuple[GriddedCayleyPerm]:
+    ) -> tuple[GriddedCayleyPerm, ...]:
         """The obstructions that were previously implied by GCPs being consistent."""
         col_map, row_map = param_map.preimage_map()
         n, m = dimensions
@@ -162,7 +162,7 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
     def row_or_col_pairs(
         self,
         row_map: dict[int, tuple[int, ...]],
-        forward_map: dict[int, tuple[int, ...]],
+        forward_map: dict[int, int],
     ) -> set[tuple[int, int]]:
         """Finds the pairs of rows or columns to add implied obstructions to."""
         row_pairs = set()
@@ -170,19 +170,20 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         for row in row_map:
             if row in sorted_rows:
                 continue
-            if len(row_map[row]) > 1:
-                initial_row = row_map[row][0]
-                for next_row in row_map[row][1:]:
-                    if next_row != initial_row + 1:
-                        end_points: list[int] = []
-                        for skipped_row in range(initial_row + 1, next_row):
-                            row_pairs.add((skipped_row, next_row))
-                            for end_point in end_points:
-                                row_pairs.add((skipped_row, end_point))
-                            skipped_row_preimage = forward_map[skipped_row]
-                            sorted_rows.add(skipped_row_preimage)
-                            end_points.append(row_map[skipped_row_preimage][-1])
-                    initial_row = next_row
+            if len(row_map[row]) <= 1:
+                continue
+            initial_row = row_map[row][0]
+            for next_row in row_map[row][1:]:
+                if next_row != initial_row + 1:
+                    end_points: list[int] = []
+                    for skipped_row in range(initial_row + 1, next_row):
+                        row_pairs.add((skipped_row, next_row))
+                        for end_point in end_points:
+                            row_pairs.add((skipped_row, end_point))
+                        skipped_row_preimage = forward_map[skipped_row]
+                        sorted_rows.add(skipped_row_preimage)
+                        end_points.append(row_map[skipped_row_preimage][-1])
+                initial_row = next_row
         return row_pairs
 
     def make_new_parameter_maps(
@@ -250,6 +251,8 @@ class MTLTORERowColSeparation(AbstractMTRowColSeparation):
     ) -> list[tuple[dict[int, int], list[int], dict[int, int]]]:
         """Returns maps between old param and possible new params
         Each is in a tuple with indices of point rows to add obs for."""
+        # pylint: disable=too-many-nested-blocks
+        # pylint: disable=too-many-local-variables
         base_map = self.preimage_map
         base_rows_or_cols = (
             set(param.col_map.values()) if not rows else set(param.row_map.values())
