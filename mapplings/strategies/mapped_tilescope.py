@@ -36,7 +36,7 @@ class MappedTileScopePack(StrategyPack):
         return MappedTileScopePack(
             initial_strats=[
                 MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingLessThanOrEqualRowColSeparationFactory(),
                 MapplingPointPlacementFactory(),
             ],
             inferral_strats=[
@@ -124,7 +124,7 @@ class MappedTileScopePack(StrategyPack):
         return MappedTileScopePack(
             initial_strats=[
                 MapplingFactorStrategy(),
-                MapplingLessThanOrEqualRowColSeparationStrategy(),
+                MapplingLessThanOrEqualRowColSeparationFactory(),
             ],
             inferral_strats=[
                 # CleaningStrategy(),
