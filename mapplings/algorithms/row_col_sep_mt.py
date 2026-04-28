@@ -125,40 +125,44 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         col_map, row_map = param_map.preimage_map()
         n, m = dimensions
         implied_obs = []
-        row_pairs = self.row_or_col_pairs(row_map)
-        col_pairs = self.row_or_col_pairs(col_map)
+        row_pairs = self.row_or_col_pairs(row_map, param_map.row_map)
+        col_pairs = self.row_or_col_pairs(col_map, param_map.col_map)
         for row1, row2 in row_pairs:
             for col1, col2 in combinations(range(n), 2):
-                implied_obs.append(
-                    GriddedCayleyPerm(
-                        CayleyPermutation((0, 1)),
-                        ((col1, row1), (col2, row2)),
+                if param_map.col_map[col1] != param_map.col_map[col2]:
+                    implied_obs.append(
+                        GriddedCayleyPerm(
+                            CayleyPermutation((0, 1)),
+                            ((col1, row1), (col2, row2)),
+                        )
                     )
-                )
-                implied_obs.append(
-                    GriddedCayleyPerm(
-                        CayleyPermutation((1, 0)),
-                        ((col1, row2), (col2, row1)),
+                    implied_obs.append(
+                        GriddedCayleyPerm(
+                            CayleyPermutation((1, 0)),
+                            ((col1, row2), (col2, row1)),
+                        )
                     )
-                )
         for col1, col2 in col_pairs:
             for row1, row2 in combinations(range(m), 2):
-                implied_obs.append(
-                    GriddedCayleyPerm(
-                        CayleyPermutation((0, 1)),
-                        ((col1, row1), (col2, row2)),
+                if param_map.row_map[row1] != param_map.row_map[row2]:
+                    implied_obs.append(
+                        GriddedCayleyPerm(
+                            CayleyPermutation((0, 1)),
+                            ((col1, row1), (col2, row2)),
+                        )
                     )
-                )
-                implied_obs.append(
-                    GriddedCayleyPerm(
-                        CayleyPermutation((1, 0)),
-                        ((col2, row1), (col1, row2)),
+                    implied_obs.append(
+                        GriddedCayleyPerm(
+                            CayleyPermutation((1, 0)),
+                            ((col2, row1), (col1, row2)),
+                        )
                     )
-                )
         return tuple(implied_obs)
 
     def row_or_col_pairs(
-        self, row_map: dict[int, tuple[int, ...]]
+        self,
+        row_map: dict[int, tuple[int, ...]],
+        forward_map: dict[int, tuple[int, ...]],
     ) -> set[tuple[int, int]]:
         """Finds the pairs of rows or columns to add implied obstructions to."""
         row_pairs = set()
@@ -170,17 +174,14 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
                 initial_row = row_map[row][0]
                 for next_row in row_map[row][1:]:
                     if next_row != initial_row + 1:
+                        end_points: list[int] = []
                         for skipped_row in range(initial_row + 1, next_row):
                             row_pairs.add((skipped_row, next_row))
-                            sorted_rows.add(skipped_row)
-                            mapping_to = row_map[skipped_row][-1]
-                            for other_rows in range(
-                                row_map[skipped_row][0] + 1, mapping_to
-                            ):
-                                if other_rows < next_row:
-                                    row_pairs.add((other_rows, mapping_to))
-                                else:
-                                    break
+                            for end_point in end_points:
+                                row_pairs.add((skipped_row, end_point))
+                            skipped_row_preimage = forward_map[skipped_row]
+                            sorted_rows.add(skipped_row_preimage)
+                            end_points.append(row_map[skipped_row_preimage][-1])
                     initial_row = next_row
         return row_pairs
 
@@ -193,24 +194,17 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         Each is in a tuple with indices of point rows to add obs for."""
         param_to_param_map: dict[int, int] = {}
         param_to_bt_map: dict[int, int] = {}
-        new_param_col = 0
-        count = -1
-        bt_count = 0
-        old_bt_mapping_to = None
-        for n in range(param.dimensions[int(rows)]):
-            bt_mapping_to = self.preimage_map[int(rows)][
-                param.col_map[n] if not rows else param.row_map[n]
-            ]
-            if len(bt_mapping_to) > 1 and old_bt_mapping_to == bt_mapping_to:
-                bt_count += 1
-            else:
-                bt_count = 0
-                count += 1
-            for i in range(len(bt_mapping_to)):
-                param_to_bt_map[new_param_col] = bt_mapping_to[bt_count]
-                param_to_param_map[new_param_col] = i + count
-                new_param_col += 1
-            old_bt_mapping_to = bt_mapping_to
+        bt_to_param_map = param.map.preimage_map()[rows]
+        count = 0
+        for bt_row in self.preimage_map[int(rows)]:
+            if bt_row not in bt_to_param_map:
+                continue
+            bt_mapping_to = self.preimage_map[int(rows)][bt_row]
+            for row_mapping_to in bt_mapping_to:
+                for og_row in bt_to_param_map[bt_row]:
+                    param_to_bt_map[count] = row_mapping_to
+                    param_to_param_map[count] = og_row
+                    count += 1
         return (param_to_bt_map, param_to_param_map)
 
     @staticmethod
