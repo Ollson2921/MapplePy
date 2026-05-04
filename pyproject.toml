@@ -12,7 +12,7 @@ authors = [
     { name = "Abigail Ollson" }
 ]
 dependencies = [
-    "comb-spec-searcher>=4.2.1",
+    "comb_spec_searcher @ git+https://github.com/PermutaTriangle/comb_spec_searcher@develop",
     "cayley_perms @ git+https://github.com/Ollson2921/CayleyPerms@main",
 ]
 readme = "README.rst"
