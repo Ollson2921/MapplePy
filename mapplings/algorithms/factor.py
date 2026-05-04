@@ -13,7 +13,7 @@ from mapplings.cleaners import MTCleaner
 Cell = tuple[int, int]
 
 
-class Factor(Factors):
+class MTFactors(Factors):
     """Class containing algorithms for factoring"""
 
     def __init__(self, mappling: MappedTiling):
@@ -80,7 +80,7 @@ class Factor(Factors):
         return all_factors
 
 
-class ILFactorNormal(Factor):
+class MTILFactorNormal(MTFactors):
     """Does IL factoring with 00 obs as normal"""
 
     @cached_property
@@ -150,7 +150,7 @@ class ILFactorNormal(Factor):
         return super().find_factors()
 
 
-class ILFactorInverted(ILFactorNormal):
+class MTILFactorInverted(MTILFactorNormal):
     """Does IL factoring with the compliment of 00 obs"""
 
     def combine_cells_in_obs_and_reqs(self):
