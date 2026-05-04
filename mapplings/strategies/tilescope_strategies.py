@@ -30,6 +30,7 @@ from tilescope.strategies import (
     AbstractObstructionTransitivityStrategy,
 )
 from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
+from mapplings import MappedTiling, ParameterList, Parameter
 
 
 from comb_spec_searcher import (
@@ -437,7 +438,7 @@ class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStr
             new_cont_param_list, found_new = self.obs_trans_for_param_list(
                 cont_param_list
             )
-            new_cont_params.append(new_cont_param_list)
+            new_cont_params.append(ParameterList(new_cont_param_list))
             found_new_obs = found_new_obs or found_new
 
         if not found_new_obs:
