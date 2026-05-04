@@ -30,16 +30,13 @@ from tilescope.strategies import (
     AbstractObstructionTransitivityStrategy,
 )
 from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
-from mapplings import MappedTiling, ParameterList, Parameter
-
-
 from comb_spec_searcher import (
     DisjointUnionStrategy,
     CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling, Parameter
+from mapplings import MappedTiling, Parameter, ParameterList
 from mapplings.algorithms import (
     MTRequirementPlacement,
     MTFactors,
