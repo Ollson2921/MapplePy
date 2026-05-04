@@ -6,22 +6,9 @@ from gridded_cayley_permutations import (
     GriddedCayleyPerm,
     ObstructionTransitivity,
 )
-from gridded_cayley_permutations.point_placements import DIRECTIONS
-from tilescope.strategies import (
-    FactorStrategy,
-    ShuffleFactorStrategy,
-    RequirementPlacementStrategy,
-    LessThanRowColSeparationStrategy,
-    LessThanOrEqualRowColSeparationStrategy,
-    CellInsertionFactory,
-    PointPlacementFactory,
-    RowInsertionFactory,
-    ColInsertionFactory,
-    RequirementInsertionStrategy,
-    AbstractObstructionTransitivityStrategy,
-)
+from gridded_cayley_permutations.point_placements import (
+    DIRECTIONS,
 
-from tilescope.strategies.point_placements import (
     DIR_LEFT_BOT,
     DIR_RIGHT_BOT,
     DIR_LEFT_TOP,
@@ -29,6 +16,23 @@ from tilescope.strategies.point_placements import (
     DIR_LEFT,
     DIR_RIGHT,
 )
+from tilescope.strategies import (
+    AbstractFactorStrategy,
+    AbstractShuffleFactorStrategy,
+    AbstractRequirementPlacementStrategy,
+    AbstractLessThanRowColSeparationStrategy,
+    AbstractLessThanOrEqualRowColSeparationStrategy,
+    AbstractLessThanOrEqualRowColSeparationFactory,
+    AbstractCellInsertionFactory,
+    AbstractPointPlacementFactory,
+    AbstractRowInsertionFactory,
+    AbstractColInsertionFactory,
+    AbstractRequirementInsertionStrategy, 
+    AbstractObstructionTransitivityStrategy,
+)
+from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
+
+
 from comb_spec_searcher import (
     DisjointUnionStrategy,
     CombinatorialSpecificationSearcher,
@@ -38,11 +42,11 @@ from cayley_permutations import CayleyPermutation
 from mapplings import MappedTiling, Parameter
 from mapplings.algorithms import (
     MTRequirementPlacement,
-    Factor,
-    ILFactorNormal,
-    ILFactorInverted,
-    LTORERowColSeparationMT,
-    LTRowColSeparationMT,
+    MTFactors,
+    MTILFactorNormal,
+    MTILFactorInverted,
+    MTLTORERowColSeparation,
+    MTLTRowColSeparation,
 )
 from mapplings.cleaners import MTCleaner, ParamCleaner
 
@@ -62,7 +66,7 @@ def new_status(self, elaborate: bool) -> str:
 CombinatorialSpecificationSearcher.status = new_status  # type: ignore
 
 
-class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
+class MapplingRequirementPlacementStrategy(AbstractRequirementPlacementStrategy):
     """
     A strategy for placing requirements in a mapped tiling.
     """
@@ -70,26 +74,39 @@ class MapplingRequirementPlacementStrategy(RequirementPlacementStrategy):
     cleaner = MTCleaner.make_full_cleaner("Req Placement Cleaner")
 
     def algorithm(self, tiling):
+        """Returns the algorithm to use for placing points in a mapped tiling."""
         return MTRequirementPlacement(tiling)
 
     def decomposition_function(self, comb_class):
         return tuple(
-            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+            map(
+                self.__class__.cleaner,
+                (comb_class.add_obstructions(self.gcps),)
+                + self.algorithm(comb_class).point_placement(
+                    self.gcps, self.indices, self.direction
+                ),
+            )
         )
 
 
-class MapplingRequirementInsertionStrategy(RequirementInsertionStrategy):
+class MapplingRequirementInsertionStrategy(AbstractRequirementInsertionStrategy):
     """Mappling version of RequirementInsertionStrategy with a cleaner"""
 
     cleaner = MTCleaner.make_full_cleaner("Req Insertion Cleaner")
 
     def decomposition_function(self, comb_class):
         return tuple(
-            map(self.__class__.cleaner, super().decomposition_function(comb_class))
+            map(
+                self.__class__.cleaner,
+                (
+                    comb_class.add_obstructions(self.gcps),
+                    comb_class.add_requirement_list(self.gcps),
+                ),
+            )
         )
 
 
-class MapplingCellInsertionFactory(CellInsertionFactory):
+class MapplingCellInsertionFactory(AbstractCellInsertionFactory):
     """Factory for inserting points into active cells of a tiling."""
 
     def __call__(
@@ -101,7 +118,7 @@ class MapplingCellInsertionFactory(CellInsertionFactory):
             yield strategy
 
 
-class MapplingPointPlacementFactory(PointPlacementFactory):
+class MapplingPointPlacementFactory(AbstractPointPlacementFactory):
     """
     A factory for creating point placement strategies for mapped tilings.
     """
@@ -118,7 +135,7 @@ class MapplingPointPlacementFactory(PointPlacementFactory):
                 #     yield PartialRequirementPlacementStrategy(gcps, indices, direction)
 
 
-class MapplingRowPlacementFactory(RowInsertionFactory):
+class MapplingRowPlacementFactory(AbstractRowInsertionFactory):
     """A factory for placing the minimum points in the rows of tilings."""
 
     def __call__(
@@ -137,11 +154,13 @@ class MapplingRowPlacementFactory(RowInsertionFactory):
                 yield MapplingRequirementPlacementStrategy(all_gcps, indices, direction)
 
 
-class MapplingColPlacementFactory(ColInsertionFactory):
+class MapplingColPlacementFactory(AbstractColInsertionFactory):
     """A factory for placing the leftmost or rightmost points in
     the columns of tilings."""
 
-    def __call__(self, comb_class: Tiling) -> Iterator[RequirementPlacementStrategy]:
+    def __call__(
+        self, comb_class: Tiling
+    ) -> Iterator[MapplingRequirementPlacementStrategy]:
         not_point_cols = set(range(comb_class.dimensions[0])) - set(
             cell[0] for cell in comb_class.point_cells()
         )
@@ -294,7 +313,7 @@ class CleaningStrategy(DisjointUnionStrategy[MappedTiling, GriddedCayleyPerm]):
         raise NotImplementedError
 
 
-class MapplingFactorStrategy(FactorStrategy):
+class MapplingFactorStrategy(AbstractFactorStrategy):
     """
     A strategy for finding factors in a mapped tiling.
     """
@@ -302,15 +321,14 @@ class MapplingFactorStrategy(FactorStrategy):
     cleaner = MTCleaner([], "Factoring Cleaner")
 
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = Factor(comb_class).find_factors()
+        factors = MTFactors(comb_class).find_factors()
         if len(factors) <= 1:
             raise StrategyDoesNotApply
         factors = tuple(map(self.__class__.cleaner, factors))
         return factors
 
 
-# pylint:disable=too-many-ancestors
-class MapplingILFactorStrategy(ShuffleFactorStrategy):
+class MapplingILFactorStrategy(AbstractShuffleFactorStrategy):
     """
     A strategy for finding interleaving factors in a mapped tiling.
     """
@@ -318,7 +336,7 @@ class MapplingILFactorStrategy(ShuffleFactorStrategy):
     cleaner = MTCleaner.make_full_cleaner("IL Factoring Cleaner")
 
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = ILFactorNormal(comb_class).find_factors()
+        factors = MTILFactorNormal(comb_class).find_factors()
         if len(factors) <= 1:
             raise StrategyDoesNotApply
         factors = tuple(map(self.__class__.cleaner, factors))
@@ -328,7 +346,7 @@ class MapplingILFactorStrategy(ShuffleFactorStrategy):
         return "Factor the mappling into interleaving factors"
 
 
-class MapplingInvertedILFactorStrategy(ShuffleFactorStrategy):
+class MapplingInvertedILFactorStrategy(AbstractShuffleFactorStrategy):
     """
     A strategy for finding interleaving factors in a mapped tiling by inverting 00 obstructions
     """
@@ -336,7 +354,7 @@ class MapplingInvertedILFactorStrategy(ShuffleFactorStrategy):
     cleaner = MTCleaner.make_full_cleaner("Inverted IL Factoring Cleaner")
 
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = ILFactorInverted(comb_class).find_factors()
+        factors = MTILFactorInverted(comb_class).find_factors()
         if len(factors) <= 1:
             raise StrategyDoesNotApply
         factors = tuple(map(self.__class__.cleaner, factors))
@@ -346,32 +364,57 @@ class MapplingInvertedILFactorStrategy(ShuffleFactorStrategy):
         return "Invert obstructions and factor the mappling into interleaving factors"
 
 
-class MapplingLessThanRowColSeparationStrategy(LessThanRowColSeparationStrategy):
+class MapplingLessThanRowColSeparationStrategy(
+    AbstractLessThanRowColSeparationStrategy
+):
     """A strategy for separating rows and columns with less than constraints."""
 
     cleaner = MTCleaner.make_full_cleaner("LT Separation Cleaner")
 
     def decomposition_function(self, comb_class):
-        algo = LTRowColSeparationMT(comb_class)
+        algo = MTLTRowColSeparation(comb_class)
         if algo.separation.row_col_map.is_identity():
             raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
-    LessThanOrEqualRowColSeparationStrategy
+    AbstractLessThanOrEqualRowColSeparationStrategy
 ):
     """A strategy for separating rows and columns with less than or equal constraints."""
 
     cleaner = MTCleaner.make_full_cleaner("LEQ Separation Cleaner")
 
+    def algorithm(self, comb_class):
+        """Returns the algorithm for finding the row and column separation."""
+        return MTLTORERowColSeparation(comb_class, self.row_order)
+
     def decomposition_function(self, comb_class):
-        algo = LTORERowColSeparationMT(comb_class)
+        algo = self.algorithm(comb_class)
         if algo.separation.row_col_map.is_identity():
             raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))
 
 
+class MapplingLessThanOrEqualRowColSeparationFactory(
+    AbstractLessThanOrEqualRowColSeparationFactory
+):
+    """A factory for making less than or equal row/col separation strategies."""
+
+    def algorithm(self, comb_class: MappedTiling) -> LessThanOrEqualRowColSeparation:
+        """The algorithm for finding the row and column separation."""
+        return LessThanOrEqualRowColSeparation(comb_class.tiling)
+
+    def __call__(
+        self, comb_class: MappedTiling
+    ) -> Iterator[MapplingLessThanOrEqualRowColSeparationStrategy]:
+        """Finds max expansion and if any row separates more than 2 cells then
+        it merges them together so that each row splits into at most 2 rows
+        (plus a point row between them) and yields all possible ways of doing this."""
+        for row_order in self.row_separations(comb_class):
+            yield MapplingLessThanOrEqualRowColSeparationStrategy(
+                row_order=row_order,
+            )
 class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStrategy):
     """A strategy for adding new obstructions to the tiling based on the current obstructions."""
 
