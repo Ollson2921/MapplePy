@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mapped_tilings"
+version = "0.1.0"
+description = "A module for using mapped tilings."
+authors = [
+    { name = "Reed Acton" },
+    { name = "Christian Bean", email = "c.n.bean@keele.ac.uk" },
+    { name = "Abigail Ollson" }
+]
+dependencies = [
+    "comb_spec_searcher @ git+https://github.com/PermutaTriangle/comb_spec_searcher@main",
+    "cayley_perms @ git+https://github.com/Ollson2921/CayleyPerms@main",
+]
+readme = "README.rst"
+
+[tool.setuptools.packages.find]
+where = ["."]
+namespaces = true
