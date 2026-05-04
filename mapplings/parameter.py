@@ -244,7 +244,7 @@ class Parameter(Tiling):
     def insert_cols_and_rows(
         self, cols: Iterable[int], rows: Iterable[int]
     ) -> "Parameter":
-        """Inserts a blank col or col at each index.
+        """Inserts a blank col or row at each index.
         New col/row gets map data from the col/row at the given index."""
         col_adjust = {
             i: i + sum((j < i for j in cols)) for i in range(self.dimensions[0])
@@ -292,6 +292,143 @@ class Parameter(Tiling):
                 False,
             ),
             RowColMap(new_col_map, new_row_map),
+        )
+
+    def map_for_adding_cols_and_rows(
+        self, cols: Iterable[int], rows: Iterable[int]
+    ) -> RowColMap:
+        """Returns the rc map for adding the columns and rows to the parameter."""
+        new_col_map = dict[int, int]()
+        new_row_map = dict[int, int]()
+        new_dimensions = (
+            self.dimensions[0] + len(tuple(cols)),
+            self.dimensions[1] + len(tuple(rows)),
+        )
+        tweak = 0
+
+        for i in range(new_dimensions[0]):
+            if i - tweak - 1 in cols:
+                if i - tweak - 1 == -1:
+                    new_col_map[i] = self.col_map[0]
+                    tweak += 1
+                    continue
+                new_col_map[i] = new_col_map[i - 1]
+                tweak += 1
+            else:
+                new_col_map[i] = self.col_map[i - tweak]
+        tweak = 0
+        for i in range(new_dimensions[1]):
+            if i - tweak - 1 in rows:
+                if i - tweak - 1 == -1:
+                    new_row_map[i] = self.row_map[0]
+                    tweak += 1
+                    continue
+                new_row_map[i] = new_row_map[i - 1]
+                tweak += 1
+            else:
+                new_row_map[i] = self.row_map[i - tweak]
+
+        rc_map = RowColMap(new_col_map, new_row_map)
+        return rc_map
+
+    def map_param_to_param_adding_cols_and_rows(
+        self, cols: Iterable[int], rows: Iterable[int]
+    ) -> RowColMap:
+        """Returns the map from one parameter to another which has been
+        unfused at the given columns and rows."""
+        col_map = dict[int, int]()
+        row_map = dict[int, int]()
+        adjust = 0
+        if -1 in cols:
+            col_map[0] = 0
+            adjust += 1
+        for i in range(self.dimensions[0]):
+            col_map[i + adjust] = i
+            if i in cols:
+                adjust += 1
+                col_map[i + adjust] = i
+        adjust = 0
+        if -1 in rows:
+            row_map[0] = 0
+            adjust += 1
+        for i in range(self.dimensions[1]):
+            row_map[i + adjust] = i
+            if i in rows:
+                adjust += 1
+                row_map[i + adjust] = i
+        return RowColMap(col_map, row_map)
+
+    def unfuse_cols_and_rows_for_insert_blank(
+        self, cols: Iterable[tuple[int, bool]], rows: Iterable[tuple[int, bool]]
+    ) -> "Parameter":
+        """Unfuses the param at all columns and rows and makes added row/cols empty
+        unless adjacent to a point req, in which case it makes it blank."""
+        new_dimensions = (
+            self.dimensions[0] + len(tuple(cols)),
+            self.dimensions[1] + len(tuple(rows)),
+        )
+        idx_cols_to_add = {idx for idx, _ in cols}
+        idx_rows_to_add = {idx for idx, _ in rows}
+        map_gcps = self.map_param_to_param_adding_cols_and_rows(
+            idx_cols_to_add, idx_rows_to_add
+        )
+        new_obs = list(map_gcps.preimage_of_obstructions(self.obstructions))
+        new_reqs = list(map_gcps.preimage_of_requirements(self.requirements))
+
+        reqs_to_remove = []
+        obs_to_remove = []
+
+        def check_cells_in_row_col(
+            col_position: tuple[int, bool], is_col: bool
+        ) -> tuple[
+            list[GriddedCayleyPerm], list[GriddedCayleyPerm], list[GriddedCayleyPerm]
+        ]:
+            """Checks cells for point reqs in the given row/col.
+            If there are then adds point req to list of reqs to remove and any size 2
+            obs in that cell or going into an adjacent cell.
+            If not then adds point ob in that cell to the new obs."""
+            col_mapping_from, adjustment = col_position
+            col = col_mapping_from + int(adjustment)
+            other_col = col if adjustment else col + 1
+            for row in range(new_dimensions[int(is_col)]):
+                if any(
+                    GriddedCayleyPerm(CayleyPermutation((0,)), ((col, row),))
+                    in req_list
+                    for req_list in new_reqs
+                ):
+                    reqs_to_remove.append(
+                        GriddedCayleyPerm(CayleyPermutation((0,)), ((col + 1, row),))
+                    )
+                    for ob in new_obs:
+                        if all(cell == (col, row) for cell in ob.positions):
+                            obs_to_remove.append(ob)
+                        elif all(cell == (other_col, row) for cell in ob.positions):
+                            continue
+                        elif all(
+                            cell in ((col, row), (other_col, row))
+                            for cell in ob.positions
+                        ):
+                            obs_to_remove.append(ob)
+                else:
+                    new_obs.append(GriddedCayleyPerm((0,), ((col, row),)))
+            return reqs_to_remove, obs_to_remove, new_obs
+
+        for col in cols:
+            check_cells_in_row_col(col, True)
+        for row in rows:
+            check_cells_in_row_col(row, False)
+        new_obs = [ob for ob in new_obs if ob not in obs_to_remove]
+        new_map = self.map_for_adding_cols_and_rows(
+            [col for col, _ in cols], [row for row, _ in rows]
+        )
+        return Parameter(
+            Tiling(
+                new_obs,
+                new_reqs,
+                new_dimensions,
+                False,
+            ).remove_requirements(reqs_to_remove),
+            new_map,
         )
 
     def sub_parameter(self, cells: Iterable[Cell]) -> "Parameter":
