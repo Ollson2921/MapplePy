@@ -8,7 +8,6 @@ from gridded_cayley_permutations import (
 )
 from gridded_cayley_permutations.point_placements import (
     DIRECTIONS,
-
     DIR_LEFT_BOT,
     DIR_RIGHT_BOT,
     DIR_LEFT_TOP,
@@ -27,7 +26,7 @@ from tilescope.strategies import (
     AbstractPointPlacementFactory,
     AbstractRowInsertionFactory,
     AbstractColInsertionFactory,
-    AbstractRequirementInsertionStrategy, 
+    AbstractRequirementInsertionStrategy,
     AbstractObstructionTransitivityStrategy,
 )
 from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
@@ -49,7 +48,6 @@ from mapplings.algorithms import (
     MTLTRowColSeparation,
 )
 from mapplings.cleaners import MTCleaner, ParamCleaner
-
 
 MTCleaner.global_log_toggle(1)
 temp = CombinatorialSpecificationSearcher.status
@@ -415,6 +413,8 @@ class MapplingLessThanOrEqualRowColSeparationFactory(
             yield MapplingLessThanOrEqualRowColSeparationStrategy(
                 row_order=row_order,
             )
+
+
 class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStrategy):
     """A strategy for adding new obstructions to the tiling based on the current obstructions."""
 
@@ -433,7 +433,7 @@ class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStr
         )
         found_new_obs = found_new_obs or found_new
         new_cont_params = []
-        for cont_param_list in comb_class.containment_parameters:
+        for cont_param_list in comb_class.containing_parameters:
             new_cont_param_list, found_new = self.obs_trans_for_param_list(
                 cont_param_list
             )
