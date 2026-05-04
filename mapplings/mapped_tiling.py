@@ -15,7 +15,6 @@ from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
 from .parameter import Parameter
 from .parameter_list import ParameterList
 
-
 Objects = DefaultDict[tuple[int, ...], List[GriddedCayleyPerm]]
 Cell = tuple[int, int]
 

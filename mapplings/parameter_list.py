@@ -13,7 +13,6 @@ from gridded_cayley_permutations import Tiling
 
 from .parameter import Parameter
 
-
 Cell = tuple[int, int]
 
 FuncTypeT = TypeVar("FuncTypeT")
