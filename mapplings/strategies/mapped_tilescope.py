@@ -98,7 +98,7 @@ class MappedTileScopePack(StrategyPack):
             initial_strats=[
                 MapplingFactorStrategy(),
                 MapplingLessThanOrEqualRowColSeparationFactory(),
-                MapplingObstructionTransitivityStrategy
+                MapplingObstructionTransitivityStrategy(),
             ],
             inferral_strats=[
                 # CleaningStrategy(),
