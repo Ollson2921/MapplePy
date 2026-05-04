@@ -50,6 +50,13 @@ class Parameter(Tiling):
         )
         return set(product(inj_cols, inj_rows))
 
+    def add_obstructions(
+        self, obstructions: Iterable[GriddedCayleyPerm]
+    ) -> "Parameter":
+        """Returns a new parameter with the obstructions added to the ghost."""
+        new_ghost = super().add_obstructions(obstructions)
+        return Parameter(new_ghost, self.map)
+
     def preimage_of_gcp(self, gcperm: GriddedCayleyPerm) -> Iterator[GriddedCayleyPerm]:
         """Returns the preimage of a gridded cayley permutation"""
         for gcp in self.map.preimage_of_gridded_cperm(gcperm):
