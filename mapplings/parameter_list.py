@@ -13,7 +13,6 @@ from gridded_cayley_permutations import Tiling
 
 from .parameter import Parameter
 
-
 Cell = tuple[int, int]
 
 FuncTypeT = TypeVar("FuncTypeT")
@@ -69,7 +68,7 @@ class ParameterList(frozenset[Parameter]):
         """Removes parameters with empty ghost"""
         return ParameterList(param for param in self if not param.is_empty())
 
-    def simple_remove_redundant(self, reverse: bool = False) -> "ParameterList":
+    def simple_remove_redundant(self) -> "ParameterList":
         """Removes any parameter implied by another through a basic check"""
         exclude = set[Parameter]()
         for param0, param1 in combinations(self, 2):
@@ -81,11 +80,8 @@ class ParameterList(frozenset[Parameter]):
             temp_param = param1.sub_parameter(param1.map.preimage_of_cells(image_cells))
             if param0.map != temp_param.map:
                 continue
-            if param0.ghost.is_subset(temp_param.ghost):
-                if reverse:
-                    exclude.add(param0)
-                else:
-                    exclude.add(param1)
+            if temp_param.ghost.is_subset(param0.ghost):
+                exclude.add(param1)
         return ParameterList(param for param in self if param not in exclude)
 
     def to_html(self) -> str:
@@ -126,4 +122,12 @@ class ParameterList(frozenset[Parameter]):
     def __lt__(self, other: object):
         if isinstance(other, ParameterList):
             return tuple(sorted(self)) < tuple(sorted(other))
+        return NotImplemented
+
+    def __getitem__(self, key):
+        return tuple(sorted(self))[key]
+
+    def __add__(self, other):
+        if isinstance(other, ParameterList):
+            return ParameterList(self.union(other))
         return NotImplemented
