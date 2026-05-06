@@ -189,11 +189,35 @@ class Parameter(Tiling):
         cols_to_remove = set()
         rows_to_remove = set()
         for i in range(self.dimensions[0] - 1):
-            if i in blank_cols and i + 1 in blank_cols:
-                cols_to_remove.add(i + 1)
+            if i in blank_cols:
+                if self.col_map[i] == self.col_map[i + 1] and i + 1 in blank_cols:
+                    cols_to_remove.add(i)
+                else:
+                    if (i == 0 or self.col_map[i - 1] != self.col_map[i]) and (
+                        i == self.dimensions[0] - 1
+                        or self.col_map[i + 1] != self.col_map[i]
+                    ):
+                        cols_to_remove.add(i)
         for j in range(self.dimensions[1] - 1):
-            if j in blank_rows and j + 1 in blank_rows:
-                rows_to_remove.add(j + 1)
+            if j in blank_rows:
+                if self.row_map[j] == self.row_map[j + 1] and j + 1 in blank_rows:
+                    rows_to_remove.add(j)
+                elif (j == 0 or self.row_map[j - 1] != self.row_map[j]) and (
+                    self.row_map[j + 1] != self.row_map[j]
+                ):
+                    rows_to_remove.add(j)
+        if (
+            self.dimensions[0] - 1 in blank_cols
+            and self.col_map[self.dimensions[0] - 1]
+            != self.col_map[self.dimensions[0] - 2]
+        ):
+            cols_to_remove.add(self.dimensions[0] - 1)
+        if (
+            self.dimensions[1] - 1 in blank_rows
+            and self.row_map[self.dimensions[1] - 1]
+            != self.row_map[self.dimensions[1] - 2]
+        ):
+            rows_to_remove.add(self.dimensions[1] - 1)
         return self.delete_rows_and_columns(cols_to_remove, rows_to_remove)
 
     def find_empty_rows_and_columns(self):
