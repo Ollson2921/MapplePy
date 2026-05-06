@@ -8,12 +8,14 @@ from mapplings import Parameter, MappedTiling, ParameterList
 def test_simple_remove_redundant_params_after_pp():
     "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),)"
     "at indices (0,) in direction 1. Check right counts after cleaning."
-        mt = MappedTiling(
+    mt = MappedTiling(
         Tiling(
             (
                 GriddedCayleyPerm(CayleyPermutation((0, 1)), ((0, 1), (0, 1))),
                 GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 1), (0, 1))),
-                GriddedCayleyPerm(CayleyPermutation((0, 1, 0)), ((0, 1), (0, 2), (0, 1))),
+                GriddedCayleyPerm(
+                    CayleyPermutation((0, 1, 0)), ((0, 1), (0, 2), (0, 1))
+                ),
                 GriddedCayleyPerm(
                     CayleyPermutation((0, 1, 0, 0)), ((0, 0), (0, 0), (0, 0), (0, 0))
                 ),
@@ -181,7 +183,8 @@ def test_simple_remove_redundant_params_after_pp():
                             (5, 5),
                         ),
                         RowColMap(
-                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 2, 1: 2, 2: 2, 3: 2, 4: 2}
+                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
+                            {0: 2, 1: 2, 2: 2, 3: 2, 4: 2},
                         ),
                     ),
                     Parameter(
@@ -492,7 +495,8 @@ def test_simple_remove_redundant_params_after_pp():
                             (5, 5),
                         ),
                         RowColMap(
-                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
+                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
                         ),
                     ),
                     Parameter(
@@ -560,7 +564,8 @@ def test_simple_remove_redundant_params_after_pp():
                             (5, 5),
                         ),
                         RowColMap(
-                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 0, 2: 0, 3: 1, 4: 2}
+                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
+                            {0: 0, 1: 0, 2: 0, 3: 1, 4: 2},
                         ),
                     ),
                     Parameter(
@@ -652,7 +657,8 @@ def test_simple_remove_redundant_params_after_pp():
                             (5, 5),
                         ),
                         RowColMap(
-                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, {0: 0, 1: 1, 2: 2, 3: 2, 4: 2}
+                            {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
+                            {0: 0, 1: 1, 2: 2, 3: 2, 4: 2},
                         ),
                     ),
                 }
