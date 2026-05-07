@@ -227,7 +227,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
     @reg(12)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
-        new_avoiders = mappling.avoiding_parameters.simple_remove_redundant(True)
+        new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
         new_containers = [
             c_list.simple_remove_redundant()
             for c_list in mappling.containing_parameters
