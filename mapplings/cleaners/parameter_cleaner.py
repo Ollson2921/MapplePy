@@ -4,9 +4,9 @@ from typing import Iterator, Iterable
 from itertools import chain
 from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
-from gridded_cayley_permutations.unplacement import PartialUnplacement
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
+from .unplacement import ParamUnplacement
 
 from .cleaner import GenericCleaner, Register, CleanerLog
 
@@ -135,33 +135,10 @@ class ParamCleaner(GenericCleaner[Parameter]):
     @reg(4, run_on_enumerators=False)
     def unplace_points(param: Parameter) -> Parameter:
         """Unplaces all possible points in the parameter"""
-        algo = PartialUnplacement(param.ghost)
-        points = param.single_value_cells()
-        cells, cols, rows = set[tuple[int, int]](), set[int](), set[int]()
-        for cell in points:
-            valid = algo.cell_in_valid_region(cell)
-            if valid[0] and param.col_map[cell[0] - 1] == param.col_map[cell[0] + 1]:
-                cells.add(cell)
-                cols.add(cell[0])
-            if valid[1] and param.row_map[cell[1] - 1] == param.row_map[cell[1] + 1]:
-                cells.add(cell)
-                rows.add(cell[1])
-        unplace_cols, unplace_rows = algo.fusable_check(cells, cols, rows)
-        if not (unplace_cols or unplace_rows):
+        if not param.positive_cells():
             return param
-        new_ghost = algo.unplace(unplace_cols, unplace_rows)
-        col_preimages, row_preimages = algo.adjustment_map(
-            unplace_cols, unplace_rows
-        ).preimage_map()
-        new_col_map = {
-            i: param.col_map[col_preimages[i][0]]
-            for i in range(new_ghost.dimensions[0])
-        }
-        new_row_map = {
-            i: param.row_map[row_preimages[i][0]]
-            for i in range(new_ghost.dimensions[1])
-        }
-        return Parameter(new_ghost, RowColMap(new_col_map, new_row_map))
+        algo = ParamUnplacement(param)
+        return algo.auto_unplace()
 
     @staticmethod
     @reg(3, run_on_enumerators=False)
