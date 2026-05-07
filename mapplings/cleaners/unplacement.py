@@ -14,29 +14,22 @@ class ParamUnplacement(PartialUnplacement):
         # self.base_obs = base_tiling.obstructions
         super().__init__(param.ghost)
 
-    def find_cols_and_rows(self) -> tuple[set[int], set[int]]:
-        """Uses the initialiser to find all valid rows and cols to unfuse"""
-        return self.check_cols_and_rows(self.point_cols, self.point_rows)
-
     def check_cols_and_rows(
         self, check_cols: set[int], check_rows: set[int]
     ) -> tuple[set[int], set[int]]:
         """Filters the input cols and rows to only include those which can be unplaced."""
         valid_cols = check_cols & self.point_cols
         valid_rows = check_rows & self.point_rows
-        try:
-            valid_cols = {
-                col
-                for col in valid_cols
-                if self.param.col_map[col - 1] == self.param.col_map[col + 1]
-            }
-            valid_rows = {
-                row
-                for row in valid_rows
-                if self.param.row_map[row - 1] == self.param.row_map[row + 1]
-            }
-        except:
-            input(self.param)
+        valid_cols = {
+            col
+            for col in valid_cols
+            if self.param.col_map[col - 1] == self.param.col_map[col + 1]
+        }
+        valid_rows = {
+            row
+            for row in valid_rows
+            if self.param.row_map[row - 1] == self.param.row_map[row + 1]
+        }
         valid_cols = set(filter(self.col_fuse_check, valid_cols))
         valid_rows = set(filter(self.row_fuse_check, valid_rows))
         return valid_cols, valid_rows
