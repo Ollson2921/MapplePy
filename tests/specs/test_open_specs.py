@@ -21,11 +21,11 @@ def test_open_4c_spec():
     assert "(x - 1)/(2*x - 1)" == str(gf)
 
 
-def test_open_4k_spec():
+def test_open_5a_spec():
     """Opens an old spec and checks still loads. Then checks can find
     the correct generating function."""
 
-    with open(HERE / "Av(02-1)_Av(1-20)_row_and_col.json") as f:
+    with open(HERE / "Av(1-20)_Av(21-0)_row_and_col_placement_expanded.json") as f:
         spec = CombinatorialSpecification.from_dict(json.load(f))
     gf = spec.get_genf()
     assert "(x - 1)/(2*x - 1)" == str(gf)
