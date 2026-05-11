@@ -197,41 +197,6 @@ def test_containing_parameter_list():
                             Tiling(
                                 (
                                     GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((1, 0),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0,)), ((2, 0),)
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((0, 1)), ((2, 2), (2, 2))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((0, 0), (0, 0))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((2, 1), (2, 1))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 2), (3, 2))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((3, 2), (4, 2))
-                                    ),
-                                    GriddedCayleyPerm(
-                                        CayleyPermutation((1, 0)), ((4, 2), (4, 2))
-                                    ),
-                                ),
-                                (),
-                                (5, 3),
-                            ),
-                            RowColMap(
-                                {0: 0, 1: 1, 2: 2, 3: 2, 4: 3}, {0: 0, 1: 1, 2: 1}
-                            ),
-                        ),
-                        Parameter(
-                            Tiling(
-                                (
-                                    GriddedCayleyPerm(
                                         CayleyPermutation((0,)), ((0, 1),)
                                     ),
                                     GriddedCayleyPerm(

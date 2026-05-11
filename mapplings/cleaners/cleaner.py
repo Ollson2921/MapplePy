@@ -382,11 +382,10 @@ class GenericCleaner(Generic[T]):
     ) -> T:
         """Applies all functions in cleaning_list without reordering"""
         new_cleaning_object = cleaning_object
-        log = cls._currently_tracking
         for func in cleaning_list:
             if not bool(new_cleaning_object):  # fix this
                 return new_cleaning_object
-            new_cleaning_object = cls._debug(log(func))(new_cleaning_object)
+            new_cleaning_object = cls._debug(func)(new_cleaning_object)
         return new_cleaning_object
 
     def tracked_cleanup(
@@ -450,6 +449,7 @@ class GenericCleaner(Generic[T]):
     @classmethod
     def _debug(cls, func: Callable[[T], T]):
         """Sets the debug behavior for cleaning functions."""
+        log = cls._currently_tracking
         if cls.DEBUG > 0:
 
             def wrapper(cleaning_object: T) -> T:
@@ -477,8 +477,9 @@ class GenericCleaner(Generic[T]):
                     )
                 return new_object
 
-            return wrapper
-        return func
+            setattr(wrapper, "log_id", func.__name__.replace("_", " ").title())
+            return log(wrapper)
+        return log(func)
 
     @classmethod
     def status_update(cls) -> str:
