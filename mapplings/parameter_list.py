@@ -13,7 +13,6 @@ from gridded_cayley_permutations import Tiling
 
 from .parameter import Parameter
 
-
 Cell = tuple[int, int]
 
 FuncTypeT = TypeVar("FuncTypeT")
@@ -69,24 +68,63 @@ class ParameterList(frozenset[Parameter]):
         """Removes parameters with empty ghost"""
         return ParameterList(param for param in self if not param.is_empty())
 
-    def simple_remove_redundant(self, reverse: bool = False) -> "ParameterList":
+    def simple_remove_redundant(self) -> "ParameterList":
         """Removes any parameter implied by another through a basic check"""
         exclude = set[Parameter]()
+
+        def compare(smaller: Parameter, bigger: Parameter) -> bool:
+            """Returns True if smaller is less restrictive than bigger"""
+            temp_bigger = bigger.sub_parameter(
+                bigger.map.preimage_of_cells(smaller.image_cells())
+            )
+
+            # excluded req check
+            if len(bigger.requirements) != len(temp_bigger.requirements):
+                return False
+
+            # map check
+            if smaller.map != temp_bigger.map:
+                return False
+
+            # ob check
+            if any(
+                small_ob.avoids(temp_bigger.obstructions)
+                for small_ob in smaller.obstructions
+            ):
+                # smaller can't have obstructions that bigger doesn't
+                return False
+
+            # req check
+            for small_req_list in smaller.requirements:
+                # False if there is a small_req that can be avoided by every big_req_list
+                if all(
+                    all(
+                        any(big_req.avoids([small_req]) for big_req in big_req_list)
+                        for big_req_list in temp_bigger.requirements
+                    )
+                    for small_req in small_req_list
+                ):
+                    return False
+            return True
+
         for param0, param1 in combinations(self, 2):
             if {param0, param1} & exclude:
                 continue
-            image_cells = param0.image_cells()
-            if not image_cells.issubset(param1.image_cells()):
-                continue
-            temp_param = param1.sub_parameter(param1.map.preimage_of_cells(image_cells))
-            if param0.map != temp_param.map:
-                continue
-            if param0.ghost.is_subset(temp_param.ghost):
-                if reverse:
-                    exclude.add(param0)
-                else:
+            image_cells = param0.image_cells(), param1.image_cells()
+
+            if image_cells[0] == image_cells[1]:
+                if compare(param0, param1):
                     exclude.add(param1)
-        return ParameterList(param for param in self if param not in exclude)
+                elif compare(param1, param0):
+                    exclude.add(param0)
+            elif image_cells[0].issubset(image_cells[1]):
+                if compare(param0, param1):
+                    exclude.add(param1)
+            elif image_cells[1].issubset(image_cells[0]):
+                if compare(param1, param0):
+                    exclude.add(param0)
+
+        return ParameterList(self - exclude)
 
     def to_html(self) -> str:
         """Returns a html of all parameters in self seperated by a line"""
