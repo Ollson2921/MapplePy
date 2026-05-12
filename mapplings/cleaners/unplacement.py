@@ -1,6 +1,12 @@
 """Contains the ParamUnplacement class"""
 
-from gridded_cayley_permutations.row_col_map import RowColMap
+from itertools import product
+from typing import Iterator
+
+from gridded_cayley_permutations import RowColMap, GriddedCayleyPermutation
+from gridded_cayley_permutations.simplify_obstructions_and_requirements import (
+    SimplifyObstructionsAndRequirements as Simplify,
+)
 from gridded_cayley_permutations.unplacement import PartialUnplacement
 from mapplings import Parameter, MappedTiling
 
@@ -8,11 +14,26 @@ from mapplings import Parameter, MappedTiling
 class ParamUnplacement(PartialUnplacement):
     """A class for unplacing point rows and cols in a parameter"""
 
-    def __init__(self, param: Parameter):
+    def __init__(self, param: Parameter, parent_mappling: MappedTiling):
         self.param = param
-        # self.base = base_tiling
-        # self.base_obs = base_tiling.obstructions
+        self.base = parent_mappling
+        self.base_obs = parent_mappling.obstructions
         super().__init__(param.ghost)
+
+    def implied_point_obs(self) -> Iterator[GriddedCayleyPermutation]:
+        """Finds point obs in the parameter that are implied by the base mappling"""
+        for cells in product(self.param.empty_cells(), self.param.positive_cells()):
+            pos = sorted(cells)
+            pattern = (pos[0][1] > pos[1][1], pos[1][1] > pos[0][1])
+            gcp = GriddedCayleyPermutation(pattern, pos)
+            if self.param.map.map_gridded_cperm(gcp) not in self.base_obs:
+                yield GriddedCayleyPermutation((0,), (cells[0],))
+
+    def expected_obs(self) -> set[GriddedCayleyPermutation]:
+        unsimplified = super().expected_obs() | set(self.implied_point_obs())
+        algo = Simplify(unsimplified, tuple(tuple()), self.param.dimensions)
+        algo.simplify()
+        return set(algo.obstructions)
 
     def check_cols_and_rows(
         self, check_cols: set[int], check_rows: set[int]

@@ -14,6 +14,7 @@ from mapplings import MappedTiling, Parameter, ParameterList
 
 from .cleaner import GenericCleaner, Register, CleanerLog
 from .parameter_cleaner import ParamCleaner
+from .unplacement import ParamUnplacement
 
 default_param_cleaner = ParamCleaner.make_full_cleaner("Param Default Cleaner")
 
@@ -84,6 +85,22 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         return MTCleaner.clean_parameters(default_param_cleaner)(mappling)
 
     @staticmethod
+    @reg(7)
+    def param_unplacement(mappling: MappedTiling) -> MappedTiling:
+        """Applies point unplacement to all avoiders and containers"""
+        avoiders, containers, enumerators = mappling.ace_parameters()
+        new_avoiders = ParameterList(
+            ParamUnplacement(av, mappling).auto_unplace() for av in avoiders
+        )
+        new_containers = [
+            ParameterList(
+                ParamUnplacement(co, mappling).auto_unplace() for co in c_list
+            )
+            for c_list in containers
+        ]
+        return MappedTiling(mappling.tiling, new_avoiders, new_containers, enumerators)
+
+    @staticmethod
     @reg(0)
     def try_to_kill(mappling: MappedTiling) -> MappedTiling:
         """Used to decide how to kill mapplings in full_cleanup"""
@@ -106,7 +123,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         return mappling
 
     @staticmethod
-    @reg(8, False)  # Broken
+    @reg(9, False)  # Broken
     def factor_containters(mappling: MappedTiling) -> MappedTiling:
         """Factors out the intersection factors of a containing parameter list"""
         new_containers = list(
@@ -129,7 +146,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(10, update_register=False)
+    @reg(11, update_register=False)
     def backmap_points(mappling: MappedTiling) -> MappedTiling:
         """Backmaps point obstructions to all parameters"""
         point_obstructions = (ob for ob in mappling.obstructions if len(ob) == 1)
@@ -224,7 +241,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(12)
+    @reg(13)
     def simple_reduce_redundant_parameters(mappling: MappedTiling) -> MappedTiling:
         """Removes any parameter implied by another with a basic check"""
         new_avoiders = mappling.avoiding_parameters.simple_remove_redundant()
@@ -251,7 +268,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         return MappedTiling(mappling.tiling, new_avoiders, containers, enumerators)
 
     @staticmethod
-    @reg(11)
+    @reg(12)
     def small_ob_inferral(mappling: MappedTiling) -> MappedTiling:
         """Adds point obstructions implied by param point cells
         and small base tiling obstructions"""
@@ -313,7 +330,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         return new_mappling
 
     @staticmethod
-    @reg(7)
+    @reg(8)
     def forward_map_parameter_gcps_from_avoiders(
         mappling: MappedTiling,
     ) -> MappedTiling:
@@ -362,7 +379,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         return MappedTiling(new_base, new_avoiders, containers, enumerators)
 
     @staticmethod
-    @reg(9)
+    @reg(10)
     def forward_map_parameter_gcps_from_containers(
         mappling: MappedTiling,
     ) -> MappedTiling:
@@ -432,7 +449,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(13)
+    @reg(14)
     def remove_blank_rows_and_cols_params(mappling: MappedTiling) -> MappedTiling:
         """Deletes all rows and cols in the parameters which have no obs or reqs,
         ignoring point rows and columns and obstructions which are already on the
