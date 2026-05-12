@@ -151,11 +151,14 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             if not new_c_list:
                 return MappedTiling.empty_mappling()
             new_containers.append(new_c_list)
-        new_avoiders = mappling.avoiding_parameters.remove_contradictions(base)
+        new_avoiders = mappling.avoiding_parameters.remove_contradictions(base)        
         avoiders = []
         for param in new_avoiders:
-            if param.dimensions == (0,0) and not GriddedCayleyPerm(CayleyPermutation(), ()) in param.obstructions:
-                    return MappedTiling.empty_mappling()
+            if (
+                param.dimensions == (0, 0)
+                and not GriddedCayleyPerm(CayleyPermutation(()), ()) in param.obstructions
+            ):
+                return MappedTiling.empty_mappling()
             else:
                 avoiders.append(param)
         new_enumerators = []
