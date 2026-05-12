@@ -162,8 +162,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     return MappedTiling.empty_mappling()
             else:
                 avoiders.append(param)
-        new_enumerators = []
-        new_enumerators = []
+        new_enumerators: list[Parameter] = []
         for e_list in mappling.enumerating_parameters:
             new_e_list = e_list.remove_contradictions(base)
             if new_e_list:
