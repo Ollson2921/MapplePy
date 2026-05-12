@@ -155,7 +155,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         if any(param.dimensions == (0, 0) for param in new_avoiders):
             if not GriddedCayleyPerm(CayleyPermutation(), ()) in param.obstructions:
                 return MappedTiling.empty_mappling()
-        new_avoiders = [p for p in new_avoiders if param.dimensions != (0, 0)]
+        new_avoiders = [p for p in new_avoiders if p.dimensions != (0, 0)]
             
         new_enumerators = []
         for e_list in mappling.enumerating_parameters:
