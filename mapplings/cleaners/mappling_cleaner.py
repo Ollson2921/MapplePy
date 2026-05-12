@@ -153,7 +153,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             new_containers.append(new_c_list)
         new_avoiders = mappling.avoiding_parameters.remove_contradictions(base)
         if any(param.dimensions == (0, 0) for param in new_avoiders):
-            if not GriddedCayleyPerm(CayleyPermutation(), ()) in param.obstructions
+            if not GriddedCayleyPerm(CayleyPermutation(), ()) in param.obstructions:
                 return MappedTiling.empty_mappling()
         new_avoiders = [p for p in new_avoiders if param.dimensions != (0, 0)]
             
