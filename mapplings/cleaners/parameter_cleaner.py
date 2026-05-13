@@ -6,7 +6,6 @@ from cayley_permutations import CayleyPermutation
 from gridded_cayley_permutations.row_col_map import RowColMap
 from gridded_cayley_permutations import Tiling
 from mapplings import Parameter
-from .unplacement import ParamUnplacement
 
 from .cleaner import GenericCleaner, Register, CleanerLog
 
@@ -130,15 +129,6 @@ class ParamCleaner(GenericCleaner[Parameter]):
         ):
             return Parameter(Tiling([], [], (0, 0)), RowColMap({}, {}))
         return param.delete_rows_and_columns(cols_to_remove, rows_to_remove)
-
-    # @staticmethod
-    # @reg(4, run_on_enumerators=False)
-    # def unplace_points(param: Parameter) -> Parameter:
-    #     """Unplaces all possible points in the parameter"""
-    #     if not param.positive_cells():
-    #         return param
-    #     algo = ParamUnplacement(param)
-    #     return algo.auto_unplace()
 
     @staticmethod
     @reg(3, run_on_enumerators=False)

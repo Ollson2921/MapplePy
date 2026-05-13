@@ -4,8 +4,6 @@ from .factor import MTFactors, MTILFactorInverted, MTILFactorNormal
 from .row_col_sep_mt import MTLTRowColSeparation, MTLTORERowColSeparation
 from .point_placement import MTRequirementPlacement
 
-# from .unplacement import ParamUnplacement
-
 __all__ = [
     "MTFactors",
     "MTILFactorNormal",
@@ -13,6 +11,5 @@ __all__ = [
     "MTLTRowColSeparation",
     "MTLTORERowColSeparation",
     "MTRequirementPlacement",
-    # "ParamUnplacement",
 ]
 __version__ = "0.1.0"
