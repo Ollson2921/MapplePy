@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mapped_tilings"
+version = "0.1.0"
+description = "A module for using mapped tilings."
+authors = [
+    { name = "Reed Acton" },
+    { name = "Christian Bean", email = "c.n.bean@keele.ac.uk" },
+    { name = "Abigail Ollson" }
+]
+dependencies = [
+    "comb-spec-searcher>=4.2.1",
+    "cayley_perms @ git+https://github.com/Ollson2921/CayleyPerms@main",
+]
+readme = "README.rst"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.hatchling.build.targets.sdist]
+include = [
+    "mapplings",
+    "tests", 
+    "README.rst",
+]
+
+[tool.black]
+target-version = ["py312"]
+line-length = 88
+include = "\\.pyi?$"
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
