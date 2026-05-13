@@ -42,6 +42,12 @@ class MappedTiling(Tiling):
         self.containing_parameters = tuple(sorted(containing_parameters))
         self.enumerating_parameters = tuple(sorted(enumerating_parameters))
         self.tiling = tiling
+
+        if any(param.dimensions == (0, 0) for param in avoiding_parameters):
+            self.tiling = Tiling.empty_tiling()
+            self.avoiding_parameters = ParameterList()
+            self.containing_parameters = tuple()
+            self.enumerating_parameters = tuple()
         super().__init__(
             tiling.obstructions, tiling.requirements, tiling.dimensions, simplify
         )
