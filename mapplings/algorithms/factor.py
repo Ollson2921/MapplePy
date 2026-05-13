@@ -9,7 +9,6 @@ from gridded_cayley_permutations.row_col_map import RowColMap
 from mapplings import MappedTiling, ParameterList, Parameter
 from mapplings.cleaners import MTCleaner
 
-
 Cell = tuple[int, int]
 
 
