@@ -165,3 +165,6 @@ class ParameterList(frozenset[Parameter]):
         if isinstance(other, ParameterList):
             return tuple(sorted(self)) < tuple(sorted(other))
         return NotImplemented
+
+    def __getitem__(self, key):
+        return sorted(self)[key]

@@ -169,14 +169,22 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 return MappedTiling.empty_mappling()
             new_containers.append(new_c_list)
         new_avoiders = mappling.avoiding_parameters.remove_contradictions(base)
-        new_enumerators = []
+        avoiders: list[Parameter] = []
+        for param in new_avoiders:
+            if param.dimensions == (0, 0):
+                if (
+                    not GriddedCayleyPerm(CayleyPermutation(()), ())
+                    in param.obstructions
+                ):
+                    return MappedTiling.empty_mappling()
+            else:
+                avoiders.append(param)
+        new_enumerators: list[ParameterList] = []
         for e_list in mappling.enumerating_parameters:
             new_e_list = e_list.remove_contradictions(base)
             if new_e_list:
                 new_enumerators.append(e_list)
-        return MappedTiling(
-            mappling.tiling, new_avoiders, new_containers, new_enumerators
-        )
+        return MappedTiling(mappling.tiling, avoiders, new_containers, new_enumerators)
 
     @staticmethod
     @reg(2)
@@ -264,7 +272,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         avoiders, containers, enumerators = mappling.apply_to_all_parameters(
             param_reducer
         ).ace_parameters()
-        new_avoiders = ParameterList(av for av in avoiders if av.dimensions != (0, 0))
+        new_avoiders = ParameterList(avoiders)
         return MappedTiling(mappling.tiling, new_avoiders, containers, enumerators)
 
     @staticmethod
@@ -287,7 +295,6 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     for avoider in new_mappling.avoiding_parameters.apply_to_all(
                         MTCleaner._cayley_ob_adjust_param, (ob,)
                     )
-                    if avoider.dimensions != (0, 0)
                 )
                 new_containers = tuple(
                     ParameterList(
@@ -310,7 +317,6 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                     for avoider in new_mappling.avoiding_parameters.apply_to_all(
                         MTCleaner._ob_adjust_param, (ob,)
                     )
-                    if avoider.dimensions != (0, 0)
                 )
                 new_containers = tuple(
                     ParameterList(

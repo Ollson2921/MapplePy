@@ -1,7 +1,11 @@
 """Strategies for mapplings tilescope."""
 
-from typing import Iterator
-from gridded_cayley_permutations import Tiling, GriddedCayleyPerm
+from typing import Iterator, Iterable
+from gridded_cayley_permutations import (
+    Tiling,
+    GriddedCayleyPerm,
+    ObstructionTransitivity,
+)
 from gridded_cayley_permutations.point_placements import (
     DIRECTIONS,
     DIR_LEFT_BOT,
@@ -23,17 +27,16 @@ from tilescope.strategies import (
     AbstractRowInsertionFactory,
     AbstractColInsertionFactory,
     AbstractRequirementInsertionStrategy,
+    AbstractObstructionTransitivityStrategy,
 )
 from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
-
-
 from comb_spec_searcher import (
     DisjointUnionStrategy,
     CombinatorialSpecificationSearcher,
 )
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from cayley_permutations import CayleyPermutation
-from mapplings import MappedTiling
+from mapplings import MappedTiling, Parameter, ParameterList
 from mapplings.algorithms import (
     MTRequirementPlacement,
     MTFactors,
@@ -43,7 +46,6 @@ from mapplings.algorithms import (
     MTLTRowColSeparation,
 )
 from mapplings.cleaners import MTCleaner, ParamCleaner
-
 
 MTCleaner.global_log_toggle(1)
 temp = CombinatorialSpecificationSearcher.status
@@ -409,3 +411,56 @@ class MapplingLessThanOrEqualRowColSeparationFactory(
             yield MapplingLessThanOrEqualRowColSeparationStrategy(
                 row_order=row_order,
             )
+
+
+class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStrategy):
+    """A strategy for adding new obstructions to the tiling based on the current obstructions."""
+
+    def decomposition_function(
+        self, comb_class: MappedTiling
+    ) -> tuple[MappedTiling, ...]:
+        """Updates base tiling, avoiding parameters, and containing parameters
+        based on obstruction transitivity.
+
+        TODO: As we're adding obstructions, we should simplify the parameter's tilings
+        too. Should this happen when simplify=True for a mappling?"""
+        new_bt_obs = ObstructionTransitivity(comb_class).new_obs()
+        found_new_obs = bool(new_bt_obs)
+        new_av_params, found_new = self.obs_trans_for_param_list(
+            comb_class.avoiding_parameters
+        )
+        found_new_obs = found_new_obs or found_new
+        new_cont_params = []
+        for cont_param_list in comb_class.containing_parameters:
+            new_cont_param_list, found_new = self.obs_trans_for_param_list(
+                cont_param_list
+            )
+            new_cont_params.append(ParameterList(new_cont_param_list))
+            found_new_obs = found_new_obs or found_new
+
+        if not found_new_obs:
+            raise StrategyDoesNotApply("No new obstructions to add.")
+        return (
+            MappedTiling(
+                comb_class.add_obstructions(new_bt_obs).tiling,
+                new_av_params,
+                new_cont_params,
+                comb_class.enumerating_parameters,
+                simplify=True,
+            ),
+        )
+
+    def obs_trans_for_param_list(
+        self, param_list: Iterable[Parameter]
+    ) -> tuple[list[Parameter], bool]:
+        """Does obstruction transitivity on each param in a param list,
+        returns the new list and a bool if any new obstructions were added."""
+        added_obs = False
+        new_param_list = []
+        for param in param_list:
+            new_obs = ObstructionTransitivity(param).new_obs()
+            if new_obs:
+                added_obs = True
+                param = param.add_obstructions(new_obs)
+            new_param_list.append(param)
+        return new_param_list, added_obs
