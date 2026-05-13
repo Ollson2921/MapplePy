@@ -32,7 +32,7 @@ class ParamUnplacement(PartialUnplacement):
 
     @cached_property
     def expected_obs(self) -> set[GriddedCayleyPerm]:
-        unsimplified = super().expected_obs | set(self.implied_point_obs())
+        unsimplified = tuple(super().expected_obs | set(self.implied_point_obs()))
         algo = Simplify(unsimplified, tuple(tuple()), self.param.dimensions)
         algo.simplify()
         return set(algo.obstructions)
