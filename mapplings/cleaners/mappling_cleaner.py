@@ -454,29 +454,6 @@ class MTCleaner(GenericCleaner[MappedTiling]):
             mappling.enumerating_parameters,
         )
 
-    @staticmethod
-    @reg(14)
-    def remove_blank_rows_and_cols_params(mappling: MappedTiling) -> MappedTiling:
-        """Deletes all rows and cols in the parameters which have no obs or reqs,
-        ignoring point rows and columns and obstructions which are already on the
-        base tiling."""
-        base_tiling = mappling.tiling
-        av_params = []
-        for param in mappling.avoiding_parameters:
-            av_params.append(param.delete_blank_row_cols_in_param(base_tiling))
-        containing_params = []
-        for c_list in mappling.containing_parameters:
-            new_c_list = []
-            for param in c_list:
-                new_c_list.append(param.delete_blank_row_cols_in_param(base_tiling))
-            containing_params.append(ParameterList(new_c_list))
-        return MappedTiling(
-            mappling.tiling,
-            ParameterList(av_params),
-            containing_params,
-            mappling.enumerating_parameters,
-        )
-
     # Internal Methods
 
     @staticmethod
