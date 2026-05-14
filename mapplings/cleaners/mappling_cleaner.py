@@ -455,7 +455,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         )
 
     @staticmethod
-    @reg(14)
+    # @reg(14)
     def remove_blank_rows_and_cols_params(mappling: MappedTiling) -> MappedTiling:
         """Deletes all rows and cols in the parameters which have no obs or reqs,
         ignoring point rows and columns and obstructions which are already on the
