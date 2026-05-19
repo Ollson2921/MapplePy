@@ -6,7 +6,8 @@ from cayley_permutations import CayleyPermutation
 
 
 def test_cleaning_after_pp():
-    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),) at indices (0,) in direction 1 then check counts after cleaning."
+    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 2),)),)"
+    " at indices (0,) in direction 1 then check counts after cleaning."
     mt = MappedTiling(
         Tiling(
             (
@@ -901,7 +902,8 @@ def test_rc_map_orders():
         (),
     )
 
-    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),) at indices (0,) in direction 0"
+    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),) "
+    "at indices (0,) in direction 0"
 
     placed = MTRequirementPlacement(mt).point_placement(
         (GriddedCayleyPerm(CayleyPermutation((0,)), ((1, 0),)),), (0,), 0
