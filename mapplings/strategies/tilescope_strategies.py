@@ -27,7 +27,7 @@ from tilescope.strategies import (
     AbstractRowInsertionFactory,
     AbstractColInsertionFactory,
     AbstractRequirementInsertionStrategy,
-    AbstractObstructionTransitivityStrategy,
+    ObstructionTransitivityStrategy,
 )
 from tilescope.strategies.row_column_separation import LessThanOrEqualRowColSeparation
 from comb_spec_searcher import (
@@ -413,7 +413,7 @@ class MapplingLessThanOrEqualRowColSeparationFactory(
             )
 
 
-class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStrategy):
+class MapplingObstructionTransitivityStrategy(ObstructionTransitivityStrategy):
     """A strategy for adding new obstructions to the tiling based on the current obstructions."""
 
     def decomposition_function(
