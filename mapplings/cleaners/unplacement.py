@@ -89,9 +89,6 @@ class ParamUnplacement(PartialUnplacement):
 
     def auto_unplace(self):
         """Does all valid unplacements for the tiling's point cells"""
-        print(self.find_cols_and_rows())
         temp = self.param_unplace(set(), self.find_cols_and_rows()[1])
-        print(temp)
         new_algo = ParamUnplacement(temp, self.base)
-        print(new_algo.find_cols_and_rows())
         return new_algo.param_unplace(new_algo.find_cols_and_rows()[0], set())
