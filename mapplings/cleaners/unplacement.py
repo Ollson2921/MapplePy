@@ -27,7 +27,7 @@ class ParamUnplacement(PartialUnplacement):
             pos = sorted(cells)
             pattern = (pos[0][1] > pos[1][1], pos[1][1] > pos[0][1])
             gcp = GriddedCayleyPerm(pattern, pos)
-            if self.param.map.map_gridded_cperm(gcp) not in self.base_obs:
+            if not self.param.map.map_gridded_cperm(gcp).avoids(self.base_obs):
                 yield GriddedCayleyPerm((0,), (cells[0],))
 
     @cached_property
@@ -89,6 +89,9 @@ class ParamUnplacement(PartialUnplacement):
 
     def auto_unplace(self):
         """Does all valid unplacements for the tiling's point cells"""
+        print(self.find_cols_and_rows())
         temp = self.param_unplace(set(), self.find_cols_and_rows()[1])
+        print(temp)
         new_algo = ParamUnplacement(temp, self.base)
+        print(new_algo.find_cols_and_rows())
         return new_algo.param_unplace(new_algo.find_cols_and_rows()[0], set())
