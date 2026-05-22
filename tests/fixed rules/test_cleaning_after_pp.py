@@ -911,3 +911,70 @@ def test_rc_map_orders():
 
     for i in range(5):
         assert mt.get_terms(i) == placed.get_terms(i)
+
+
+def test_direcitonles_pp_in_param():
+    """Had issues with directionless point placement in this param when doing
+    pp in the mappling, check counts are still correct."""
+    mt = MappedTiling(
+        Tiling(
+            (
+                GriddedCayleyPerm(CayleyPermutation((1, 0)), ((0, 0), (0, 0))),
+                GriddedCayleyPerm(
+                    CayleyPermutation((0, 0, 0)), ((0, 0), (0, 0), (0, 0))
+                ),
+            ),
+            ((GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),),),
+            (1, 1),
+        ),
+        ParameterList(
+            frozenset(
+                {
+                    Parameter(
+                        Tiling(
+                            (
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 0)), ((1, 0), (1, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 0)), ((1, 0), (2, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((1, 0), (1, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((0, 1)), ((1, 0), (2, 0))
+                                ),
+                                GriddedCayleyPerm(
+                                    CayleyPermutation((1, 0)), ((1, 0), (1, 0))
+                                ),
+                            ),
+                            (
+                                (
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((1, 0),)
+                                    ),
+                                    GriddedCayleyPerm(
+                                        CayleyPermutation((0,)), ((2, 0),)
+                                    ),
+                                ),
+                            ),
+                            (4, 1),
+                        ),
+                        RowColMap({0: 0, 1: 0, 2: 0, 3: 0}, {0: 0}),
+                    )
+                }
+            )
+        ),
+        (),
+        (),
+    )
+
+    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),) at"
+    " indices (0,) in direction 3 but only child and index 1 is non-empty"
+
+    placed = MTRequirementPlacement(mt).point_placement(
+        (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (0,), 3
+    )[0]
+    for i in range(5):
+        assert mt.get_terms(i)[()] == placed.get_terms(i)[()]
