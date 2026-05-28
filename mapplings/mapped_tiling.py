@@ -18,7 +18,6 @@ import sympy
 from .parameter import Parameter
 from .parameter_list import ParameterList
 
-
 Objects = DefaultDict[tuple[int, ...], List[GriddedCayleyPerm]]
 Cell = tuple[int, int]
 
@@ -135,7 +134,16 @@ class MappedTiling(Tiling):
     def extra_parameters(self):
         return tuple(f"k_{i}" for i in range(len(self.enumerating_parameters)))
 
+    def find_parameter(self, enumerating_param_list: ParameterList) -> str:
+        idx = self.enumerating_parameters.index(enumerating_param_list)
+        return f"k_{idx}"
+
+    def get_enumerator(self, param: str) -> ParameterList:
+        idx = self.extra_parameters.index(param)
+        return self.enumerating_parameters[idx]
+
     def remove_enumerators(self) -> "MappedTiling":
+        """Returns the mappling without the enumerating parameters."""
         return MappedTiling(
             self.tiling,
             self.avoiding_parameters,

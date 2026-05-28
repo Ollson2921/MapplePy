@@ -25,14 +25,22 @@ class MTRequirementPlacement:
         direction: int,
     ) -> Tuple[MappedTiling, ...]:
         """Point placement in the mapped tiling."""
-        cells = []
-        for idx, gcp in zip(indices, requirement_list):
-            cells.append(gcp.positions[idx])
-        cells = sorted(set(cells))
+        cells_to_place_in = self.cells_to_place_in(requirement_list, indices)
         return tuple(
             self.point_placement_in_cell(requirement_list, indices, direction, cell)
-            for cell in cells
+            for cell in cells_to_place_in
         )
+
+    def cells_to_place_in(
+        self,
+        requirement_list: tuple[GriddedCayleyPerm, ...],
+        indices: tuple[int, ...],
+    ) -> set[Cell]:
+        """Return the set of cells to place points in."""
+        cells = set()
+        for idx, gcp in zip(indices, requirement_list):
+            cells.add(gcp.positions[idx])
+        return sorted(cells)
 
     def point_placement_in_cell(
         self,

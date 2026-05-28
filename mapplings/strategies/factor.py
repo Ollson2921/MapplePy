@@ -1,3 +1,5 @@
+"""Factoring strategies for mapped tilings."""
+
 from collections import Counter
 from functools import reduce
 from operator import mul
@@ -7,10 +9,11 @@ from comb_spec_searcher import CartesianProduct
 from gridded_cayley_permutations import GriddedCayleyPerm
 from sympy import Eq, Function
 
-from mapplings.mapped_tiling import MappedTiling
+from mapplings.mapped_tiling import MappedTiling, ParameterList
 from tilescope.strategies import FactorStrategy, ShuffleFactorStrategy
 from mapplings.cleaners import MTCleaner
 from mapplings.algorithms import Factor, ILFactorNormal, ILFactorInverted
+from mapplings.strategies.extra_parameters import ExtraParametersForStrategies
 from comb_spec_searcher.exception import StrategyDoesNotApply
 from comb_spec_searcher.typing import (
     Parameters,
@@ -105,7 +108,7 @@ class Interleaving(CartesianProduct[MappedTiling, GriddedCayleyPerm]):
         raise NotImplementedError
 
 
-class MapplingFactorStrategy(FactorStrategy):
+class MapplingFactorStrategy(ExtraParametersForStrategies, FactorStrategy):
     """
     A strategy for finding factors in a mapped tiling.
     """
@@ -118,6 +121,11 @@ class MapplingFactorStrategy(FactorStrategy):
             raise StrategyDoesNotApply
         factors = tuple(map(self.__class__.cleaner, factors))
         return factors
+
+    def update_enumerator_list(
+        self, comb_class: MappedTiling, enumerator_list: ParameterList
+    ) -> tuple[ParameterList, ...]:
+        return (enumerator_list,) * len(self.decomposition_function(comb_class))
 
 
 # pylint:disable=too-many-ancestors

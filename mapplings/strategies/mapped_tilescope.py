@@ -7,19 +7,23 @@ from .verification_strategy import (
     MapplingVerticalInsertionEncodableVerificationStrategy,
     MapplingHorizontalInsertionEncodableVerificationStrategy,
 )
-from .tilescope_strategies import (
+from .factor import MapplingFactorStrategy
+from .placement_strategies import (
     MapplingPointPlacementFactory,
     MapplingRowPlacementFactory,
     MapplingColPlacementFactory,
-    MapplingVerticalInsertionEncodingRequirementInsertionFactory,
-    MapplingVerticalInsertionEncodingPlacementFactory,
-    MapplingHorizontalInsertionEncodingRequirementInsertionFactory,
     MapplingHorizontalInsertionEncodingPlacementFactory,
+    MapplingVerticalInsertionEncodingPlacementFactory,
+)
+from .requirement_insertion import (
+    MapplingCellInsertionFactory,
+    MapplingVerticalInsertionEncodingRequirementInsertionFactory,
+    MapplingHorizontalInsertionEncodingRequirementInsertionFactory,
+)
+from .row_col_separation import (
     MapplingLessThanRowColSeparationStrategy,
     MapplingLessThanOrEqualRowColSeparationStrategy,
-    MapplingCellInsertionFactory,
 )
-from .factor import MapplingFactorStrategy
 
 
 class MappedTileScopePack(StrategyPack):
