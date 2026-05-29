@@ -1,4 +1,3 @@
-from mapplings.cleaners import MTCleaner
 from mapplings import MappedTiling, ParameterList, Parameter
 from gridded_cayley_permutations import GriddedCayleyPerm, RowColMap, Tiling
 from cayley_permutations import CayleyPermutation
