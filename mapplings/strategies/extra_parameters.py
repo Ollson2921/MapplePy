@@ -4,8 +4,10 @@ import abc
 from typing import Optional
 from comb_spec_searcher.strategies.strategy import StrategyDoesNotApply
 from comb_spec_searcher import Strategy
-from gridded_cayley_permutations import RowColMap, GriddedCayleyPerm, Tiling
+from gridded_cayley_permutations import GriddedCayleyPerm
 from mapplings import MappedTiling, ParameterList
+
+from mapplings.cleaners.parameter_cleaner import ParamCleaner
 
 
 class ExtraParametersForStrategies(Strategy[MappedTiling, GriddedCayleyPerm]):
@@ -32,11 +34,28 @@ class ExtraParametersForStrategies(Strategy[MappedTiling, GriddedCayleyPerm]):
             )
             for idx, child in enumerate(children):
                 child_enumerating_params = child_enumerating_params_tuple[idx]
-                if child_enumerating_params in child.enumerating_parameters:
+                cleaned_child_enumerating_params = self.update_from_cleaner(
+                    child, child_enumerating_params
+                )
+                if cleaned_child_enumerating_params in child.enumerating_parameters:
                     dicts[idx][parent_param] = child.find_parameter(
-                        child_enumerating_params
+                        cleaned_child_enumerating_params
                     )
         return dicts
+
+    def update_from_cleaner(
+        self, comb_class: MappedTiling, enumerator_list: ParameterList
+    ) -> ParameterList:
+        """Updates an enumerator list using the cleaner."""
+        param_cleaner = ParamCleaner.make_full_cleaner("Param Default Cleaner")
+        new_enumerator_list = enumerator_list
+        for func in param_cleaner:
+            if getattr(func, "run_on_enumerators"):
+                new_enumerator_list = ParameterList(
+                    param.update_active_cells(comb_class.tiling)
+                    for param in new_enumerator_list.apply_to_all(func)
+                )
+        return new_enumerator_list
 
     @abc.abstractmethod
     def update_enumerator_list(
