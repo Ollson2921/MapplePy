@@ -316,8 +316,12 @@ class MapplingFactorStrategy(AbstractFactorStrategy):
 
     cleaner = MTCleaner([], "Factoring Cleaner")
 
+    def algorithm(self, comb_class: MappedTiling) -> MTFactors:
+        """Returns the algorithm for finding factors in a mapped tiling."""
+        return MTFactors(comb_class)
+
     def decomposition_function(self, comb_class) -> tuple[MappedTiling, ...]:
-        factors = MTFactors(comb_class).find_factors()
+        factors = self.algorithm(comb_class).find_factors()
         if len(factors) <= 1:
             raise StrategyDoesNotApply
         factors = tuple(map(self.__class__.cleaner, factors))
