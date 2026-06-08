@@ -27,7 +27,7 @@ class ParamUnplacement(PartialUnplacement):
             pos = sorted(cells)
             pattern = (pos[0][1] > pos[1][1], pos[1][1] > pos[0][1])
             gcp = GriddedCayleyPerm(pattern, pos)
-            if self.param.map.map_gridded_cperm(gcp) not in self.base_obs:
+            if not self.param.map.map_gridded_cperm(gcp).avoids(self.base_obs):
                 yield GriddedCayleyPerm((0,), (cells[0],))
 
     @cached_property
