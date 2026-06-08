@@ -92,6 +92,9 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
 
     def separate(self) -> Iterator[MappedTiling]:
         """Returns the row/col separated mapping"""
+        if any(self.tiling.find_empty_rows_and_columns()):
+            yield self.mapped_tiling
+            return
         if self.separation.row_col_map.is_identity():
             yield self.mapped_tiling
             return
@@ -239,6 +242,9 @@ class MTLTORERowColSeparation(AbstractMTRowColSeparation):
 
     def separate(self) -> Iterator[MappedTiling]:
         """Returns the row/col separated mapping"""
+        if any(self.tiling.find_empty_rows_and_columns()):
+            yield self.mapped_tiling
+            return
         if self.separation.row_col_map.is_identity():
             yield self.mapped_tiling
             return
