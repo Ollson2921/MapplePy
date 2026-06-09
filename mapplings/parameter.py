@@ -443,6 +443,18 @@ class Parameter(Tiling):
         rows_to_delete = {i for i in range(self.dimensions[1]) if i not in rows}
         return self.delete_rows_and_columns(cols_to_delete, rows_to_delete)
 
+    def restrict_to_region(self, cells: Iterable[Cell]) -> "Parameter":
+        """Returns a subset of obs and reqs of the parameter in the given cells."""
+        obs_by_col, obs_by_row = self.obs_by_col_and_row()
+        reqs_by_col, reqs_by_row = self.reqs_by_col_and_row()
+        subset_obs, subset_reqs = set(), set()
+        for cell in cells:
+            subset_obs.update(obs_by_col[cell[0]])
+            subset_obs.update(obs_by_row[cell[1]])
+            subset_reqs.update(reqs_by_col[cell[0]])
+            subset_reqs.update(reqs_by_row[cell[1]])
+        return Parameter(Tiling(subset_obs, subset_reqs, self.dimensions), self.map)
+
     def factor(self) -> Iterator["Parameter"]:
         """Factors the ghost and combines factors with overlapping images."""
         factor_cells = Factors(self.ghost).find_factors_as_cells

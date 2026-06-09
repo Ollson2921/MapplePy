@@ -74,7 +74,7 @@ class ParameterList(frozenset[Parameter]):
 
         def compare(smaller: Parameter, bigger: Parameter) -> bool:
             """Returns True if smaller is less restrictive than bigger"""
-            temp_bigger = bigger.sub_parameter(
+            temp_bigger = bigger.restrict_to_region(
                 bigger.map.preimage_of_cells(smaller.image_cells())
             )
 
