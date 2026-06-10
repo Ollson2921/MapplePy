@@ -970,8 +970,8 @@ def test_direcitonles_pp_in_param():
         (),
     )
 
-    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),) at"
-    " indices (0,) in direction 3 but only child and index 1 is non-empty"
+    "Placed the point of the requirement (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),) "
+    "at indices (0,) in direction 3 but only child and index 1 is non-empty"
 
     placed = MTRequirementPlacement(mt).point_placement(
         (GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),)),), (0,), 3
