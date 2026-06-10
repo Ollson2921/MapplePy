@@ -387,13 +387,18 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
 
     def algorithm(self, comb_class):
         """Returns the algorithm for finding the row and column separation."""
-        return MTLTORERowColSeparation(comb_class, self.row_order)
+        return MTLTORERowColSeparation(comb_class, self.row_order).separation
 
     def decomposition_function(self, comb_class):
         algo = self.algorithm(comb_class)
-        if algo.separation.row_col_map.is_identity():
+        if algo.row_col_map.is_identity():
             raise StrategyDoesNotApply
-        return tuple(map(self.__class__.cleaner, algo.separate()))
+        return tuple(
+            map(
+                self.__class__.cleaner,
+                MTLTORERowColSeparation(comb_class, self.row_order).separate(),
+            )
+        )
 
 
 class MapplingLessThanOrEqualRowColSeparationFactory(
