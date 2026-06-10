@@ -336,7 +336,7 @@ class MTCleaner(GenericCleaner[MappedTiling]):
         return new_mappling
 
     @staticmethod
-    @reg(8)
+    # @reg(8)
     def forward_map_parameter_gcps_from_avoiders(
         mappling: MappedTiling,
     ) -> MappedTiling:
