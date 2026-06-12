@@ -314,7 +314,7 @@ class MapplingFactorStrategy(AbstractFactorStrategy):
     A strategy for finding factors in a mapped tiling.
     """
 
-    cleaner = MTCleaner([], "Factoring Cleaner")
+    cleaner = MTCleaner.make_full_cleaner("Factoring Cleaner")
 
     def algorithm(self, comb_class: MappedTiling) -> MTFactors:
         """Returns the algorithm for finding factors in a mapped tiling."""
@@ -371,9 +371,12 @@ class MapplingLessThanRowColSeparationStrategy(
 
     cleaner = MTCleaner.make_full_cleaner("LT Separation Cleaner")
 
+    def algorithm(self, comb_class):
+        return MTLTRowColSeparation(comb_class).separation
+
     def decomposition_function(self, comb_class):
         algo = MTLTRowColSeparation(comb_class)
-        if algo.separation.row_col_map.is_identity():
+        if self.algorithm(comb_class).row_col_map.is_identity():
             raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))
 

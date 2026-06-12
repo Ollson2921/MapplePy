@@ -112,6 +112,11 @@ class MTCleaner(GenericCleaner[MappedTiling]):
                 for avoider in mappling.avoiding_parameters
             ):
                 return MappedTiling.empty_mappling()
+            if any(
+                avoider.gcp_in_tiling(GriddedCayleyPerm((), ()))
+                for avoider in mappling.avoiding_parameters
+            ):
+                return MappedTiling.empty_mappling()
             return MappedTiling(
                 Tiling(
                     [GriddedCayleyPerm(CayleyPermutation((0,)), ((0, 0),))], [], (1, 1)
