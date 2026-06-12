@@ -372,6 +372,7 @@ class MapplingLessThanRowColSeparationStrategy(
     cleaner = MTCleaner.make_full_cleaner("LT Separation Cleaner")
 
     def algorithm(self, comb_class):
+        """Returns the algorithm for finding the row and column separation."""
         return MTLTRowColSeparation(comb_class).separation
 
     def decomposition_function(self, comb_class):
