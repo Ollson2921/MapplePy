@@ -371,8 +371,8 @@ class MapplingFactorStrategy(AbstractFactorStrategy):
         self,
         comb_class: MappedTiling,
         obj: GriddedCayleyPerm,
-        children: Tuple | None = None,
-    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
         raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
@@ -405,8 +405,8 @@ class MapplingILFactorStrategy(AbstractShuffleFactorStrategy):
         self,
         comb_class: MappedTiling,
         obj: GriddedCayleyPerm,
-        children: Tuple | None = None,
-    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
         raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
@@ -439,8 +439,8 @@ class MapplingInvertedILFactorStrategy(AbstractShuffleFactorStrategy):
         self,
         comb_class: MappedTiling,
         obj: GriddedCayleyPerm,
-        children: Tuple | None = None,
-    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
         raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
