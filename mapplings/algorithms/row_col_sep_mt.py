@@ -113,6 +113,7 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         n, m = (len(col_param_to_bt_map), len(row_param_to_bt_map))
         rc_map = RowColMap(col_param_param_map, row_param_param_map)
         obs, reqs = rc_map.preimage_of_tiling(param.ghost)
+        obs = tuple(ob for ob in obs if not ob.contradictory())
         implied_obs = self.implied_obs(rc_map, (n, m))
         new_ghost = Tiling(
             obs + implied_obs,
@@ -128,8 +129,8 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
         col_map, row_map = param_map.preimage_map()
         n, m = dimensions
         implied_obs = []
-        row_pairs = self.row_or_col_pairs(row_map, param_map.row_map)
-        col_pairs = self.row_or_col_pairs(col_map, param_map.col_map)
+        row_pairs = self.row_or_col_pairs(row_map)
+        col_pairs = self.row_or_col_pairs(col_map)
         for row1, row2 in row_pairs:
             for col1, col2 in combinations(range(n), 2):
                 if param_map.col_map[col1] != param_map.col_map[col2]:
@@ -165,28 +166,24 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
     def row_or_col_pairs(
         self,
         row_map: dict[int, tuple[int, ...]],
-        forward_map: dict[int, int],
     ) -> set[tuple[int, int]]:
         """Finds the pairs of rows or columns to add implied obstructions to."""
         row_pairs = set()
-        sorted_rows = set()
+        sorted_start_points = set()
         for row in row_map:
-            if row in sorted_rows:
-                continue
             if len(row_map[row]) <= 1:
                 continue
             initial_row = row_map[row][0]
-            for next_row in row_map[row][1:]:
+            for idx, next_row in enumerate(row_map[row][1:]):
                 if next_row != initial_row + 1:
-                    end_points: list[int] = []
-                    for skipped_row in range(initial_row + 1, next_row):
-                        row_pairs.add((skipped_row, next_row))
+                    start_points = range(row_map[row][idx] + 1, next_row)
+                    end_points = [end_point for end_point in row_map[row][idx + 1 :]]
+                    for start_point in start_points:
+                        if start_point in sorted_start_points:
+                            continue
                         for end_point in end_points:
-                            row_pairs.add((skipped_row, end_point))
-                        skipped_row_preimage = forward_map[skipped_row]
-                        sorted_rows.add(skipped_row_preimage)
-                        end_points.append(row_map[skipped_row_preimage][-1])
-                initial_row = next_row
+                            row_pairs.add((start_point, end_point))
+                            sorted_start_points.add(end_point)
         return row_pairs
 
     def make_new_parameter_maps(
