@@ -177,7 +177,7 @@ class MTLTRowColSeparation(AbstractMTRowColSeparation):
             for idx, next_row in enumerate(row_map[row][1:]):
                 if next_row != initial_row + 1:
                     start_points = range(row_map[row][idx] + 1, next_row)
-                    end_points = [end_point for end_point in row_map[row][idx + 1 :]]
+                    end_points = list(row_map[row][idx + 1 :])
                     for start_point in start_points:
                         if start_point in sorted_start_points:
                             continue
