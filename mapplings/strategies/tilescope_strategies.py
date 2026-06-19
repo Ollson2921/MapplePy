@@ -1,6 +1,6 @@
 """Strategies for mapplings tilescope."""
 
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Optional, Tuple
 from gridded_cayley_permutations import (
     Tiling,
     GriddedCayleyPerm,
@@ -84,6 +84,22 @@ class MapplingRequirementPlacementStrategy(AbstractRequirementPlacementStrategy)
             )
         )
 
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Tuple | None = None,
+    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
+
 
 class MapplingRequirementInsertionStrategy(AbstractRequirementInsertionStrategy):
     """Mappling version of RequirementInsertionStrategy with a cleaner"""
@@ -100,6 +116,22 @@ class MapplingRequirementInsertionStrategy(AbstractRequirementInsertionStrategy)
                 ),
             )
         )
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Tuple | None = None,
+    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
 class MapplingCellInsertionFactory(AbstractCellInsertionFactory):
@@ -327,6 +359,22 @@ class MapplingFactorStrategy(AbstractFactorStrategy):
         factors = tuple(map(self.__class__.cleaner, factors))
         return factors
 
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
+
 
 class MapplingILFactorStrategy(AbstractShuffleFactorStrategy):
     """
@@ -344,6 +392,22 @@ class MapplingILFactorStrategy(AbstractShuffleFactorStrategy):
 
     def formal_step(self) -> str:
         return "Factor the mappling into interleaving factors"
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
 class MapplingInvertedILFactorStrategy(AbstractShuffleFactorStrategy):
@@ -363,6 +427,22 @@ class MapplingInvertedILFactorStrategy(AbstractShuffleFactorStrategy):
     def formal_step(self) -> str:
         return "Invert obstructions and factor the mappling into interleaving factors"
 
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Optional[Tuple[MappedTiling, ...]] = None,
+    ) -> Tuple[GriddedCayleyPerm, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
+
 
 class MapplingLessThanRowColSeparationStrategy(
     AbstractLessThanRowColSeparationStrategy
@@ -380,6 +460,22 @@ class MapplingLessThanRowColSeparationStrategy(
         if self.algorithm(comb_class).row_col_map.is_identity():
             raise StrategyDoesNotApply
         return tuple(map(self.__class__.cleaner, algo.separate()))
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Tuple | None = None,
+    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
 class MapplingLessThanOrEqualRowColSeparationStrategy(
@@ -403,6 +499,22 @@ class MapplingLessThanOrEqualRowColSeparationStrategy(
                 MTLTORERowColSeparation(comb_class, self.row_order).separate(),
             )
         )
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Tuple | None = None,
+    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
 
 
 class MapplingLessThanOrEqualRowColSeparationFactory(
@@ -477,3 +589,19 @@ class MapplingObstructionTransitivityStrategy(AbstractObstructionTransitivityStr
                 param = param.add_obstructions(new_obs)
             new_param_list.append(param)
         return new_param_list, added_obs
+
+    def backward_map(
+        self,
+        comb_class: MappedTiling,
+        objs: Tuple[GriddedCayleyPerm | None, ...],
+        children: Tuple[MappedTiling, ...] | None = None,
+    ) -> Iterator[GriddedCayleyPerm]:
+        raise NotImplementedError("Backward map not updated for cleaned mapplings.")
+
+    def forward_map(
+        self,
+        comb_class: MappedTiling,
+        obj: GriddedCayleyPerm,
+        children: Tuple | None = None,
+    ) -> Tuple[GriddedCayleyPerm | None, ...]:
+        raise NotImplementedError("Forward map not updated for cleaned mapplings.")
